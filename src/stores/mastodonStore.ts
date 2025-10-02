@@ -51,6 +51,7 @@ interface MastodonStore {
   
   // Posts data
   posts: MastodonPost[];
+  allPosts: MastodonPost[];
   isLoadingPosts: boolean;
   
   // Feed controls state
@@ -60,6 +61,8 @@ interface MastodonStore {
   searchQuery: string;
   instanceUrl: string;
   postLimit: number;
+  displayLimit: number;
+  algorithm: 'latest' | 'trending' | 'diverse' | 'balanced' | 'random';
   displayMode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined';
   
   // Actions
@@ -82,7 +85,10 @@ interface MastodonStore {
   setSearchQuery: (query: string) => void;
   setInstanceUrl: (url: string) => void;
   setPostLimit: (limit: number) => void;
+  setDisplayLimit: (limit: number) => void;
+  setAlgorithm: (algorithm: 'latest' | 'trending' | 'diverse' | 'balanced' | 'random') => void;
   setDisplayMode: (mode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined') => void;
+  applyAlgorithm: () => void;
 }
 
 const defaultAuth: MastodonAuth = {
@@ -112,6 +118,7 @@ export const useMastodonStore = create<MastodonStore>()(
       importProgress: 0,
       lastImportError: undefined,
       posts: [],
+      allPosts: [],
       isLoadingPosts: false,
       
       // Feed controls initial state
@@ -121,6 +128,8 @@ export const useMastodonStore = create<MastodonStore>()(
       searchQuery: '',
       instanceUrl: 'https://mastodon.social',
       postLimit: 500,
+      displayLimit: 50,
+      algorithm: 'latest',
       displayMode: 'refined',
 
       // Actions
@@ -261,7 +270,7 @@ export const useMastodonStore = create<MastodonStore>()(
         set({ isLoadingPosts: true, lastImportError: undefined });
 
         try {
-          const posts = postLimit > 40 
+          const allPosts = postLimit > 40 
             ? await mastodonService.getPublicTimelinePaginated(
                 instanceUrl,
                 auth.accessToken,
@@ -275,42 +284,9 @@ export const useMastodonStore = create<MastodonStore>()(
                 postLimit
               );
 
-          // Apply filtering and sorting
-          const { sortBy, filterBy, searchQuery } = get();
-          let filteredPosts = posts;
-          
-          // Apply filters
-          if (filterBy === 'with_media') {
-            filteredPosts = posts.filter(post => post.media_attachments && post.media_attachments.length > 0);
-          } else if (filterBy === 'with_hashtags') {
-            filteredPosts = posts.filter(post => post.tags && post.tags.length > 0);
-          }
-          
-          // Apply search
-          if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase();
-            filteredPosts = filteredPosts.filter(post => 
-              post.content.toLowerCase().includes(query) ||
-              post.account.display_name.toLowerCase().includes(query) ||
-              post.account.username.toLowerCase().includes(query) ||
-              (post.tags && post.tags.some(tag => tag.name.toLowerCase().includes(query)))
-            );
-          }
-          
-          // Apply sorting
-          filteredPosts.sort((a, b) => {
-            switch (sortBy) {
-              case 'oldest':
-                return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-              case 'popular':
-                return (b.favourites_count + b.reblogs_count) - (a.favourites_count + a.reblogs_count);
-              case 'newest':
-              default:
-                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-            }
-          });
-
-          set({ posts: filteredPosts });
+          // Store all posts and apply algorithm
+          set({ allPosts });
+          get().applyAlgorithm();
         } catch (error) {
           console.error('Failed to fetch public timeline:', error);
           set({ lastImportError: 'Failed to fetch posts' });
@@ -387,6 +363,145 @@ export const useMastodonStore = create<MastodonStore>()(
         set({ postLimit: validLimit });
         // Fetch posts with new limit
         get().fetchPublicTimeline();
+      },
+
+      setDisplayLimit: (limit) => {
+        const validLimit = Math.max(1, Math.min(1000, limit)); // Clamp between 1 and 1,000
+        set({ displayLimit: validLimit });
+        // Apply algorithm with new display limit
+        get().applyAlgorithm();
+      },
+
+      setAlgorithm: (algorithm) => {
+        console.log('Setting algorithm to:', algorithm);
+        set({ algorithm });
+        // Apply new algorithm
+        get().applyAlgorithm();
+      },
+
+      applyAlgorithm: () => {
+        const { allPosts, displayLimit, algorithm, sortBy, filterBy, searchQuery } = get();
+        
+        console.log('Applying algorithm:', { 
+          algorithm, 
+          displayLimit, 
+          allPostsLength: allPosts.length,
+          sortBy,
+          filterBy,
+          searchQuery 
+        });
+        
+        if (allPosts.length === 0) {
+          console.log('No posts to apply algorithm to');
+          set({ posts: [] });
+          return;
+        }
+
+        // Apply filtering and sorting first
+        let filteredPosts = [...allPosts];
+        
+        // Apply filters
+        if (filterBy === 'with_media') {
+          filteredPosts = filteredPosts.filter(post => post.media_attachments && post.media_attachments.length > 0);
+        } else if (filterBy === 'with_hashtags') {
+          filteredPosts = filteredPosts.filter(post => post.tags && post.tags.length > 0);
+        }
+        
+        // Apply search
+        if (searchQuery.trim()) {
+          const query = searchQuery.toLowerCase();
+          filteredPosts = filteredPosts.filter(post => 
+            post.content.toLowerCase().includes(query) ||
+            post.account.display_name.toLowerCase().includes(query) ||
+            post.account.username.toLowerCase().includes(query) ||
+            (post.tags && post.tags.some(tag => tag.name.toLowerCase().includes(query)))
+          );
+        }
+        
+        // Apply sorting
+        filteredPosts.sort((a, b) => {
+          switch (sortBy) {
+            case 'oldest':
+              return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+            case 'popular':
+              return (b.favourites_count + b.reblogs_count) - (a.favourites_count + a.reblogs_count);
+            case 'newest':
+            default:
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          }
+        });
+
+        // Apply algorithm to select posts
+        let selectedPosts: MastodonPost[] = [];
+        
+        switch (algorithm) {
+          case 'latest':
+            // Take the most recent posts
+            selectedPosts = filteredPosts.slice(0, displayLimit);
+            break;
+            
+          case 'trending':
+            // Sort by engagement and take top posts
+            const trendingPosts = [...filteredPosts].sort((a, b) => {
+              const aEngagement = a.favourites_count + a.reblogs_count + a.replies_count;
+              const bEngagement = b.favourites_count + b.reblogs_count + b.replies_count;
+              return bEngagement - aEngagement;
+            });
+            selectedPosts = trendingPosts.slice(0, displayLimit);
+            break;
+            
+          case 'diverse':
+            // Mix of recent and popular posts
+            const recentPosts = filteredPosts.slice(0, Math.ceil(displayLimit / 2));
+            const popularPosts = [...filteredPosts].sort((a, b) => {
+              const aEngagement = a.favourites_count + a.reblogs_count;
+              const bEngagement = b.favourites_count + b.reblogs_count;
+              return bEngagement - aEngagement;
+            }).slice(0, Math.floor(displayLimit / 2));
+            
+            // Remove duplicates and combine
+            const combinedPosts = [...recentPosts];
+            popularPosts.forEach(post => {
+              if (!combinedPosts.find(p => p.id === post.id)) {
+                combinedPosts.push(post);
+              }
+            });
+            selectedPosts = combinedPosts.slice(0, displayLimit);
+            break;
+            
+          case 'balanced':
+            // Distribute across different engagement levels
+            const sortedByEngagement = [...filteredPosts].sort((a, b) => {
+              const aEngagement = a.favourites_count + a.reblogs_count;
+              const bEngagement = b.favourites_count + b.reblogs_count;
+              return bEngagement - aEngagement;
+            });
+            
+            const highEngagement = sortedByEngagement.slice(0, Math.ceil(displayLimit / 3));
+            const mediumEngagement = sortedByEngagement.slice(
+              Math.ceil(sortedByEngagement.length / 3), 
+              Math.ceil(sortedByEngagement.length / 3) + Math.ceil(displayLimit / 3)
+            );
+            const lowEngagement = sortedByEngagement.slice(-Math.ceil(displayLimit / 3));
+            
+            selectedPosts = [...highEngagement, ...mediumEngagement, ...lowEngagement].slice(0, displayLimit);
+            break;
+            
+          case 'random':
+            // Random selection
+            const shuffled = [...filteredPosts].sort(() => 0.5 - Math.random());
+            selectedPosts = shuffled.slice(0, displayLimit);
+            break;
+        }
+        
+        console.log('Algorithm completed:', {
+          algorithm,
+          selectedPostsCount: selectedPosts.length,
+          displayLimit,
+          filteredPostsCount: filteredPosts.length
+        });
+        
+        set({ posts: selectedPosts });
       },
 
       setDisplayMode: (mode) => {

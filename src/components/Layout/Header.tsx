@@ -32,7 +32,12 @@ import {
   Image,
   BarChart3,
   List,
-  Sparkles
+  Sparkles,
+  Clock,
+  TrendingUp,
+  Shuffle,
+  Target,
+  Dice1
 } from 'lucide-react'
 
 const Header: React.FC = () => {
@@ -47,7 +52,10 @@ const Header: React.FC = () => {
     instanceUrl,
     displayMode,
     postLimit,
+    displayLimit,
+    algorithm,
     posts,
+    allPosts,
     setFeedType,
     setSortBy,
     setFilterBy,
@@ -55,6 +63,8 @@ const Header: React.FC = () => {
     setInstanceUrl,
     setDisplayMode,
     setPostLimit,
+    setDisplayLimit,
+    setAlgorithm,
     fetchPublicTimeline
   } = useMastodonStore()
   const location = useLocation()
@@ -197,7 +207,25 @@ const Header: React.FC = () => {
                   className="w-16 px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
                 />
                 <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                  ({posts.length} posts)
+                  ({posts.length} of {allPosts.length})
+                </span>
+              </div>
+
+              {/* Display Limit Input */}
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  value={displayLimit}
+                  onChange={(e) => {
+                    const newLimit = parseInt(e.target.value) || 1;
+                    setDisplayLimit(newLimit);
+                  }}
+                  min="1"
+                  max="1000"
+                  className="w-16 px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                />
+                <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                  show
                 </span>
               </div>
             </div>
@@ -260,6 +288,73 @@ const Header: React.FC = () => {
                 title="Dense Grid"
               >
                 <List className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
+          {/* Algorithm Buttons (only on feed page) */}
+          {isFeedPage && auth.isAuthenticated && (
+            <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
+              <button
+                onClick={() => {
+                  console.log('Latest button clicked');
+                  setAlgorithm('latest');
+                }}
+                className={`p-1.5 rounded transition-colors ${
+                  algorithm === 'latest'
+                    ? 'bg-purple-600 text-white'
+                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                }`}
+                title="Latest Posts"
+              >
+                <Clock className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => {
+                  console.log('Trending button clicked');
+                  setAlgorithm('trending');
+                }}
+                className={`p-1.5 rounded transition-colors ${
+                  algorithm === 'trending'
+                    ? 'bg-purple-600 text-white'
+                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                }`}
+                title="Trending Posts"
+              >
+                <TrendingUp className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => setAlgorithm('diverse')}
+                className={`p-1.5 rounded transition-colors ${
+                  algorithm === 'diverse'
+                    ? 'bg-purple-600 text-white'
+                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                }`}
+                title="Diverse Mix"
+              >
+                <Shuffle className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => setAlgorithm('balanced')}
+                className={`p-1.5 rounded transition-colors ${
+                  algorithm === 'balanced'
+                    ? 'bg-purple-600 text-white'
+                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                }`}
+                title="Balanced Selection"
+              >
+                <Target className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => setAlgorithm('random')}
+                className={`p-1.5 rounded transition-colors ${
+                  algorithm === 'random'
+                    ? 'bg-purple-600 text-white'
+                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                }`}
+                title="Random Selection"
+              >
+                <Dice1 className="w-3 h-3" />
               </button>
             </div>
           )}
