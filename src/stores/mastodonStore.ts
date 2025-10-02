@@ -700,7 +700,7 @@ export const useMastodonStore = create<MastodonStore>()(
 
       toggleLike: async (postId: string) => {
         console.log('🔄 toggleLike called for post:', postId);
-        const { auth, posts, allPosts, mastodonService } = get();
+        const { auth, posts, allPosts } = get();
         
         console.log('🔍 Auth state:', {
           isAuthenticated: auth.isAuthenticated,
@@ -763,7 +763,7 @@ export const useMastodonStore = create<MastodonStore>()(
       },
 
       toggleBookmark: async (postId: string) => {
-        const { auth, posts, allPosts, mastodonService } = get();
+        const { auth, posts, allPosts } = get();
         
         if (!auth.isAuthenticated || !auth.accessToken) {
           console.error('Not authenticated');
