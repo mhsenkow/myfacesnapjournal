@@ -307,8 +307,34 @@ export const useMastodonStore = create<MastodonStore>()(
 
           console.log(`Successfully fetched ${allPosts.length} posts (requested: ${postLimit})`);
           
-          // Store all posts and apply algorithm
-          set({ allPosts });
+          // Preserve existing like/bookmark states when fetching new posts
+          const { allPosts: existingPosts } = get();
+          const existingPostStates = new Map();
+          existingPosts.forEach(post => {
+            existingPostStates.set(post.id, {
+              favourited: post.favourited,
+              bookmarked: post.bookmarked,
+              favourites_count: post.favourites_count
+            });
+          });
+
+          // Merge new posts with existing like/bookmark states
+          const mergedPosts = allPosts.map(newPost => {
+            const existingState = existingPostStates.get(newPost.id);
+            if (existingState) {
+              // Preserve user's like/bookmark state
+              return {
+                ...newPost,
+                favourited: existingState.favourited,
+                bookmarked: existingState.bookmarked,
+                favourites_count: existingState.favourites_count
+              };
+            }
+            return newPost;
+          });
+          
+          // Store merged posts and apply algorithm
+          set({ allPosts: mergedPosts });
           
           // Apply algorithm immediately to show available posts
           get().applyAlgorithm();
@@ -664,11 +690,36 @@ export const useMastodonStore = create<MastodonStore>()(
             liveFeedBatchSize
           );
 
+          // Create a map of existing posts with their like/bookmark states
+          const existingPostStates = new Map();
+          allPosts.forEach(post => {
+            existingPostStates.set(post.id, {
+              favourited: post.favourited,
+              bookmarked: post.bookmarked,
+              favourites_count: post.favourites_count
+            });
+          });
+
+          // Merge new posts with existing state
+          const mergedPosts = newPosts.map(newPost => {
+            const existingState = existingPostStates.get(newPost.id);
+            if (existingState) {
+              // Preserve user's like/bookmark state
+              return {
+                ...newPost,
+                favourited: existingState.favourited,
+                bookmarked: existingState.bookmarked,
+                favourites_count: existingState.favourites_count
+              };
+            }
+            return newPost;
+          });
+
           // Remove old posts to maintain display limit, add new ones
           const currentPosts = [...allPosts];
-          const postsToRemove = Math.min(newPosts.length, currentPosts.length);
+          const postsToRemove = Math.min(mergedPosts.length, currentPosts.length);
           const updatedPosts = [
-            ...newPosts,
+            ...mergedPosts,
             ...currentPosts.slice(0, Math.max(0, currentPosts.length - postsToRemove))
           ];
 
@@ -750,9 +801,20 @@ export const useMastodonStore = create<MastodonStore>()(
             );
           };
 
+          const updatedPosts = updatePostInArray(posts);
+          const updatedAllPosts = updatePostInArray(allPosts);
+          
+          console.log('🔄 Updating state:', {
+            originalFavourited: post.favourited,
+            originalCount: post.favourites_count,
+            newFavourited: updatedPost.favourited,
+            newCount: updatedPost.favourites_count,
+            postId
+          });
+          
           set({
-            posts: updatePostInArray(posts),
-            allPosts: updatePostInArray(allPosts)
+            posts: updatedPosts,
+            allPosts: updatedAllPosts
           });
 
           console.log(`✅ Post ${isLiked ? 'unliked' : 'liked'} successfully`);
