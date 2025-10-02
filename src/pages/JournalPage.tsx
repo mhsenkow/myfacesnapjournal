@@ -9,10 +9,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Plus, Edit3, Trash2, Lock, Eye, EyeOff, Tag, Heart, CheckSquare, Square, ChevronDown, ChevronUp, Facebook } from 'lucide-react';
+import { Search, Filter, Plus, Edit3, Trash2, Lock, Eye, EyeOff, Tag, Heart, CheckSquare, Square, ChevronDown, ChevronUp } from 'lucide-react';
 import { useJournalStore, JournalEntry } from '../stores/journalStore';
-import FacebookImport from '../components/Facebook/FacebookImport';
-import FacebookScrapingImport from '../components/Facebook/FacebookScrapingImport';
 
 const JournalPage: React.FC = () => {
   const {
@@ -51,8 +49,6 @@ const JournalPage: React.FC = () => {
   const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [isNewEntryOpen, setIsNewEntryOpen] = useState(false);
-  const [showScrapingImport, setShowScrapingImport] = useState(false);
-  const [showFacebookImport, setShowFacebookImport] = useState(false);
 
   // Load entries from database on mount
   useEffect(() => {
@@ -186,8 +182,8 @@ const JournalPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Journal</h1>
-          <p className="text-gray-600">Capture your thoughts, ideas, and experiences.</p>
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Journal</h1>
+          <p className="text-neutral-600 dark:text-neutral-400">Capture your thoughts, ideas, and experiences.</p>
         </div>
         <div className="flex gap-2">
           {isSelectMode ? (
@@ -217,20 +213,6 @@ const JournalPage: React.FC = () => {
                 Select
               </button>
               <button 
-                onClick={() => setShowFacebookImport(!showFacebookImport)}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-              >
-                <Facebook className="w-4 h-4" />
-                Facebook API
-              </button>
-              <button 
-                onClick={() => setShowScrapingImport(!showScrapingImport)}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
-              >
-                <Facebook className="w-4 h-4" />
-                Facebook Scraping
-              </button>
-              <button 
                 onClick={toggleNewEntry}
                 className="btn btn-primary"
               >
@@ -250,14 +232,13 @@ const JournalPage: React.FC = () => {
       {/* Search and Filters */}
       <div className="flex gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 dark:text-neutral-500 w-4 h-4" />
           <input
             type="text"
             placeholder="Search entries..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-neutral-300 dark:border-neutral-600 glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
         <button
@@ -267,28 +248,21 @@ const JournalPage: React.FC = () => {
           <Filter className="w-4 h-4 mr-2" />
           Filters
         </button>
-        <button
-          onClick={() => setShowFacebookImport(!showFacebookImport)}
-          className={`btn ${showFacebookImport ? 'btn-primary' : 'btn-outline'}`}
-        >
-          <Facebook className="w-4 h-4 mr-2" />
-          Facebook
-        </button>
       </div>
 
       {/* Filters Panel */}
       {showFilters && (
-        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+        <div className="glass-subtle p-4 rounded-lg space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Tags Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Tags</label>
               <select
                 multiple
                 value={selectedTags}
                 onChange={(e) => setSelectedTags(Array.from(e.target.selectedOptions, option => option.value))}
-                style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg"
               >
                 {allTags().map(tag => (
                   <option key={tag} value={tag}>{tag}</option>
@@ -298,12 +272,12 @@ const JournalPage: React.FC = () => {
 
             {/* Mood Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Mood</label>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Mood</label>
               <select
                 value={selectedMood}
                 onChange={(e) => setSelectedMood(e.target.value)}
-                style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg"
               >
                 <option value="">All moods</option>
                 {allMoods().map(mood => (
@@ -314,12 +288,12 @@ const JournalPage: React.FC = () => {
 
             {/* Privacy Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Privacy</label>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Privacy</label>
               <select
                 value={selectedPrivacy}
                 onChange={(e) => setSelectedPrivacy(e.target.value)}
-                style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg"
               >
                 <option value="">All privacy levels</option>
                 <option value="public">Public</option>
@@ -330,18 +304,16 @@ const JournalPage: React.FC = () => {
 
             {/* Source Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Source</label>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Source</label>
               <select
                 value={selectedSource}
                 onChange={(e) => setSelectedSource(e.target.value)}
-                style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg"
               >
                 <option value="">All sources</option>
                 <option value="local">Local</option>
-                <option value="facebook">Facebook</option>
-                <option value="instagram">Instagram</option>
-                <option value="twitter">Twitter</option>
+                <option value="mastodon">Mastodon</option>
               </select>
             </div>
           </div>
@@ -355,24 +327,12 @@ const JournalPage: React.FC = () => {
         </div>
       )}
 
-      {/* Facebook Import Panel */}
-      {showFacebookImport && (
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <FacebookImport />
-        </div>
-      )}
-
-      {showScrapingImport && (
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <FacebookScrapingImport />
-        </div>
-      )}
 
       {/* New Entry Accordion */}
       {isNewEntryOpen && (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">New Entry</h2>
+        <div className="glass border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">New Entry</h2>
           </div>
           <div className="p-4 space-y-4">
             <input
@@ -380,8 +340,8 @@ const JournalPage: React.FC = () => {
               placeholder="Entry title"
               value={editingEntry.title}
               onChange={(e) => setEditingEntry({ ...editingEntry, title: e.target.value })}
-              style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             
             <textarea
@@ -389,13 +349,13 @@ const JournalPage: React.FC = () => {
               value={editingEntry.content}
               onChange={(e) => setEditingEntry({ ...editingEntry, content: e.target.value })}
               rows={6}
-              style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+              className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
             />
 
             {/* Tags Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Tags</label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {editingEntry.tags?.map((tag) => (
                   <span
@@ -416,7 +376,7 @@ const JournalPage: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Add a tag..."
-                  style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                  className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -425,7 +385,7 @@ const JournalPage: React.FC = () => {
                       input.value = '';
                     }
                   }}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
                 <button
                   onClick={() => {
@@ -445,12 +405,12 @@ const JournalPage: React.FC = () => {
             {/* Mood and Privacy */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mood</label>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Mood</label>
                 <select
                   value={editingEntry.mood}
                   onChange={(e) => setEditingEntry({ ...editingEntry, mood: e.target.value as any })}
-                  style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                  className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="happy">Happy</option>
                   <option value="grateful">Grateful</option>
@@ -462,12 +422,12 @@ const JournalPage: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Privacy</label>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Privacy</label>
                 <select
                   value={editingEntry.privacy}
                   onChange={(e) => setEditingEntry({ ...editingEntry, privacy: e.target.value as any })}
-                  style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                  className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="public">Public</option>
                   <option value="private">Private</option>
@@ -500,7 +460,7 @@ const JournalPage: React.FC = () => {
         {/* Recent Entries */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">Recent Entries</h2>
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">Recent Entries</h2>
             {isSelectMode && (
               <button
                 onClick={handleSelectAll}
@@ -540,13 +500,13 @@ const JournalPage: React.FC = () => {
                       {selectedEntries.has(entry.id) ? (
                         <CheckSquare className="w-5 h-5 text-primary-600" />
                       ) : (
-                        <Square className="w-5 h-5 text-gray-400" />
+                        <Square className="w-5 h-5 text-neutral-400 dark:text-neutral-500" />
                       )}
                     </div>
                   )}
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{entry.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{entry.content}</p>
+                    <h3 className="font-medium text-neutral-900 dark:text-neutral-100">{entry.title}</h3>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1 line-clamp-2">{entry.content}</p>
                     <div className="flex items-center gap-2 mt-2">
                       {entry.tags.map((tag) => (
                         <span
@@ -558,24 +518,23 @@ const JournalPage: React.FC = () => {
                       ))}
                     </div>
                     <div className="flex items-center justify-between mt-3">
-                      <span className="text-xs text-gray-500">{formatDate(entry.createdAt)}</span>
+                      <span className="text-xs text-neutral-500 dark:text-neutral-400">{formatDate(entry.createdAt)}</span>
                       <div className="flex items-center gap-2">
                         {entry.mood && (
-                          <span className="flex items-center gap-1 text-xs text-gray-500">
+                          <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
                             <Heart className="w-3 h-3" />
                             {entry.mood}
                           </span>
                         )}
                         <div className="flex items-center gap-1">
-                          {entry.privacy === 'private' && <Lock className="w-3 h-3 text-gray-400" />}
-                          {entry.privacy === 'secret' && <EyeOff className="w-3 h-3 text-gray-400" />}
-                          {entry.privacy === 'public' && <Eye className="w-3 h-3 text-gray-400" />}
-                          <span className="text-xs text-gray-500 capitalize">{entry.privacy}</span>
+                          {entry.privacy === 'private' && <Lock className="w-3 h-3 text-neutral-400 dark:text-neutral-500" />}
+                          {entry.privacy === 'secret' && <EyeOff className="w-3 h-3 text-neutral-400 dark:text-neutral-500" />}
+                          {entry.privacy === 'public' && <Eye className="w-3 h-3 text-neutral-400 dark:text-neutral-500" />}
+                          <span className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">{entry.privacy}</span>
                         </div>
                         {entry.source && (
                           <div className="flex items-center gap-1">
-                            {entry.source === 'facebook' && <Facebook className="w-3 h-3 text-blue-600" />}
-                            <span className="text-xs text-gray-500 capitalize">{entry.source}</span>
+                            <span className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">{entry.source}</span>
                           </div>
                         )}
                       </div>
@@ -585,15 +544,15 @@ const JournalPage: React.FC = () => {
                     <div className="flex items-center gap-1">
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleEdit(entry); }}
-                        className="p-1 hover:bg-gray-100 rounded"
+                        className="p-1 hover:bg-neutral-100 dark:bg-neutral-600 rounded"
                       >
-                        <Edit3 className="w-4 h-4 text-gray-400" />
+                        <Edit3 className="w-4 h-4 text-neutral-400 dark:text-neutral-500" />
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleDelete(entry); }}
-                        className="p-1 hover:bg-gray-100 rounded"
+                        className="p-1 hover:bg-neutral-100 dark:bg-neutral-600 rounded"
                       >
-                        <Trash2 className="w-4 h-4 text-gray-400" />
+                        <Trash2 className="w-4 h-4 text-neutral-400 dark:text-neutral-500" />
                       </button>
                     </div>
                   )}
@@ -606,15 +565,15 @@ const JournalPage: React.FC = () => {
         {/* Edit Entry */}
         {isEditing && (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900">Edit Entry</h2>
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">Edit Entry</h2>
             <div className="space-y-4">
               <input
                 type="text"
                 placeholder="Entry title"
                 value={editingEntry.title}
                 onChange={(e) => setEditingEntry({ ...editingEntry, title: e.target.value })}
-                style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               
               <textarea
@@ -622,13 +581,13 @@ const JournalPage: React.FC = () => {
                 value={editingEntry.content}
                 onChange={(e) => setEditingEntry({ ...editingEntry, content: e.target.value })}
                 rows={8}
-                style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
               />
 
               {/* Tags Input */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Tags</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {editingEntry.tags?.map((tag) => (
                     <span
@@ -649,7 +608,7 @@ const JournalPage: React.FC = () => {
                   <input
                     type="text"
                     placeholder="Add a tag..."
-                    style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                    className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -658,7 +617,7 @@ const JournalPage: React.FC = () => {
                         input.value = '';
                       }
                     }}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                   <button
                     onClick={() => {
@@ -678,12 +637,12 @@ const JournalPage: React.FC = () => {
               {/* Mood and Privacy */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Mood</label>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Mood</label>
                   <select
                     value={editingEntry.mood}
                     onChange={(e) => setEditingEntry({ ...editingEntry, mood: e.target.value as any })}
-                    style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
                     <option value="happy">Happy</option>
                     <option value="grateful">Grateful</option>
@@ -695,12 +654,12 @@ const JournalPage: React.FC = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Privacy</label>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Privacy</label>
                   <select
                     value={editingEntry.privacy}
                     onChange={(e) => setEditingEntry({ ...editingEntry, privacy: e.target.value as any })}
-                    style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
                     <option value="public">Public</option>
                     <option value="private">Private</option>
