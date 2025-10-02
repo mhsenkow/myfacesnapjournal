@@ -9,8 +9,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit3, Trash2, Lock, Eye, EyeOff, Tag, Heart, CheckSquare, Square, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Edit3, Trash2, Lock, Eye, EyeOff, Heart, CheckSquare, Square } from 'lucide-react';
 import { useJournalStore, JournalEntry } from '../stores/journalStore';
+import EntryModal from '../components/UI/EntryModal';
 
 const JournalPage: React.FC = () => {
   const {
@@ -47,7 +48,8 @@ const JournalPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
   const [isSelectMode, setIsSelectMode] = useState(false);
-  const [isNewEntryOpen, setIsNewEntryOpen] = useState(false);
+  const [isNewEntryModalOpen, setIsNewEntryModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Load entries from database on mount
   useEffect(() => {
@@ -65,13 +67,15 @@ const JournalPage: React.FC = () => {
       if (isEditing && selectedEntry) {
         console.log('Updating existing entry');
         await updateEntry(selectedEntry.id, editingEntry);
+        setIsEditModalOpen(false);
         setIsEditing(false);
         setEditingEntry({ title: '', content: '', tags: [], mood: 'neutral', privacy: 'private' });
+        selectEntry(null);
       } else {
         console.log('Creating new entry');
         await createEntry(editingEntry as Omit<JournalEntry, 'id' | 'createdAt' | 'updatedAt'>);
+        setIsNewEntryModalOpen(false);
         setEditingEntry({ title: '', content: '', tags: [], mood: 'neutral', privacy: 'private' });
-        setIsNewEntryOpen(false);
       }
     } catch (error) {
       console.error('Failed to save entry:', error);
@@ -89,6 +93,7 @@ const JournalPage: React.FC = () => {
     });
     setIsEditing(true);
     selectEntry(entry);
+    setIsEditModalOpen(true);
   };
 
   const handleDelete = async (entry: JournalEntry) => {
@@ -106,26 +111,23 @@ const JournalPage: React.FC = () => {
   };
 
 
-  const toggleNewEntry = () => {
-    setIsNewEntryOpen(!isNewEntryOpen);
-    if (!isNewEntryOpen) {
-      // Opening - reset form
+  const openNewEntryModal = () => {
+    setIsEditing(false);
+    setEditingEntry({ title: '', content: '', tags: [], mood: 'neutral', privacy: 'private' });
+    selectEntry(null);
+    setIsNewEntryModalOpen(true);
+  };
+
+  const closeNewEntryModal = () => {
+    setIsNewEntryModalOpen(false);
+    setEditingEntry({ title: '', content: '', tags: [], mood: 'neutral', privacy: 'private' });
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
       setIsEditing(false);
       setEditingEntry({ title: '', content: '', tags: [], mood: 'neutral', privacy: 'private' });
       selectEntry(null);
-    }
-  };
-
-  const addTag = (tag: string) => {
-    if (tag && editingEntry.tags && !editingEntry.tags.includes(tag)) {
-      setEditingEntry({ ...editingEntry, tags: [...editingEntry.tags, tag] });
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    if (editingEntry.tags) {
-      setEditingEntry({ ...editingEntry, tags: editingEntry.tags.filter(tag => tag !== tagToRemove) });
-    }
   };
 
   const formatDate = (date: Date) => {
@@ -212,16 +214,11 @@ const JournalPage: React.FC = () => {
                 Select
               </button>
               <button 
-                onClick={toggleNewEntry}
+                onClick={openNewEntryModal}
                 className="btn btn-primary"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New Entry
-                {isNewEntryOpen ? (
-                  <ChevronUp className="w-4 h-4 ml-2" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 ml-2" />
-                )}
               </button>
             </>
           )}
@@ -230,132 +227,27 @@ const JournalPage: React.FC = () => {
 
 
 
-      {/* New Entry Accordion */}
-      {isNewEntryOpen && (
-        <div className="glass border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
-            <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">New Entry</h2>
-          </div>
-          <div className="p-4 space-y-4">
-            <input
-              type="text"
-              placeholder="Entry title"
-              value={editingEntry.title}
-              onChange={(e) => setEditingEntry({ ...editingEntry, title: e.target.value })}
-              className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-            
-            <textarea
-              placeholder="Write your thoughts..."
-              value={editingEntry.content}
-              onChange={(e) => setEditingEntry({ ...editingEntry, content: e.target.value })}
-              rows={6}
-              className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-            />
+      {/* Entry Modals */}
+      <EntryModal
+        isOpen={isNewEntryModalOpen}
+        onClose={closeNewEntryModal}
+        onSave={handleSave}
+        title="New Entry"
+        editingEntry={editingEntry}
+        setEditingEntry={setEditingEntry}
+        isEditing={false}
+      />
 
-            {/* Tags Input */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Tags</label>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {editingEntry.tags?.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-1 text-sm bg-primary-100 text-primary-800 rounded-full flex items-center gap-1"
-                  >
-                    {tag}
-                    <button
-                      onClick={() => removeTag(tag)}
-                      className="hover:text-primary-600"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Add a tag..."
-                  className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const input = e.target as HTMLInputElement;
-                      addTag(input.value.trim());
-                      input.value = '';
-                    }
-                  }}
-                  className="flex-1 px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-                <button
-                  onClick={() => {
-                    const input = document.querySelector('input[placeholder="Add a tag..."]') as HTMLInputElement;
-                    if (input && input.value.trim()) {
-                      addTag(input.value.trim());
-                      input.value = '';
-                    }
-                  }}
-                  className="btn btn-outline"
-                >
-                  <Tag className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+      <EntryModal
+        isOpen={isEditModalOpen}
+        onClose={closeEditModal}
+        onSave={handleSave}
+        title="Edit Entry"
+        editingEntry={editingEntry}
+        setEditingEntry={setEditingEntry}
+        isEditing={true}
+      />
 
-            {/* Mood and Privacy */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Mood</label>
-                <select
-                  value={editingEntry.mood}
-                  onChange={(e) => setEditingEntry({ ...editingEntry, mood: e.target.value as any })}
-                  className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                  className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                >
-                  <option value="happy">Happy</option>
-                  <option value="grateful">Grateful</option>
-                  <option value="excited">Excited</option>
-                  <option value="neutral">Neutral</option>
-                  <option value="sad">Sad</option>
-                  <option value="anxious">Anxious</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Privacy</label>
-                <select
-                  value={editingEntry.privacy}
-                  onChange={(e) => setEditingEntry({ ...editingEntry, privacy: e.target.value as any })}
-                  className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                  className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                >
-                  <option value="public">Public</option>
-                  <option value="private">Private</option>
-                  <option value="secret">Secret</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <button 
-                onClick={handleSave}
-                disabled={!editingEntry.title?.trim() || !editingEntry.content?.trim()}
-                className="btn btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Save Entry
-              </button>
-              <button 
-                onClick={() => setIsNewEntryOpen(false)}
-                className="btn btn-outline"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -464,8 +356,8 @@ const JournalPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Edit Entry */}
-        {isEditing && (
+        {/* Edit Entry - Now handled by modal */}
+        {false && (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">Edit Entry</h2>
             <div className="space-y-4">
