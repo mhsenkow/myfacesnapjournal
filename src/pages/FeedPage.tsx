@@ -477,13 +477,18 @@ const FeedPage: React.FC = () => {
   const { 
     auth, 
     posts, 
+    allPosts,
     isLoadingPosts, 
     lastImportError,
     fetchPublicTimeline,
     feedType,
     postLimit,
     setPostLimit,
-    displayMode
+    displayMode,
+    isLiveFeed,
+    liveFeedBatchSize,
+    liveFeedInterval,
+    refreshLiveFeed
   } = useMastodonStore();
   
   const [isScrolling, setIsScrolling] = useState(false);
@@ -551,6 +556,19 @@ const FeedPage: React.FC = () => {
       setPreviousPosts(posts);
     }
   }, [posts, previousPosts.length]);
+
+  // Live feed auto-refresh
+  useEffect(() => {
+    if (!isLiveFeed || !auth.isAuthenticated) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      refreshLiveFeed();
+    }, liveFeedInterval);
+
+    return () => clearInterval(interval);
+  }, [isLiveFeed, auth.isAuthenticated, liveFeedInterval, refreshLiveFeed]);
 
   // Helper function to determine animation class for a post with directional context
   const getPostAnimationClass = (postId: string, currentIndex: number) => {

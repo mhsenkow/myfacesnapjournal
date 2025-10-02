@@ -37,7 +37,10 @@ import {
   TrendingUp,
   Shuffle,
   Target,
-  Dice1
+  Dice1,
+  Play,
+  Pause,
+  Radio
 } from 'lucide-react'
 
 const Header: React.FC = () => {
@@ -56,6 +59,9 @@ const Header: React.FC = () => {
     algorithm,
     posts,
     allPosts,
+    isLiveFeed,
+    liveFeedBatchSize,
+    liveFeedInterval,
     setFeedType,
     setSortBy,
     setFilterBy,
@@ -65,7 +71,11 @@ const Header: React.FC = () => {
     setPostLimit,
     setDisplayLimit,
     setAlgorithm,
-    fetchPublicTimeline
+    setIsLiveFeed,
+    setLiveFeedBatchSize,
+    setLiveFeedInterval,
+    fetchPublicTimeline,
+    refreshLiveFeed
   } = useMastodonStore()
   const location = useLocation()
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -350,6 +360,59 @@ const Header: React.FC = () => {
               >
                 <Dice1 className="w-3 h-3" />
               </button>
+            </div>
+          )}
+
+          {/* Live Feed Controls (only on feed page) */}
+          {isFeedPage && auth.isAuthenticated && (
+            <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
+              {/* Live Feed Toggle */}
+              <button
+                onClick={() => setIsLiveFeed(!isLiveFeed)}
+                className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
+                  isLiveFeed
+                    ? 'bg-green-600 text-white'
+                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                }`}
+                title={isLiveFeed ? "Live Feed Active" : "Static Feed"}
+              >
+                {isLiveFeed ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                {isLiveFeed ? 'Live' : 'Static'}
+              </button>
+
+              {/* Batch Size Selector */}
+              <select
+                value={liveFeedBatchSize}
+                onChange={(e) => setLiveFeedBatchSize(parseInt(e.target.value))}
+                className="px-1 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent"
+                disabled={!isLiveFeed}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+
+              {/* Interval Selector */}
+              <select
+                value={liveFeedInterval}
+                onChange={(e) => setLiveFeedInterval(parseInt(e.target.value))}
+                className="px-1 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent"
+                disabled={!isLiveFeed}
+              >
+                <option value={10000}>10s</option>
+                <option value={30000}>30s</option>
+                <option value={60000}>1m</option>
+                <option value={120000}>2m</option>
+                <option value={300000}>5m</option>
+              </select>
+
+              {/* Live Feed Indicator */}
+              {isLiveFeed && (
+                <div className="flex items-center gap-1">
+                  <Radio className="w-3 h-3 text-green-600 animate-pulse" />
+                  <span className="text-xs text-green-600">Streaming</span>
+                </div>
+              )}
             </div>
           )}
         </div>

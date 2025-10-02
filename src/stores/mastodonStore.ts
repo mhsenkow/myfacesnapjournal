@@ -64,6 +64,9 @@ interface MastodonStore {
   displayLimit: number;
   algorithm: 'latest' | 'trending' | 'diverse' | 'balanced' | 'random';
   displayMode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined';
+  isLiveFeed: boolean;
+  liveFeedBatchSize: number;
+  liveFeedInterval: number;
   
   // Actions
   login: (authData: { instance: string; accessToken: string; user: MastodonUser }) => Promise<void>;
@@ -90,6 +93,10 @@ interface MastodonStore {
   setDisplayMode: (mode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined') => void;
   applyAlgorithm: () => void;
   initialize: () => void;
+  setIsLiveFeed: (isLive: boolean) => void;
+  setLiveFeedBatchSize: (size: number) => void;
+  setLiveFeedInterval: (interval: number) => void;
+  refreshLiveFeed: () => Promise<void>;
 }
 
 const defaultAuth: MastodonAuth = {
@@ -132,6 +139,9 @@ export const useMastodonStore = create<MastodonStore>()(
       displayLimit: 50,
       algorithm: 'latest',
       displayMode: 'refined',
+      isLiveFeed: false,
+      liveFeedBatchSize: 25,
+      liveFeedInterval: 30000, // 30 seconds
 
       // Actions
       login: async (authData) => {
@@ -491,6 +501,51 @@ export const useMastodonStore = create<MastodonStore>()(
         set({ displayMode: mode });
       },
 
+      setIsLiveFeed: (isLive) => {
+        set({ isLiveFeed: isLive });
+      },
+
+      setLiveFeedBatchSize: (size) => {
+        const validSize = Math.max(10, Math.min(50, size)); // Clamp between 10 and 50
+        set({ liveFeedBatchSize: validSize });
+      },
+
+      setLiveFeedInterval: (interval) => {
+        const validInterval = Math.max(10000, Math.min(300000, interval)); // Clamp between 10s and 5m
+        set({ liveFeedInterval: validInterval });
+      },
+
+      refreshLiveFeed: async () => {
+        const { auth, instanceUrl, feedType, liveFeedBatchSize, allPosts } = get();
+        
+        if (!auth.isAuthenticated || !auth.accessToken) {
+          return;
+        }
+
+        try {
+          // Fetch new posts
+          const newPosts = await mastodonService.getPublicTimeline(
+            instanceUrl,
+            auth.accessToken,
+            feedType,
+            liveFeedBatchSize
+          );
+
+          // Remove old posts to maintain display limit, add new ones
+          const currentPosts = [...allPosts];
+          const postsToRemove = Math.min(newPosts.length, currentPosts.length);
+          const updatedPosts = [
+            ...newPosts,
+            ...currentPosts.slice(0, Math.max(0, currentPosts.length - postsToRemove))
+          ];
+
+          set({ allPosts: updatedPosts });
+          get().applyAlgorithm();
+        } catch (error) {
+          console.error('Failed to refresh live feed:', error);
+        }
+      },
+
       // Initialize algorithm when store is created
       initialize: () => {
         const { allPosts } = get();
@@ -511,7 +566,10 @@ export const useMastodonStore = create<MastodonStore>()(
         feedType: state.feedType,
         sortBy: state.sortBy,
         filterBy: state.filterBy,
-        instanceUrl: state.instanceUrl
+        instanceUrl: state.instanceUrl,
+        isLiveFeed: state.isLiveFeed,
+        liveFeedBatchSize: state.liveFeedBatchSize,
+        liveFeedInterval: state.liveFeedInterval
       })
     }
   )
