@@ -54,6 +54,8 @@ interface FeedLayoutProps {
   isScrolling: boolean;
   formatContent: (content: string) => string;
   formatRelativeTime: (dateString: string) => string;
+  getPostAnimationClass: (postId: string) => string;
+  animationKey: number;
 }
 
 const FeedLayout: React.FC<FeedLayoutProps> = ({ 
@@ -61,14 +63,16 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
   displayMode, 
   isScrolling, 
   formatContent, 
-  formatRelativeTime 
+  formatRelativeTime,
+  getPostAnimationClass,
+  animationKey
 }) => {
   // Refined Layout (Default)
   if (displayMode === 'refined') {
     return (
       <div className="space-y-6">
         {posts.map((post) => (
-          <div key={post.id} className="glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 hover:glass transition-all duration-500 hover:scale-[1.02] hover:shadow-xl">
+          <div key={post.id} className={`glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 hover:glass transition-all duration-500 hover:scale-[1.02] hover:shadow-xl ${getPostAnimationClass(post.id)}`}>
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
                 <User className="w-6 h-6 text-white" />
@@ -146,7 +150,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {posts.map((post) => (
-          <div key={post.id} className="glass border border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 hover:glass-strong transition-all duration-300 hover:scale-105 hover:shadow-2xl group">
+          <div key={post.id} className={`glass border border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 hover:glass-strong transition-all duration-300 hover:scale-105 hover:shadow-2xl group ${getPostAnimationClass(post.id)}`}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
                 <User className="w-5 h-5 text-white" />
@@ -204,7 +208,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {posts.map((post) => (
-          <div key={post.id} className="glass border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden hover:glass-strong transition-all duration-300 hover:scale-105 group">
+          <div key={post.id} className={`glass border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden hover:glass-strong transition-all duration-300 hover:scale-105 group ${getPostAnimationClass(post.id)}`}>
             {/* Media Display - Square aspect ratio */}
             <div className="aspect-square bg-gradient-to-br from-purple-400 via-pink-400 to-red-400 relative overflow-hidden">
               {post.media_attachments && post.media_attachments.length > 0 ? (
@@ -349,7 +353,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 hover:glass transition-all duration-300 hover:scale-105 
                 bg-gradient-to-r ${getEngagementColor(totalEngagement)}
                 text-white shadow-md hover:shadow-lg
-                cursor-pointer group
+                cursor-pointer group ${getPostAnimationClass(post.id)}
               `}
               title={`${post.account.display_name}: ${formatContent(post.content).substring(0, 100)}...`}
             >
@@ -426,7 +430,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {posts.map((post) => (
-          <div key={post.id} className="glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 hover:glass transition-all duration-200 hover:scale-[1.02] group">
+          <div key={post.id} className={`glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 hover:glass transition-all duration-200 hover:scale-[1.02] group ${getPostAnimationClass(post.id)}`}>
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0">
                 <User className="w-3 h-3 text-white" />
@@ -483,6 +487,8 @@ const FeedPage: React.FC = () => {
   
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const [previousPosts, setPreviousPosts] = useState<MastodonPost[]>([]);
+  const [animationKey, setAnimationKey] = useState(0);
 
   // Fetch posts when component mounts
   useEffect(() => {
@@ -522,6 +528,43 @@ const FeedPage: React.FC = () => {
       }
     };
   }, []);
+
+  // Handle post changes for animations
+  useEffect(() => {
+    if (posts.length > 0 && previousPosts.length > 0) {
+      // Posts have changed - trigger animation
+      setAnimationKey(prev => prev + 1);
+    }
+    
+    // Update previous posts after a short delay to allow animations to complete
+    const timeout = setTimeout(() => {
+      setPreviousPosts(posts);
+    }, 600); // Match animation duration
+    
+    return () => clearTimeout(timeout);
+  }, [posts]);
+
+  // Initialize previous posts on first load
+  useEffect(() => {
+    if (posts.length > 0 && previousPosts.length === 0) {
+      setPreviousPosts(posts);
+    }
+  }, [posts, previousPosts.length]);
+
+  // Helper function to determine animation class for a post
+  const getPostAnimationClass = (postId: string) => {
+    const wasPresent = previousPosts.some(p => p.id === postId);
+    const isPresent = posts.some(p => p.id === postId);
+    
+    if (!wasPresent && isPresent) {
+      return 'animate-post-enter'; // New post - grow in
+    } else if (wasPresent && !isPresent) {
+      return 'animate-post-exit'; // Disappearing post - shrink out
+    } else if (wasPresent && isPresent) {
+      return 'animate-post-update'; // Staying post - subtle movement
+    }
+    return ''; // No animation
+  };
 
   // Format relative time
   const formatRelativeTime = (dateString: string) => {
@@ -594,6 +637,8 @@ const FeedPage: React.FC = () => {
               isScrolling={isScrolling}
               formatContent={formatContent}
               formatRelativeTime={formatRelativeTime}
+              getPostAnimationClass={getPostAnimationClass}
+              animationKey={animationKey}
             />
           )}
         </>
