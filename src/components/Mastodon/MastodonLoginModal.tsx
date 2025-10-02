@@ -79,7 +79,7 @@ const MastodonLoginModal: React.FC<MastodonLoginModalProps> = ({
     setError(null);
 
     try {
-      const redirectUri = `${window.location.origin}/oauth-callback.html`;
+      const redirectUri = `http://localhost:8080/callback`;
       console.log('Using redirect URI:', redirectUri);
       const clientData = await mastodonService.registerClient(selectedInstance, redirectUri);
       const authUrl = mastodonService.getAuthUrl(selectedInstance, redirectUri, clientData.client_id);

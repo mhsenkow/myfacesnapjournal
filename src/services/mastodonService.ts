@@ -102,7 +102,7 @@ class MastodonService {
           client_name: 'MyFace SnapJournal',
           redirect_uris: redirectUri,
           scopes: 'read:accounts read:statuses write:favourites write:bookmarks',
-          website: window.location.origin
+          website: 'https://github.com/mhsenkow/myfacesnapjournal'
         })
       });
 
@@ -153,7 +153,7 @@ class MastodonService {
           client_name: fallbackName,
           redirect_uris: redirectUri,
           scopes: 'read:accounts read:statuses write:favourites write:bookmarks',
-          website: window.location.origin
+          website: 'https://github.com/mhsenkow/myfacesnapjournal'
         })
       });
 
