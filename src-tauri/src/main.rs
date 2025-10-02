@@ -357,10 +357,10 @@ async fn check_ai_availability(state: State<'_, AppState>) -> Result<bool, Strin
 // OAuth commands
 #[tauri::command]
 async fn open_oauth_window(app_handle: tauri::AppHandle, url: String) -> Result<String, String> {
-    let webview = WebviewWindowBuilder::new(
+    let _webview = WebviewWindowBuilder::new(
         &app_handle,
         "oauth",
-        WebviewUrl::External(url.parse().map_err(|e| e.to_string())?),
+        WebviewUrl::External(url.parse::<url::Url>().map_err(|e| e.to_string())?),
     )
     .title("Mastodon Authentication")
     .inner_size(600.0, 700.0)

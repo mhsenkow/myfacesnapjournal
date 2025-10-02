@@ -25,6 +25,7 @@ anyhow = "1.0"
 thiserror = "1.0"
 tauri-plugin-dialog = "2"
 sqlx-migrate = "0.7.1"
+url = "2.5"
 
 [features]
 # This feature is used for production builds or when `devPath` points to the filesystem
