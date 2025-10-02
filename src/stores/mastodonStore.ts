@@ -62,7 +62,7 @@ interface MastodonStore {
   instanceUrl: string;
   postLimit: number;
   displayLimit: number;
-  algorithm: 'latest' | 'trending' | 'diverse' | 'balanced' | 'random';
+  algorithm: 'latest' | 'trending' | 'viral' | 'diverse' | 'balanced' | 'fresh' | 'media_rich' | 'conversational' | 'random';
   displayMode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined';
   isLiveFeed: boolean;
   liveFeedBatchSize: number;
@@ -89,7 +89,7 @@ interface MastodonStore {
   setInstanceUrl: (url: string) => void;
   setPostLimit: (limit: number) => void;
   setDisplayLimit: (limit: number) => void;
-  setAlgorithm: (algorithm: 'latest' | 'trending' | 'diverse' | 'balanced' | 'random') => void;
+  setAlgorithm: (algorithm: 'latest' | 'trending' | 'viral' | 'diverse' | 'balanced' | 'fresh' | 'media_rich' | 'conversational' | 'random') => void;
   setDisplayMode: (mode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined') => void;
   applyAlgorithm: () => void;
   initialize: () => void;
@@ -455,62 +455,170 @@ export const useMastodonStore = create<MastodonStore>()(
         // Apply algorithm to select posts
         let selectedPosts: MastodonPost[] = [];
         
+        // Helper function to calculate time decay score
+        const getTimeDecayScore = (post: MastodonPost) => {
+          const now = new Date().getTime();
+          const postTime = new Date(post.created_at).getTime();
+          const hoursAgo = (now - postTime) / (1000 * 60 * 60);
+          return Math.max(0, 1 - (hoursAgo / 24)); // Decay over 24 hours
+        };
+        
+        // Helper function to calculate engagement score
+        const getEngagementScore = (post: MastodonPost) => {
+          return post.favourites_count + (post.reblogs_count * 2) + post.replies_count;
+        };
+        
+        // Helper function to calculate viral score (engagement rate)
+        const getViralScore = (post: MastodonPost) => {
+          const engagement = getEngagementScore(post);
+          const hoursAgo = (new Date().getTime() - new Date(post.created_at).getTime()) / (1000 * 60 * 60);
+          return hoursAgo > 0 ? engagement / hoursAgo : engagement;
+        };
+        
         switch (algorithm) {
           case 'latest':
-            // Take the most recent posts
+            // Chronological order (already sorted by API)
             selectedPosts = filteredPosts.slice(0, displayLimit);
             break;
             
           case 'trending':
-            // Sort by engagement and take top posts
-            const trendingPosts = [...filteredPosts].sort((a, b) => {
-              const aEngagement = a.favourites_count + a.reblogs_count + a.replies_count;
-              const bEngagement = b.favourites_count + b.reblogs_count + b.replies_count;
-              return bEngagement - aEngagement;
-            });
-            selectedPosts = trendingPosts.slice(0, displayLimit);
+            // High engagement posts with time decay
+            selectedPosts = [...filteredPosts]
+              .sort((a, b) => {
+                const aScore = getEngagementScore(a) * getTimeDecayScore(a);
+                const bScore = getEngagementScore(b) * getTimeDecayScore(b);
+                return bScore - aScore;
+              })
+              .slice(0, displayLimit);
+            break;
+            
+          case 'viral':
+            // Posts with high engagement rate (engagement per hour)
+            selectedPosts = [...filteredPosts]
+              .sort((a, b) => {
+                const aViral = getViralScore(a);
+                const bViral = getViralScore(b);
+                return bViral - aViral;
+              })
+              .slice(0, displayLimit);
             break;
             
           case 'diverse':
-            // Mix of recent and popular posts
-            const recentPosts = filteredPosts.slice(0, Math.ceil(displayLimit / 2));
-            const popularPosts = [...filteredPosts].sort((a, b) => {
-              const aEngagement = a.favourites_count + a.reblogs_count;
-              const bEngagement = b.favourites_count + b.reblogs_count;
-              return bEngagement - aEngagement;
-            }).slice(0, Math.floor(displayLimit / 2));
+            // Mix of different types of content and users
+            const uniqueUsers = new Set<string>();
+            const mediaPosts: MastodonPost[] = [];
+            const textPosts: MastodonPost[] = [];
+            const taggedPosts: MastodonPost[] = [];
             
-            // Remove duplicates and combine
-            const combinedPosts = [...recentPosts];
-            popularPosts.forEach(post => {
-              if (!combinedPosts.find(p => p.id === post.id)) {
-                combinedPosts.push(post);
+            filteredPosts.forEach(post => {
+              if (post.media_attachments.length > 0) {
+                mediaPosts.push(post);
+              } else if (post.tags.length > 0) {
+                taggedPosts.push(post);
+              } else {
+                textPosts.push(post);
               }
             });
-            selectedPosts = combinedPosts.slice(0, displayLimit);
+            
+            // Select diverse mix
+            const postsPerType = Math.ceil(displayLimit / 3);
+            const diversePosts: MastodonPost[] = [];
+            
+            // Add media posts
+            diversePosts.push(...mediaPosts.slice(0, postsPerType));
+            // Add tagged posts
+            diversePosts.push(...taggedPosts.slice(0, postsPerType));
+            // Add text posts
+            diversePosts.push(...textPosts.slice(0, postsPerType));
+            
+            // Remove duplicates and ensure user diversity
+            const finalDiverse: MastodonPost[] = [];
+            for (const post of diversePosts) {
+              if (finalDiverse.length >= displayLimit) break;
+              if (!uniqueUsers.has(post.account.id) || finalDiverse.length < displayLimit * 0.7) {
+                finalDiverse.push(post);
+                uniqueUsers.add(post.account.id);
+              }
+            }
+            
+            selectedPosts = finalDiverse;
             break;
             
           case 'balanced':
-            // Distribute across different engagement levels
-            const sortedByEngagement = [...filteredPosts].sort((a, b) => {
-              const aEngagement = a.favourites_count + a.reblogs_count;
-              const bEngagement = b.favourites_count + b.reblogs_count;
+            // Balanced mix of high, medium, and low engagement posts
+            const engagementSorted = [...filteredPosts].sort((a, b) => {
+              const aEngagement = getEngagementScore(a);
+              const bEngagement = getEngagementScore(b);
               return bEngagement - aEngagement;
             });
             
-            const highEngagement = sortedByEngagement.slice(0, Math.ceil(displayLimit / 3));
-            const mediumEngagement = sortedByEngagement.slice(
-              Math.ceil(sortedByEngagement.length / 3), 
-              Math.ceil(sortedByEngagement.length / 3) + Math.ceil(displayLimit / 3)
-            );
-            const lowEngagement = sortedByEngagement.slice(-Math.ceil(displayLimit / 3));
+            const total = engagementSorted.length;
+            const highCount = Math.ceil(displayLimit * 0.4); // 40% high engagement
+            const mediumCount = Math.ceil(displayLimit * 0.4); // 40% medium engagement  
+            const lowCount = displayLimit - highCount - mediumCount; // 20% low engagement
             
-            selectedPosts = [...highEngagement, ...mediumEngagement, ...lowEngagement].slice(0, displayLimit);
+            const highEngagement = engagementSorted.slice(0, Math.ceil(total * 0.2));
+            const mediumEngagement = engagementSorted.slice(Math.ceil(total * 0.2), Math.ceil(total * 0.7));
+            const lowEngagement = engagementSorted.slice(Math.ceil(total * 0.7));
+            
+            selectedPosts = [
+              ...highEngagement.slice(0, highCount),
+              ...mediumEngagement.slice(0, mediumCount),
+              ...lowEngagement.slice(0, lowCount)
+            ].slice(0, displayLimit);
+            break;
+            
+          case 'fresh':
+            // Recent posts with some engagement (not just time-based)
+            selectedPosts = [...filteredPosts]
+              .filter(post => {
+                const hoursAgo = (new Date().getTime() - new Date(post.created_at).getTime()) / (1000 * 60 * 60);
+                const hasEngagement = getEngagementScore(post) > 0;
+                return hoursAgo < 6 && (hasEngagement || hoursAgo < 2); // Fresh with engagement OR very recent
+              })
+              .sort((a, b) => {
+                const aTime = new Date(a.created_at).getTime();
+                const bTime = new Date(b.created_at).getTime();
+                return bTime - aTime; // Most recent first
+              })
+              .slice(0, displayLimit);
+            break;
+            
+          case 'media_rich':
+            // Posts with media attachments, prioritizing engagement
+            selectedPosts = [...filteredPosts]
+              .filter(post => post.media_attachments.length > 0)
+              .sort((a, b) => {
+                const aScore = getEngagementScore(a) * getTimeDecayScore(a);
+                const bScore = getEngagementScore(b) * getTimeDecayScore(b);
+                return bScore - aScore;
+              })
+              .slice(0, displayLimit);
+            break;
+            
+          case 'conversational':
+            // Posts that encourage discussion (replies, questions, polls)
+            selectedPosts = [...filteredPosts]
+              .filter(post => {
+                const content = post.content.toLowerCase();
+                const hasQuestion = content.includes('?');
+                const hasPoll = post.poll !== undefined;
+                const hasReplies = post.replies_count > 0;
+                const isReply = post.in_reply_to_id !== null;
+                
+                return hasQuestion || hasPoll || hasReplies || isReply;
+              })
+              .sort((a, b) => {
+                const aScore = getEngagementScore(a) * getTimeDecayScore(a);
+                const bScore = getEngagementScore(b) * getTimeDecayScore(b);
+                return bScore - aScore;
+              })
+              .slice(0, displayLimit);
             break;
             
           case 'random':
-            // Random selection
-            const shuffled = [...filteredPosts].sort(() => 0.5 - Math.random());
+            // True random selection
+            const shuffled = [...filteredPosts].sort(() => Math.random() - 0.5);
             selectedPosts = shuffled.slice(0, displayLimit);
             break;
         }

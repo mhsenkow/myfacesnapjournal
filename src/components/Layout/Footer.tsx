@@ -18,7 +18,9 @@ import {
   Play,
   Pause,
   Radio,
-  X
+  X,
+  Zap,
+  MessageCircle
 } from 'lucide-react';
 
 interface FooterProps {
@@ -340,6 +342,50 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                   title="Balanced Selection"
                 >
                   <Target className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setAlgorithm('viral')}
+                  className={`p-2 rounded-md transition-colors ${
+                    algorithm === 'viral'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
+                  }`}
+                  title="Viral Posts (High Engagement Rate)"
+                >
+                  <Zap className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setAlgorithm('fresh')}
+                  className={`p-2 rounded-md transition-colors ${
+                    algorithm === 'fresh'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
+                  }`}
+                  title="Fresh Posts (Recent + Engagement)"
+                >
+                  <Sparkles className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setAlgorithm('media_rich')}
+                  className={`p-2 rounded-md transition-colors ${
+                    algorithm === 'media_rich'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
+                  }`}
+                  title="Media Rich Posts"
+                >
+                  <Image className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setAlgorithm('conversational')}
+                  className={`p-2 rounded-md transition-colors ${
+                    algorithm === 'conversational'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
+                  }`}
+                  title="Conversational Posts (Questions, Polls, Replies)"
+                >
+                  <MessageCircle className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setAlgorithm('random')}
