@@ -12,6 +12,7 @@ import React from 'react'
 import { useApp } from '../../contexts/AppContext'
 import Sidebar from './Sidebar'
 import Header from './Header'
+import FloatingSearch from '../UI/FloatingSearch'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -46,6 +47,9 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </main>
       </div>
+      
+      {/* Floating Search */}
+      <FloatingSearch />
     </div>
   )
 }

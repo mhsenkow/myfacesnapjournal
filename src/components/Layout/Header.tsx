@@ -163,11 +163,11 @@ const Header: React.FC = () => {
                   <Server className="w-3 h-3 mr-1 inline" />
                   Local
                 </button>
-              </div>
+        </div>
 
               {/* Instance */}
-              <input
-                type="text"
+            <input
+              type="text"
                 value={instanceUrl}
                 onChange={(e) => setInstanceUrl(e.target.value)}
                 className="w-40 px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
@@ -437,22 +437,6 @@ const Header: React.FC = () => {
           )}
         </div>
 
-        {/* Center - Search bar (only show on non-feed pages) */}
-        {!isFeedPage && (
-        <div className="flex-1 max-w-md mx-8">
-          <form onSubmit={handleSearch} className="relative">
-              <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" />
-            <input
-              type="text"
-              placeholder="Search entries, tags, or content..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-fast"
-            />
-          </form>
-        </div>
-        )}
-
         {/* Right side - Actions */}
         <div className="flex items-center space-x-2">
           {/* Theme toggle */}
@@ -506,21 +490,6 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Search bar for feed page (below main row) */}
-      {isFeedPage && auth.isAuthenticated && (
-        <div className="mt-3">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search posts, users, or hashtags..."
-              className="w-full pl-10 pr-4 py-2 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-      )}
 
       {/* Breadcrumb navigation (only show on non-feed pages) */}
       {!isFeedPage && (
