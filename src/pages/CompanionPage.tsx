@@ -8,11 +8,12 @@
  * - Personalized introspection exercises and mindfulness
  */
 
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Send, Brain, Heart, Lightbulb, Bot, Moon, Sun, Eye, Zap, Target, Sparkles } from 'lucide-react'
 
 const CompanionPage: React.FC = () => {
   const [message, setMessage] = useState('')
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [conversation, setConversation] = useState([
     {
       id: '1',
@@ -53,6 +54,21 @@ const CompanionPage: React.FC = () => {
       e.preventDefault()
       handleSendMessage()
     }
+  }
+
+  const handlePromptClick = (promptText: string) => {
+    setMessage(promptText)
+    setTimeout(() => {
+      textareaRef.current?.focus()
+    }, 100)
+  }
+
+  const handleExerciseClick = (exerciseTitle: string) => {
+    const exerciseMessage = `I'd like to try the ${exerciseTitle} exercise. Can you guide me through it?`
+    setMessage(exerciseMessage)
+    setTimeout(() => {
+      textareaRef.current?.focus()
+    }, 100)
   }
 
   const introspectionPrompts = [
@@ -121,12 +137,12 @@ const CompanionPage: React.FC = () => {
                     className={`max-w-2xl px-6 py-4 rounded-2xl ${
                       msg.type === 'user'
                         ? 'bg-gradient-to-br from-purple-500 to-blue-600 text-white shadow-lg'
-                        : 'glass-subtle border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100'
+                        : 'glass-subtle border border-neutral-200 dark:border-neutral-700 glass-text-primary'
                     }`}
                   >
                     <p className="text-sm leading-relaxed font-light">{msg.content}</p>
                     <p className={`text-xs mt-2 font-light ${
-                      msg.type === 'user' ? 'text-purple-100' : 'text-neutral-400 dark:text-neutral-500'
+                      msg.type === 'user' ? 'text-purple-100' : 'glass-text-muted'
                     }`}>
                       {msg.timestamp.toLocaleTimeString()}
                     </p>
@@ -140,11 +156,12 @@ const CompanionPage: React.FC = () => {
               <div className="flex space-x-4">
                 <div className="flex-1 relative">
                   <textarea
+                    ref={textareaRef}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Share your thoughts, feelings, or questions for deep introspection..."
-                    className="w-full px-4 py-3 glass-subtle border border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100 rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-neutral-400 dark:placeholder-neutral-500 font-light"
+                    className="w-full px-4 py-3 glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-neutral-400 dark:placeholder-neutral-500 font-light"
                     rows={3}
                   />
                 </div>
@@ -164,7 +181,7 @@ const CompanionPage: React.FC = () => {
         <div className="space-y-6">
           {/* Introspection Prompts */}
           <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6">
-            <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2 text-lg tracking-wide">
+            <h3 className="font-medium glass-text-primary mb-4 flex items-center gap-2 text-lg tracking-wide">
               <Lightbulb size={18} className="text-yellow-500" />
               Introspection Prompts
             </h3>
@@ -172,13 +189,14 @@ const CompanionPage: React.FC = () => {
               {introspectionPrompts.map((prompt, index) => (
                 <button
                   key={index}
+                  onClick={() => handlePromptClick(prompt.text)}
                   className="w-full p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg bg-${prompt.color}-100 dark:bg-${prompt.color}-900/30`}>
                       <prompt.icon size={16} className={`text-${prompt.color}-600 dark:text-${prompt.color}-400`} />
                     </div>
-                    <span className="text-sm text-neutral-700 dark:text-neutral-300 group-hover:text-neutral-900 dark:group-hover:text-neutral-100 font-light">
+                    <span className="text-sm glass-text-secondary group-hover:text-neutral-900 dark:group-hover:text-neutral-100 font-light">
                       {prompt.text}
                     </span>
                   </div>
@@ -189,7 +207,7 @@ const CompanionPage: React.FC = () => {
 
           {/* Mindfulness Exercises */}
           <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6">
-            <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2 text-lg tracking-wide">
+            <h3 className="font-medium glass-text-primary mb-4 flex items-center gap-2 text-lg tracking-wide">
               <Moon size={18} className="text-blue-500" />
               Mindfulness Exercises
             </h3>
@@ -197,16 +215,17 @@ const CompanionPage: React.FC = () => {
               {mindfulnessExercises.map((exercise, index) => (
                 <button
                   key={index}
+                  onClick={() => handleExerciseClick(exercise.title)}
                   className="w-full p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <exercise.icon size={16} className="text-neutral-600 dark:text-neutral-400" />
-                      <span className="text-sm font-light text-neutral-700 dark:text-neutral-300 group-hover:text-neutral-900 dark:group-hover:text-neutral-100">
+                      <span className="text-sm font-light glass-text-secondary group-hover:text-neutral-900 dark:group-hover:text-neutral-100">
                         {exercise.title}
                       </span>
                     </div>
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400 font-light">
+                    <span className="text-xs glass-text-muted font-light">
                       {exercise.duration}
                     </span>
                   </div>
@@ -217,22 +236,22 @@ const CompanionPage: React.FC = () => {
 
           {/* Session History */}
           <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6">
-            <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2 text-lg tracking-wide">
+            <h3 className="font-medium glass-text-primary mb-4 flex items-center gap-2 text-lg tracking-wide">
               <Eye size={18} className="text-purple-500" />
               Recent Sessions
             </h3>
             <div className="space-y-3 text-sm">
               <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer">
-                <p className="font-light text-neutral-900 dark:text-neutral-100">Deep Self-Analysis</p>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 font-light">2 hours ago</p>
+                <p className="font-light glass-text-primary">Deep Self-Analysis</p>
+                <p className="text-xs glass-text-muted mt-1 font-light">2 hours ago</p>
               </div>
               <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer">
-                <p className="font-light text-neutral-900 dark:text-neutral-100">Emotional Processing</p>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 font-light">Yesterday</p>
+                <p className="font-light glass-text-primary">Emotional Processing</p>
+                <p className="text-xs glass-text-muted mt-1 font-light">Yesterday</p>
               </div>
               <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer">
-                <p className="font-light text-neutral-900 dark:text-neutral-100">Values Exploration</p>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 font-light">3 days ago</p>
+                <p className="font-light glass-text-primary">Values Exploration</p>
+                <p className="text-xs glass-text-muted mt-1 font-light">3 days ago</p>
               </div>
             </div>
           </div>
