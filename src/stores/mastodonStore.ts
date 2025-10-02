@@ -83,7 +83,7 @@ interface MastodonStore {
   
   // Feed control actions
   setFeedType: (type: 'public' | 'local') => void;
-  setSortBy: (sort: 'newest' | 'oldest' | 'popular') => void;
+  setSortBy: (sort: 'newest' | 'oldest' | 'random') => void;
   setFilterBy: (filter: 'all' | 'with_media' | 'with_hashtags') => void;
   setSearchQuery: (query: string) => void;
   setInstanceUrl: (url: string) => void;

@@ -35,7 +35,6 @@ import {
   Heart,
   MessageCircle,
   Repeat2,
-  Share,
   Clock,
   User,
   Hash,
@@ -49,7 +48,6 @@ import {
   Bookmark
 } from 'lucide-react';
 import { useMastodonStore } from '../stores/mastodonStore';
-import { mastodonService } from '../services/mastodonService';
 import { MastodonPost } from '../types/mastodon';
 
 // Feed Layout Component
@@ -59,8 +57,7 @@ interface FeedLayoutProps {
   isScrolling: boolean;
   formatContent: (content: string) => string;
   formatRelativeTime: (dateString: string) => string;
-  getPostAnimationClass: (postId: string) => string;
-  animationKey: number;
+  getPostAnimationClass: (postId: string, currentIndex: number) => string;
   toggleLike: (postId: string) => Promise<void>;
   toggleBookmark: (postId: string) => Promise<void>;
 }
@@ -72,7 +69,6 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
   formatContent, 
   formatRelativeTime,
   getPostAnimationClass,
-  animationKey,
   toggleLike,
   toggleBookmark
 }) => {
@@ -710,16 +706,10 @@ const FeedPage: React.FC = () => {
   const { 
     auth, 
     posts, 
-    allPosts,
     isLoadingPosts, 
     lastImportError,
-    fetchPublicTimeline,
-    feedType,
-    postLimit,
-    setPostLimit,
     displayMode,
     isLiveFeed,
-    liveFeedBatchSize,
     liveFeedInterval,
     refreshLiveFeed,
     toggleLike,
@@ -913,7 +903,6 @@ const FeedPage: React.FC = () => {
               formatContent={formatContent}
               formatRelativeTime={formatRelativeTime}
               getPostAnimationClass={getPostAnimationClass}
-              animationKey={animationKey}
               toggleLike={toggleLike}
               toggleBookmark={toggleBookmark}
             />
