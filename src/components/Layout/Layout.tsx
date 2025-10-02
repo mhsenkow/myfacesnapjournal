@@ -11,10 +11,12 @@
 
 import React, { useState } from 'react'
 import { useApp } from '../../contexts/AppContext'
+import { useNotificationStore } from '../../stores/notificationStore'
 import Sidebar from './Sidebar'
 import FloatingControls from './FloatingControls'
 import Footer from './Footer'
 import FloatingSearch from '../UI/FloatingSearch'
+import NotificationPanel from '../Notifications/NotificationPanel'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -22,6 +24,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const { state } = useApp()
+  const { isPanelOpen } = useNotificationStore()
   const [footerVisible, setFooterVisible] = useState(false)
 
   return (
@@ -34,6 +37,9 @@ export default function Layout({ children }: LayoutProps) {
       
       {/* Floating Controls */}
       <FloatingControls />
+      
+      {/* Notification Panel - only render when open */}
+      {isPanelOpen && <NotificationPanel />}
       
       {/* Main content area */}
       <div className={`relative transition-all duration-normal ease-in-out ${

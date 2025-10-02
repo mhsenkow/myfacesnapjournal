@@ -919,7 +919,18 @@ export const useMastodonStore = create<MastodonStore>()(
         isLiveFeed: state.isLiveFeed,
         liveFeedBatchSize: state.liveFeedBatchSize,
         liveFeedInterval: state.liveFeedInterval
-      })
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Convert date strings back to Date objects after rehydration
+          if (state.auth.lastAuthDate && typeof state.auth.lastAuthDate === 'string') {
+            state.auth.lastAuthDate = new Date(state.auth.lastAuthDate);
+          }
+          if (state.importSettings.lastImportDate && typeof state.importSettings.lastImportDate === 'string') {
+            state.importSettings.lastImportDate = new Date(state.importSettings.lastImportDate);
+          }
+        }
+      }
     }
   )
 );

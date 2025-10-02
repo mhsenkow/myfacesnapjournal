@@ -10,24 +10,32 @@
  */
 
 import React, { useState } from 'react'
-import { Settings, Palette, Shield, Brain, Database, Download, Upload, ArrowRight, Link } from 'lucide-react'
+import { Settings, Palette, Shield, Brain, Database, Download, Upload, ArrowRight, Link, User } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { useNavigate } from 'react-router-dom'
 import MastodonImport from '../components/Mastodon/MastodonImport'
+import MastodonProfileInfo from '../components/Profile/MastodonProfileInfo'
 
 const SettingsPage: React.FC = () => {
   const { settings, updateSettings } = useApp()
   const { theme, setTheme, exportTheme, importTheme } = useTheme()
-  const [activeTab, setActiveTab] = useState('general')
+  
+  // Check URL params for initial tab (e.g., ?tab=profile)
+  const urlParams = new URLSearchParams(window.location.search)
+  const initialTab = urlParams.get('tab') || 'profile'
+  
+  const [activeTab, setActiveTab] = useState(initialTab)
   const navigate = useNavigate()
 
   const tabs = [
+    { id: 'profile', label: 'Profile', icon: User },
     { id: 'general', label: 'General', icon: Settings },
     { id: 'theme', label: 'Theme', icon: Palette },
     { id: 'ai', label: 'AI Settings', icon: Brain },
     { id: 'integrations', label: 'Integrations', icon: Link },
     { id: 'privacy', label: 'Privacy', icon: Shield },
+
     { id: 'data', label: 'Data', icon: Database }
   ]
 
@@ -68,6 +76,31 @@ const SettingsPage: React.FC = () => {
 
         {/* Tab Content */}
         <div className="p-6">
+          {/* Profile Settings */}
+          {activeTab === 'profile' && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium text-neutral-900 mb-2">Connected Profile</h3>
+                <p className="text-sm text-neutral-500 mb-6">
+                  View and manage your connected Mastodon profile information
+                </p>
+              </div>
+              
+              <div className="glass p-6 rounded-lg border border-neutral-200">
+                <MastodonProfileInfo showExtra={true} />
+              </div>
+              
+              <div className="glass p-4 rounded-lg border border-neutral-200 bg-blue-50">
+                <h4 className="text-sm font-medium text-blue-800 mb-2">Profile Integration</h4>
+                <p className="text-sm text-blue-700">
+                  Your Mastodon profile is now integrated throughout the app. It appears in the sidebar, 
+                  settings, and any social features. Your display name and avatar are used as your identity 
+                  across MyFace SnapJournal.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* General Settings */}
           {activeTab === 'general' && (
             <div className="space-y-6">

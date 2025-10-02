@@ -11,6 +11,7 @@
 import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useApp } from '../../contexts/AppContext'
+import { useMastodonStore } from '../../stores/mastodonStore'
 import { 
   BookOpen, 
   Brain, 
@@ -19,13 +20,16 @@ import {
   Shield, 
   ChevronLeft, 
   ChevronRight,
-  Rss
+  Rss,
+  Globe,
+  User
 } from 'lucide-react'
 
 const Sidebar: React.FC = () => {
   const { state, toggleSidebar, setCurrentView } = useApp()
   const navigate = useNavigate()
   const location = useLocation()
+  const { auth } = useMastodonStore()
 
   // Navigation items
   const navItems = [
@@ -131,25 +135,94 @@ const Sidebar: React.FC = () => {
       {/* User Profile Section */}
       {!state.sidebarCollapsed && (
         <div className="p-4 border-t border-neutral-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">U</span>
+          {auth.isAuthenticated && auth.user ? (
+            /* Mastodon Profile */
+            <button 
+              onClick={() => {
+                navigate('/settings?tab=profile')
+                setCurrentView('settings' as any)
+              }}
+              className="flex items-center space-x-3 w-full hover:bg-neutral-100 rounded-md p-1 transition-colors"
+              title="Click to view your profile"
+            >
+              {auth.user.avatar_static || auth.user.avatar ? (
+                <img
+                  src={auth.user.avatar_static || auth.user.avatar}
+                  alt={auth.user.display_name}
+                  className="w-8 h-8 rounded-full object-cover cursor-pointer"
+                  onError={(e) => {
+                    // Fallback to initials if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <div className={`w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center cursor-pointer ${auth.user.avatar_static || auth.user.avatar ? 'hidden' : ''}`}>
+                <span className="text-white text-sm font-medium">
+                  {auth.user.display_name ? auth.user.display_name.charAt(0).toUpperCase() : auth.user.username.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium glass-text-primary truncate">
+                  {auth.user.display_name || auth.user.username}
+                </p>
+                <p className="text-xs glass-text-muted truncate flex items-center gap-1">
+                  <Globe className="w-3 h-3" />
+                  @{auth.user.acct}
+                </p>
+              </div>
+            </button>
+          ) : (
+            /* Default Profile */
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium glass-text-primary truncate">MyFace User</p>
+                <p className="text-xs glass-text-muted truncate">
+                  Connect to Mastodon for profile
+                </p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium glass-text-primary truncate">User</p>
-              <p className="text-xs glass-text-muted truncate">user@example.com</p>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
       {/* Collapsed User Profile */}
       {state.sidebarCollapsed && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-          <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-sm font-medium">U</span>
+        <button 
+          onClick={() => {
+            navigate('/settings?tab=profile')
+            setCurrentView('settings' as any)
+          }}
+          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 hover:scale-105 transition-transform"
+          title="Click to view your profile"
+        >
+          {auth.isAuthenticated && auth.user ? (
+            auth.user.avatar_static || auth.user.avatar ? (
+              <img
+                src={auth.user.avatar_static || auth.user.avatar}
+                alt={auth.user.display_name}
+                className="w-8 h-8 rounded-full object-cover cursor-pointer"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null
+          ) : null}
+          <div className={`w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center cursor-pointer ${auth.isAuthenticated && auth.user && (auth.user.avatar_static || auth.user.avatar) ? 'hidden' : ''}`}>
+            <span className="text-white text-sm font-medium">
+              {auth.isAuthenticated && auth.user 
+                ? (auth.user.display_name ? auth.user.display_name.charAt(0).toUpperCase() : auth.user.username.charAt(0).toUpperCase())
+                : 'U'
+              }
+            </span>
           </div>
-        </div>
+        </button>
       )}
     </aside>
   )

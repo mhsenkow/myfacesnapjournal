@@ -10,6 +10,22 @@ import { invoke } from '@tauri-apps/api/core';
 import { mastodonService } from '../../services/mastodonService';
 import { MastodonInstance } from '../../types/mastodon';
 
+// Detect if we're running in Tauri (desktop) or browser environment
+const isTauri = () => {
+  return typeof window !== 'undefined' && (window as any).__TAURI__;
+};
+
+// Get the appropriate redirect URI based on environment
+const getRedirectUri = () => {
+  if (isTauri()) {
+    // Desktop app - use localhost:8080/callback
+    return 'http://localhost:8080/callback';
+  } else {
+    // Browser - use current origin + callback
+    return `${window.location.origin}/callback`;
+  }
+};
+
 interface MastodonLoginModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -83,23 +99,63 @@ const MastodonLoginModal: React.FC<MastodonLoginModalProps> = ({
     setError(null);
 
     try {
-      const redirectUri = `http://localhost:8080/callback`;
+      const redirectUri = getRedirectUri();
       console.log('Using redirect URI:', redirectUri);
       const clientData = await mastodonService.registerClient(selectedInstance, redirectUri);
       const authUrl = mastodonService.getAuthUrl(selectedInstance, redirectUri, clientData.client_id);
       
-      // Use Tauri's webview window instead of popup
-      try {
-        await invoke('open_oauth_window', { url: authUrl });
-      } catch (error) {
-        setError(`Failed to open OAuth window: ${error}`);
-        setIsLoading(false);
-        return;
-      }
+      // Check if we're in Tauri (desktop) or browser environment
+      if (isTauri()) {
+        // Use Tauri's webview window for desktop app
+        try {
+          await invoke('open_oauth_window', { url: authUrl });
+          setError('Please complete the authorization in the OAuth window, then copy the authorization code and paste it below.');
+          setIsLoading(false);
+        } catch (error) {
+          setError(`Failed to open OAuth window: ${error}`);
+          setIsLoading(false);
+          return;
+        }
+      } else {
+        // Use browser popup for web app
+        const popup = window.open(authUrl, 'mastodon-auth', 'width=600,height=700,scrollbars=yes,resizable=yes');
+        
+        if (!popup) {
+          setError('Failed to open popup window. Please check your browser\'s popup blocker settings.');
+          setIsLoading(false);
+          return;
+        }
 
-      // OAuth window opened successfully - please copy the code manually
-      setError('Please complete the authorization in the OAuth window, then copy the authorization code and paste it below.');
-      setIsLoading(false);
+        // Listen for the popup to close or receive messages
+        const checkClosed = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(checkClosed);
+            setIsLoading(false);
+            setError('Authorization cancelled. Please try again or enter the code manually below.');
+          }
+        }, 1000);
+
+        // Listen for messages from the popup
+        const messageListener = (event: MessageEvent) => {
+          if (event.origin !== window.location.origin) return;
+          
+          if (event.data.type === 'MASTODON_OAUTH_CALLBACK') {
+            clearInterval(checkClosed);
+            window.removeEventListener('message', messageListener);
+            
+            if (event.data.code) {
+              handleOAuthCallback(selectedInstance, event.data.code, redirectUri);
+            } else if (event.data.error) {
+              setError(`OAuth error: ${event.data.error}`);
+              setIsLoading(false);
+            }
+          }
+        };
+
+        window.addEventListener('message', messageListener);
+        setError('Please complete the authorization in the popup window.');
+        setIsLoading(false);
+      }
     } catch (error) {
       setIsLoading(false);
       const errorMsg = error instanceof Error ? error.message : 'Failed to register with Mastodon instance';
@@ -159,7 +215,7 @@ const MastodonLoginModal: React.FC<MastodonLoginModalProps> = ({
     setError(null);
 
     try {
-      const redirectUri = `http://localhost:8080/callback`;
+      const redirectUri = getRedirectUri();
       await handleOAuthCallback(selectedInstance, manualCode.trim(), redirectUri);
       setManualCode('');
     } catch (error) {

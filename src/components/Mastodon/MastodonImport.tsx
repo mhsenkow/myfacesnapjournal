@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { Globe, Download, Settings, LogOut, AlertCircle, CheckCircle, Loader2, Eye, MessageSquare, Heart, Repeat2, Hash } from 'lucide-react';
 import { useMastodonStore } from '../../stores/mastodonStore';
 import { useJournalStore } from '../../stores/journalStore';
+import { useNotificationStore } from '../../stores/notificationStore';
 import MastodonLoginModal from './MastodonLoginModal';
 import { MastodonPost } from '../../types/mastodon';
 import { EntrySource } from '../../types/journal';
@@ -32,6 +33,7 @@ const MastodonImport: React.FC = () => {
   } = useMastodonStore();
 
   const { createEntry } = useJournalStore();
+  const { notifyMastodonConnected, notifyJournalImport, notifyGeneral } = useNotificationStore();
   const [showSettings, setShowSettings] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showPosts, setShowPosts] = useState(false);
@@ -56,6 +58,9 @@ const MastodonImport: React.FC = () => {
     try {
       await login(authResponse);
       setShowLoginModal(false);
+      
+      // Trigger notification
+      notifyMastodonConnected(authResponse.instance, authResponse.user.username);
     } catch (error) {
       console.error('Login failed:', error);
     }
@@ -104,6 +109,9 @@ const MastodonImport: React.FC = () => {
           console.error('Error creating journal entry:', entryError);
         }
       }
+      
+      // Trigger notification for successful import
+      notifyJournalImport(importedPosts.length, 'mastodon');
     } catch (error) {
       console.error('Import failed:', error);
     }
