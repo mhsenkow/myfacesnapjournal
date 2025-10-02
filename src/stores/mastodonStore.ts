@@ -301,7 +301,17 @@ export const useMastodonStore = create<MastodonStore>()(
           
           // Store all posts and apply algorithm
           set({ allPosts });
+          
+          // Apply algorithm immediately to show available posts
           get().applyAlgorithm();
+          
+          // Show a brief message if we got fewer than requested
+          const { displayLimit } = get();
+          if (allPosts.length >= displayLimit) {
+            console.log(`Ready to display! Have ${allPosts.length} posts cached, showing ${Math.min(displayLimit, allPosts.length)}`);
+          } else {
+            console.log(`Partial load: Only ${allPosts.length} posts available (requested: ${postLimit})`);
+          }
         } catch (error) {
           console.error('Failed to fetch public timeline:', error);
           const errorMessage = error instanceof Error && error.message.includes('429') 
