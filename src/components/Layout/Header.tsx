@@ -136,302 +136,338 @@ const Header: React.FC = () => {
             <h1 className="text-xl font-bold glass-text-primary">{getPageTitle()}</h1>
           </div>
 
-          {/* Feed controls inline (only on feed page) */}
+          {/* Feed Controls (only on feed page) */}
           {isFeedPage && auth.isAuthenticated && (
-            <div className="flex items-center gap-3">
-              {/* Feed Type */}
-              <div className="flex bg-neutral-100 dark:bg-neutral-700 rounded-lg">
-                <button
-                  onClick={() => setFeedType('public')}
-                  className={`px-2 py-1 text-xs rounded-lg transition-colors ${
-                    feedType === 'public'
-                      ? 'bg-purple-600 text-white'
-                      : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                  }`}
-                >
-                  <Globe className="w-3 h-3 mr-1 inline" />
-                  Public
-                </button>
-                <button
-                  onClick={() => setFeedType('local')}
-                  className={`px-2 py-1 text-xs rounded-lg transition-colors ${
-                    feedType === 'local'
-                      ? 'bg-purple-600 text-white'
-                      : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                  }`}
-                >
-                  <Server className="w-3 h-3 mr-1 inline" />
-                  Local
-                </button>
+            <div className="space-y-3">
+              {/* Main Controls Row */}
+              <div className="flex items-center gap-3 flex-wrap">
+                {/* Feed Type */}
+                <div className="flex bg-neutral-100 dark:bg-neutral-700 rounded-lg">
+                  <button
+                    onClick={() => setFeedType('public')}
+                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                      feedType === 'public'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    }`}
+                  >
+                    <Globe className="w-3 h-3 mr-1 inline" />
+                    Public
+                  </button>
+                  <button
+                    onClick={() => setFeedType('local')}
+                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                      feedType === 'local'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    }`}
+                  >
+                    <Server className="w-3 h-3 mr-1 inline" />
+                    Local
+                  </button>
         </div>
 
-              {/* Instance */}
+                {/* Instance Input */}
+                <div className="flex flex-col">
             <input
               type="text"
-                value={instanceUrl}
-                onChange={(e) => setInstanceUrl(e.target.value)}
-                className="w-40 px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-                placeholder="mastodon.social"
-              />
+                    value={instanceUrl}
+                    onChange={(e) => setInstanceUrl(e.target.value)}
+                    className="w-40 px-2 py-1.5 text-xs glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="mastodon.social"
+                  />
+                  <span className="text-[10px] glass-text-muted mt-0.5">Instance</span>
+                </div>
 
-              {/* Sort & Filter */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="newest">Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="popular">Popular</option>
-              </select>
+                {/* Sort & Filter */}
+                <div className="flex flex-col">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="px-2 py-1.5 text-xs glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="popular">Popular</option>
+                  </select>
+                  <span className="text-[10px] glass-text-muted mt-0.5">Sort</span>
+                </div>
 
-              <select
-                value={filterBy}
-                onChange={(e) => setFilterBy(e.target.value as any)}
-                className="px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="all">All</option>
-                <option value="with_media">Media</option>
-                <option value="with_hashtags">Tags</option>
-              </select>
+                <div className="flex flex-col">
+                  <select
+                    value={filterBy}
+                    onChange={(e) => setFilterBy(e.target.value as any)}
+                    className="px-2 py-1.5 text-xs glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="all">All</option>
+                    <option value="with_media">Media</option>
+                    <option value="with_hashtags">Tags</option>
+                  </select>
+                  <span className="text-[10px] glass-text-muted mt-0.5">Filter</span>
+                </div>
 
-              <button
-                onClick={() => fetchPublicTimeline()}
-                className="flex items-center gap-1 px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700 transition-colors"
-              >
-                <RefreshCw className="w-3 h-3" />
-                Refresh
-              </button>
+                {/* Refresh Button */}
+                <button
+                  onClick={() => fetchPublicTimeline()}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white rounded text-xs hover:bg-purple-700 transition-colors"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Refresh
+                </button>
+              </div>
 
-              {/* Post Limit Input */}
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  value={postLimit}
-                  onChange={(e) => {
-                    const newLimit = parseInt(e.target.value) || 1;
-                    setPostLimit(newLimit);
-                  }}
-                  min="1"
-                  max="10000"
-                  className="w-16 px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-                />
-                <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                  {allPosts.length >= postLimit ? (
-                    <>✅ ({posts.length} shown of {allPosts.length} cached)</>
-                  ) : (
-                    <>⏳ ({posts.length} shown of {allPosts.length} cached - fetching more...)</>
-                  )}
-                  {postLimit > 200 && (
-                    <span className="text-yellow-600 dark:text-yellow-400 ml-1" title="Large requests may hit rate limits">
-                      ⚠️
+              {/* Data Controls Row */}
+              <div className="flex items-center gap-4 flex-wrap">
+                {/* Fetch Limit */}
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      value={postLimit}
+                      onChange={(e) => {
+                        const newLimit = parseInt(e.target.value) || 1;
+                        setPostLimit(newLimit);
+                      }}
+                      min="1"
+                      max="10000"
+                      className="w-20 px-2 py-1.5 text-xs glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                    />
+                    <span className="text-xs glass-text-muted">posts</span>
+                  </div>
+                  <span className="text-[10px] glass-text-muted mt-0.5">
+                    Fetch {postLimit > 200 && <span className="text-yellow-600 dark:text-yellow-400">⚠️ May hit rate limits</span>}
+                  </span>
+                </div>
+
+                {/* Display Limit */}
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      value={displayLimit}
+                      onChange={(e) => {
+                        const newLimit = parseInt(e.target.value) || 1;
+                        setDisplayLimit(newLimit);
+                      }}
+                      min="1"
+                      max="1000"
+                      className="w-20 px-2 py-1.5 text-xs glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                    />
+                    <span className="text-xs glass-text-muted">shown</span>
+                  </div>
+                  <span className="text-[10px] glass-text-muted mt-0.5">From {allPosts.length} cached</span>
+                </div>
+
+                {/* Status Display */}
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1">
+                    {allPosts.length >= postLimit ? (
+                      <span className="text-xs glass-text-secondary">✅ Complete</span>
+                    ) : (
+                      <span className="text-xs glass-text-secondary">⏳ Fetching...</span>
+                    )}
+                    <span className="text-xs glass-text-muted">
+                      ({posts.length} of {displayLimit})
                     </span>
-                  )}
-                </span>
-              </div>
-
-              {/* Display Limit Input */}
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  value={displayLimit}
-                  onChange={(e) => {
-                    const newLimit = parseInt(e.target.value) || 1;
-                    setDisplayLimit(newLimit);
-                  }}
-                  min="1"
-                  max="1000"
-                  className="w-16 px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-                />
-                <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                  from cache
-                </span>
+                  </div>
+                  <span className="text-[10px] glass-text-muted mt-0.5">
+                    Using {algorithm} algorithm
+                  </span>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Display Mode Buttons (only on feed page) */}
+          {/* Display Controls (only on feed page) */}
           {isFeedPage && auth.isAuthenticated && (
-            <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
-              <button
-                onClick={() => setDisplayMode('refined')}
-                className={`p-1.5 rounded transition-colors ${
-                  displayMode === 'refined'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                }`}
-                title="Refined Feed"
-              >
-                <Sparkles className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => setDisplayMode('cards')}
-                className={`p-1.5 rounded transition-colors ${
-                  displayMode === 'cards'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                }`}
-                title="Card Layout"
-              >
-                <LayoutGrid className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => setDisplayMode('instagram')}
-                className={`p-1.5 rounded transition-colors ${
-                  displayMode === 'instagram'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                }`}
-                title="Instagram Style"
-              >
-                <Image className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => setDisplayMode('dataviz')}
-                className={`p-1.5 rounded transition-colors ${
-                  displayMode === 'dataviz'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                }`}
-                title="Data Visualization"
-              >
-                <BarChart3 className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => setDisplayMode('dense')}
-                className={`p-1.5 rounded transition-colors ${
-                  displayMode === 'dense'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                }`}
-                title="Dense Grid"
-              >
-                <List className="w-3 h-3" />
-              </button>
-            </div>
-          )}
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* Display Mode */}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
+                  <button
+                    onClick={() => setDisplayMode('refined')}
+                    className={`p-1.5 rounded transition-colors ${
+                      displayMode === 'refined'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    }`}
+                    title="Refined Feed"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => setDisplayMode('cards')}
+                    className={`p-1.5 rounded transition-colors ${
+                      displayMode === 'cards'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    }`}
+                    title="Card Layout"
+                  >
+                    <LayoutGrid className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => setDisplayMode('instagram')}
+                    className={`p-1.5 rounded transition-colors ${
+                      displayMode === 'instagram'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    }`}
+                    title="Instagram Style"
+                  >
+                    <Image className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => setDisplayMode('dataviz')}
+                    className={`p-1.5 rounded transition-colors ${
+                      displayMode === 'dataviz'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    }`}
+                    title="Data Visualization"
+                  >
+                    <BarChart3 className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => setDisplayMode('dense')}
+                    className={`p-1.5 rounded transition-colors ${
+                      displayMode === 'dense'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    }`}
+                    title="Dense Grid"
+                  >
+                    <List className="w-3 h-3" />
+                  </button>
+                </div>
+                <span className="text-[10px] glass-text-muted mt-1">Layout</span>
+              </div>
 
-          {/* Algorithm Buttons (only on feed page) */}
-          {isFeedPage && auth.isAuthenticated && (
-            <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
-              <button
-                onClick={() => setAlgorithm('latest')}
-                className={`p-1.5 rounded transition-colors ${
-                  algorithm === 'latest'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                }`}
-                title="Latest Posts"
-              >
-                <Clock className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => setAlgorithm('trending')}
-                className={`p-1.5 rounded transition-colors ${
-                  algorithm === 'trending'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                }`}
-                title="Trending Posts"
-              >
-                <TrendingUp className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => setAlgorithm('diverse')}
-                className={`p-1.5 rounded transition-colors ${
-                  algorithm === 'diverse'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                }`}
-                title="Diverse Mix"
-              >
-                <Shuffle className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => setAlgorithm('balanced')}
-                className={`p-1.5 rounded transition-colors ${
-                  algorithm === 'balanced'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                }`}
-                title="Balanced Selection"
-              >
-                <Target className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => setAlgorithm('random')}
-                className={`p-1.5 rounded transition-colors ${
-                  algorithm === 'random'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                }`}
-                title="Random Selection"
-              >
-                <Dice1 className="w-3 h-3" />
-              </button>
+              {/* Algorithm Selection */}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
+                  <button
+                    onClick={() => setAlgorithm('latest')}
+                    className={`p-1.5 rounded transition-colors ${
+                      algorithm === 'latest'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    }`}
+                    title="Latest Posts"
+                  >
+                    <Clock className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => setAlgorithm('trending')}
+                    className={`p-1.5 rounded transition-colors ${
+                      algorithm === 'trending'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    }`}
+                    title="Trending Posts"
+                  >
+                    <TrendingUp className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => setAlgorithm('diverse')}
+                    className={`p-1.5 rounded transition-colors ${
+                      algorithm === 'diverse'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    }`}
+                    title="Diverse Mix"
+                  >
+                    <Shuffle className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => setAlgorithm('balanced')}
+                    className={`p-1.5 rounded transition-colors ${
+                      algorithm === 'balanced'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    }`}
+                    title="Balanced Selection"
+                  >
+                    <Target className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => setAlgorithm('random')}
+                    className={`p-1.5 rounded transition-colors ${
+                      algorithm === 'random'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    }`}
+                    title="Random Selection"
+                  >
+                    <Dice1 className="w-3 h-3" />
+                  </button>
+                </div>
+                <span className="text-[10px] glass-text-muted mt-1">Algorithm</span>
+              </div>
             </div>
           )}
 
           {/* Live Feed Controls (only on feed page) */}
           {isFeedPage && auth.isAuthenticated && (
-            <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
+            <div className="flex items-center gap-4 flex-wrap">
               {/* Live Feed Toggle */}
-              <button
-                onClick={() => setIsLiveFeed(!isLiveFeed)}
-                className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
-                  isLiveFeed
-                    ? 'bg-green-600 text-white'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                }`}
-                title={isLiveFeed ? "Live Feed Active" : "Static Feed"}
-              >
-                {isLiveFeed ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-                {isLiveFeed ? 'Live' : 'Static'}
-              </button>
+              <div className="flex flex-col">
+                <button
+                  onClick={() => setIsLiveFeed(!isLiveFeed)}
+                  className={`flex items-center gap-1 px-3 py-1.5 text-xs rounded transition-colors ${
+                    isLiveFeed
+                      ? 'bg-green-600 text-white'
+                      : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                  }`}
+                  title={isLiveFeed ? "Live Feed Active" : "Static Feed"}
+                >
+                  {isLiveFeed ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                  {isLiveFeed ? 'Live' : 'Static'}
+                </button>
+                <span className="text-[10px] glass-text-muted mt-1">Mode</span>
+              </div>
 
               {/* Batch Size Selector */}
-              <select
-                value={liveFeedBatchSize}
-                onChange={(e) => setLiveFeedBatchSize(parseInt(e.target.value))}
-                className="px-1 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent"
-                disabled={!isLiveFeed}
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-              </select>
+              <div className="flex flex-col">
+                <select
+                  value={liveFeedBatchSize}
+                  onChange={(e) => setLiveFeedBatchSize(parseInt(e.target.value))}
+                  className="px-2 py-1.5 text-xs glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded focus:ring-1 focus:ring-green-500 focus:border-transparent"
+                  disabled={!isLiveFeed}
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+                <span className="text-[10px] glass-text-muted mt-1">Batch</span>
+              </div>
 
               {/* Interval Selector */}
-              <select
-                value={liveFeedInterval}
-                onChange={(e) => setLiveFeedInterval(parseInt(e.target.value))}
-                className="px-1 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent"
-                disabled={!isLiveFeed}
-              >
-                <option value={10000}>10s</option>
-                <option value={30000}>30s</option>
-                <option value={60000}>1m</option>
-                <option value={120000}>2m</option>
-                <option value={300000}>5m</option>
-              </select>
+              <div className="flex flex-col">
+                <select
+                  value={liveFeedInterval}
+                  onChange={(e) => setLiveFeedInterval(parseInt(e.target.value))}
+                  className="px-2 py-1.5 text-xs glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded focus:ring-1 focus:ring-green-500 focus:border-transparent"
+                  disabled={!isLiveFeed}
+                >
+                  <option value={10000}>10s</option>
+                  <option value={30000}>30s</option>
+                  <option value={60000}>1m</option>
+                  <option value={120000}>2m</option>
+                  <option value={300000}>5m</option>
+                </select>
+                <span className="text-[10px] glass-text-muted mt-1">Interval</span>
+              </div>
 
               {/* Live Feed Indicator */}
               {isLiveFeed && (
-                <div className="flex items-center gap-1">
-                  <Radio className="w-3 h-3 text-green-600 animate-pulse" />
-                  <span className="text-xs text-green-600">Streaming</span>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1">
+                    <Radio className="w-3 h-3 text-green-600 animate-pulse" />
+                    <span className="text-xs text-green-600">Streaming</span>
+                  </div>
+                  <span className="text-[10px] glass-text-muted mt-1">Status</span>
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* Algorithm Status (only on feed page) */}
-          {isFeedPage && auth.isAuthenticated && allPosts.length > 0 && (
-            <div className="text-xs text-neutral-500 dark:text-neutral-400 ml-2">
-              {allPosts.length >= postLimit ? (
-                <>✅ {algorithm} algorithm selecting {posts.length} from {allPosts.length} cached</>
-              ) : (
-                <>⏳ Partial: {algorithm} selecting {posts.length} from {allPosts.length} cached (fetching more...)</>
               )}
             </div>
           )}
