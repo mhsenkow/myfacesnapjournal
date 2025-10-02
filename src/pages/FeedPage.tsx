@@ -388,15 +388,30 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 </div>
               )}
               
-              {/* Overlay gradient with engagement stats */}
+              {/* Overlay gradient with interactive engagement stats */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
                 <div className="p-3 w-full">
                   <div className="flex items-center justify-between text-white">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1">
-                        <Heart className="w-4 h-4" />
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLike(post.id);
+                        }}
+                        className={`post-action-button flex items-center gap-1 transition-colors group ${
+                          post.favourited 
+                            ? 'text-red-400 heart-liked' 
+                            : 'text-white hover:text-red-400'
+                        }`}
+                        title={post.favourited ? 'Unlike' : 'Like'}
+                      >
+                        <Heart 
+                          className={`w-4 h-4 group-hover:scale-110 transition-transform ${
+                            post.favourited ? 'fill-current' : ''
+                          }`}
+                        />
                         <span className="text-sm font-medium">{post.favourites_count}</span>
-                      </div>
+                      </button>
                       <div className="flex items-center gap-1">
                         <MessageCircle className="w-4 h-4" />
                         <span className="text-sm font-medium">{post.replies_count}</span>
@@ -406,6 +421,24 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                         <span className="text-sm font-medium">{post.reblogs_count}</span>
                       </div>
                     </div>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleBookmark(post.id);
+                      }}
+                      className={`post-action-button p-1 rounded transition-colors group ${
+                        post.bookmarked 
+                          ? 'text-yellow-400 bookmark-saved' 
+                          : 'text-white hover:text-yellow-400'
+                      }`}
+                      title={post.bookmarked ? 'Remove bookmark' : 'Bookmark'}
+                    >
+                      <Bookmark 
+                        className={`w-4 h-4 group-hover:scale-110 transition-transform ${
+                          post.bookmarked ? 'fill-current' : ''
+                        }`}
+                      />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -495,15 +528,52 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                   {post.account.display_name}
                 </span>
                 
-                {/* Engagement indicator */}
+                {/* Interactive engagement indicator */}
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {totalEngagement > 0 && (
                     <>
-                      <div className="w-1 h-1 bg-white rounded-full opacity-70"></div>
-                      <span className="text-xs font-bold">
-                        {totalEngagement}
-                      </span>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLike(post.id);
+                        }}
+                        className={`post-action-button flex items-center gap-1 transition-colors group ${
+                          post.favourited 
+                            ? 'text-red-200 hover:text-red-100' 
+                            : 'text-white hover:text-red-200'
+                        }`}
+                        title={post.favourited ? 'Unlike' : 'Like'}
+                      >
+                        <Heart 
+                          className={`w-2 h-2 group-hover:scale-125 transition-transform ${
+                            post.favourited ? 'fill-current' : ''
+                          }`}
+                        />
+                        <span className="text-xs font-bold">
+                          {post.favourites_count}
+                        </span>
+                      </button>
                     </>
+                  )}
+                  {!totalEngagement && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleLike(post.id);
+                      }}
+                      className={`post-action-button p-1 rounded transition-colors group ${
+                        post.favourited 
+                          ? 'text-red-200 hover:text-red-100' 
+                          : 'text-white hover:text-red-200'
+                      }`}
+                      title={post.favourited ? 'Unlike' : 'Like'}
+                    >
+                      <Heart 
+                        className={`w-2 h-2 group-hover:scale-125 transition-transform ${
+                          post.favourited ? 'fill-current' : ''
+                        }`}
+                      />
+                    </button>
                   )}
                 </div>
                 
@@ -575,12 +645,39 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
               {formatContent(post.content)}
             </p>
             
-            {/* Compact metrics */}
+            {/* Interactive compact metrics */}
             <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-              <span className="flex items-center gap-1">
-                <Heart className="w-3 h-3" />
-                {post.favourites_count}
-              </span>
+              <button 
+                onClick={() => toggleLike(post.id)}
+                className={`post-action-button flex items-center gap-1 transition-colors group ${
+                  post.favourited 
+                    ? 'text-red-600 heart-liked' 
+                    : 'text-neutral-500 dark:text-neutral-400 hover:text-red-600'
+                }`}
+                title={post.favourited ? 'Unlike' : 'Like'}
+              >
+                <Heart 
+                  className={`w-3 h-3 group-hover:scale-110 transition-transform ${
+                    post.favourited ? 'fill-current' : ''
+                  }`}
+                />
+                <span className="font-medium">{post.favourites_count}</span>
+              </button>
+              <button 
+                onClick={() => toggleBookmark(post.id)}
+                className={`post-action-button p-1 rounded transition-colors group ${
+                  post.bookmarked 
+                    ? 'text-yellow-600 bookmark-saved' 
+                    : 'text-neutral-500 dark:text-neutral-400 hover:text-yellow-600'
+                }`}
+                title={post.bookmarked ? 'Remove bookmark' : 'Bookmark'}
+              >
+                <Bookmark 
+                  className={`w-3 h-3 group-hover:scale-110 transition-transform ${
+                    post.bookmarked ? 'fill-current' : ''
+                  }`}
+                />
+              </button>
               <span className="flex items-center gap-1">
                 <Repeat2 className="w-3 h-3" />
                 {post.reblogs_count}
