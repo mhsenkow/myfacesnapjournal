@@ -110,7 +110,7 @@ const FloatingSearch: React.FC = () => {
 
             {/* Search Input */}
             <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 glass-text-muted" />
               <input
                 type="text"
                 value={currentSearchQuery}
