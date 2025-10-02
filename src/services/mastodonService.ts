@@ -324,20 +324,22 @@ class MastodonService {
       params.append('max_id', maxId);
     }
 
-    const response = await fetch(
-      `${instanceUrl}/api/v1/timelines/public?${params.toString()}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+    const url = `${instanceUrl}/api/v1/timelines/public?${params.toString()}`;
+    console.log(`Fetching from: ${url}`);
+    
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
       }
-    );
+    });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch ${type} timeline`);
+      throw new Error(`Failed to fetch ${type} timeline: ${response.status} ${response.statusText}`);
     }
 
-    return response.json();
+    const posts = await response.json();
+    console.log(`API returned ${posts.length} posts (requested: ${limit})`);
+    return posts;
   }
 
   /**

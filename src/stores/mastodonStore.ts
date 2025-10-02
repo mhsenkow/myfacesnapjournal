@@ -281,6 +281,8 @@ export const useMastodonStore = create<MastodonStore>()(
         set({ isLoadingPosts: true, lastImportError: undefined });
 
         try {
+          console.log(`Fetching ${postLimit} posts for ${feedType} timeline from ${instanceUrl}`);
+          
           const allPosts = postLimit > 40 
             ? await mastodonService.getPublicTimelinePaginated(
                 instanceUrl,
@@ -292,9 +294,11 @@ export const useMastodonStore = create<MastodonStore>()(
                 instanceUrl,
                 auth.accessToken,
                 feedType,
-                postLimit
+                Math.min(40, postLimit)
               );
 
+          console.log(`Successfully fetched ${allPosts.length} posts (requested: ${postLimit})`);
+          
           // Store all posts and apply algorithm
           set({ allPosts });
           get().applyAlgorithm();
