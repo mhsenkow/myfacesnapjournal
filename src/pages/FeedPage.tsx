@@ -41,7 +41,11 @@ import {
   Hash,
   EyeOff,
   RefreshCw,
-  Image
+  Image,
+  BarChart3,
+  AtSign,
+  Lock,
+  Globe
 } from 'lucide-react';
 import { useMastodonStore } from '../stores/mastodonStore';
 import { mastodonService } from '../services/mastodonService';
@@ -120,22 +124,59 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 )}
                 
                 {/* Actions */}
-                <div className="flex items-center gap-8 text-neutral-500 dark:text-neutral-400">
-                  <button className="flex items-center gap-2 hover:text-blue-600 transition-colors group">
+                <div className="flex items-center gap-6 text-neutral-500 dark:text-neutral-400 flex-wrap">
+                  {/* Core Engagement */}
+                  <button className="flex items-center gap-1.5 hover:text-blue-600 transition-colors group">
                     <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span className="text-sm font-medium">{post.replies_count}</span>
                   </button>
-                  <button className="flex items-center gap-2 hover:text-green-600 transition-colors group">
+                  <button className="flex items-center gap-1.5 hover:text-green-600 transition-colors group">
                     <Repeat2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span className="text-sm font-medium">{post.reblogs_count}</span>
                   </button>
-                  <button className="flex items-center gap-2 hover:text-red-600 transition-colors group">
+                  <button className="flex items-center gap-1.5 hover:text-red-600 transition-colors group">
                     <Heart className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span className="text-sm font-medium">{post.favourites_count}</span>
                   </button>
-                  <button className="flex items-center gap-2 hover:text-purple-600 transition-colors group">
-                    <Share className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  </button>
+                  
+                  {/* Content Indicators */}
+                  {post.media_attachments.length > 0 && (
+                    <div className="flex items-center gap-1.5 text-purple-500">
+                      <Image className="w-4 h-4" />
+                      <span className="text-sm font-medium">{post.media_attachments.length}</span>
+                    </div>
+                  )}
+                  {post.tags.length > 0 && (
+                    <div className="flex items-center gap-1.5 text-blue-500">
+                      <Hash className="w-4 h-4" />
+                      <span className="text-sm font-medium">{post.tags.length}</span>
+                    </div>
+                  )}
+                  {post.poll && (
+                    <div className="flex items-center gap-1.5 text-orange-500">
+                      <BarChart3 className="w-4 h-4" />
+                      <span className="text-sm font-medium">{post.poll.votes_count}</span>
+                    </div>
+                  )}
+                  {post.mentions.length > 0 && (
+                    <div className="flex items-center gap-1.5 text-cyan-500">
+                      <AtSign className="w-4 h-4" />
+                      <span className="text-sm font-medium">{post.mentions.length}</span>
+                    </div>
+                  )}
+                  
+                  {/* Status Indicators */}
+                  {post.sensitive && (
+                    <div className="flex items-center gap-1.5 text-yellow-600">
+                      <EyeOff className="w-4 h-4" />
+                      <span className="text-sm">CW</span>
+                    </div>
+                  )}
+                  {post.visibility !== 'public' && (
+                    <div className="flex items-center gap-1.5 text-gray-500">
+                      {post.visibility === 'unlisted' ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -183,7 +224,8 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
             
             {/* Actions */}
             <div className="flex items-center justify-between pt-4 border-t border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center gap-4 text-neutral-500 dark:text-neutral-400">
+              <div className="flex items-center gap-3 text-neutral-500 dark:text-neutral-400 flex-wrap">
+                {/* Core Engagement */}
                 <button className="flex items-center gap-1 hover:text-blue-600 transition-colors">
                   <MessageCircle className="w-4 h-4" />
                   <span className="text-sm">{post.replies_count}</span>
@@ -196,6 +238,39 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                   <Heart className="w-4 h-4" />
                   <span className="text-sm">{post.favourites_count}</span>
                 </button>
+                
+                {/* Content Indicators */}
+                {post.media_attachments.length > 0 && (
+                  <div className="flex items-center gap-1 text-purple-500">
+                    <Image className="w-4 h-4" />
+                    <span className="text-sm">{post.media_attachments.length}</span>
+                  </div>
+                )}
+                {post.poll && (
+                  <div className="flex items-center gap-1 text-orange-500">
+                    <BarChart3 className="w-4 h-4" />
+                    <span className="text-sm">{post.poll.votes_count}</span>
+                  </div>
+                )}
+                {post.mentions.length > 0 && (
+                  <div className="flex items-center gap-1 text-cyan-500">
+                    <AtSign className="w-4 h-4" />
+                    <span className="text-sm">{post.mentions.length}</span>
+                  </div>
+                )}
+                
+                {/* Status Indicators */}
+                {post.sensitive && (
+                  <div className="flex items-center gap-1 text-yellow-600">
+                    <EyeOff className="w-4 h-4" />
+                    <span className="text-sm">CW</span>
+                  </div>
+                )}
+                {post.visibility !== 'public' && (
+                  <div className="flex items-center gap-1 text-gray-500">
+                    {post.visibility === 'unlisted' ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                  </div>
+                )}
               </div>
             </div>
           </div>
