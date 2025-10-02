@@ -20,7 +20,8 @@ import {
   Radio,
   X,
   Zap,
-  MessageCircle
+  MessageCircle,
+  SprayCan
 } from 'lucide-react';
 
 interface FooterProps {
@@ -88,13 +89,6 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
           }`}>
             <div className="flex items-center gap-1 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-lg p-1 shadow-lg backdrop-blur-xl">
               <button
-                onClick={() => fetchPublicTimeline()}
-                className="p-2 rounded-md transition-all duration-200 hover:bg-white/20 dark:hover:bg-black/20 hover:scale-105"
-                title="Refresh Feed"
-              >
-                <RefreshCw className="w-4 h-4 glass-text-primary" />
-              </button>
-              <button
                 onClick={() => {
                   // Clear cache functionality
                   if (allPosts.length > 0) {
@@ -103,6 +97,20 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 }}
                 className="p-2 rounded-md transition-all duration-200 hover:bg-white/20 dark:hover:bg-black/20 hover:scale-105"
                 title="Clear Cache"
+              >
+                <SprayCan className="w-4 h-4 glass-text-primary" />
+              </button>
+              <button
+                onClick={() => fetchPublicTimeline()}
+                className="p-2 rounded-md transition-all duration-200 hover:bg-white/20 dark:hover:bg-black/20 hover:scale-105"
+                title="Refresh Feed"
+              >
+                <RefreshCw className="w-4 h-4 glass-text-primary" />
+              </button>
+              <button
+                onClick={onToggle}
+                className="p-2 rounded-md transition-all duration-200 hover:bg-white/20 dark:hover:bg-black/20 hover:scale-105"
+                title="Close Feed Controls"
               >
                 <X className="w-4 h-4 glass-text-primary" />
               </button>
