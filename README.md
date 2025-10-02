@@ -82,25 +82,41 @@ A modern, feature-rich journaling application that combines personal reflection 
 
 ## 🚀 Getting Started
 
-### **Prerequisites**
+### **Quick Start (Recommended)**
+```bash
+# Clone the repository
+git clone https://github.com/mhsenkow/myfacesnapjournal.git
+cd myfacesnapjournal
+
+# Run the automated setup script
+./setup.sh
+
+# Start the app
+npm run tauri:dev
+```
+
+### **Manual Setup**
+If you prefer manual setup or the script doesn't work:
+
+**Prerequisites:**
 - Node.js 18+ and npm
 - Rust 1.70+ and Cargo
 - Tauri CLI v2: `cargo install tauri-cli`
 
-### **Development Setup**
+**Setup Commands:**
 ```bash
 # Clone and setup
-git clone <repository>
-cd MyFace-SnapJournal
+git clone https://github.com/mhsenkow/myfacesnapjournal.git
+cd myfacesnapjournal
 
 # Install dependencies
 npm install
 
-# Start development server
+# Start development server (web version)
 npm run dev
 
-# In another terminal, run Tauri
-npm run tauri dev
+# In another terminal, run desktop app
+npm run tauri:dev
 ```
 
 ### **Build Commands**
@@ -117,6 +133,32 @@ npm run type-check
 # Linting
 npm run lint
 ```
+
+## 🐘 Mastodon Integration
+
+The app includes full Mastodon integration with interactive features:
+
+### **Getting Started with Mastodon:**
+1. **Open the Feed tab** (left sidebar)
+2. **Click "Connect to Mastodon"** 
+3. **Enter your instance URL** (e.g., `mastodon.social`)
+4. **Authorize the app** in the popup window
+5. **Start browsing and liking posts!** ❤️
+
+### **Features:**
+- **Public Timeline**: Browse global fediverse content
+- **Local Timeline**: Discover posts from your instance
+- **Interactive Likes**: Like posts directly in the app (syncs to Mastodon!)
+- **Bookmarks**: Save posts for later
+- **5 Display Modes**: Refined, Cards, Instagram, DataViz, Dense
+- **Smart Algorithms**: 9 different ways to discover interesting content
+- **Real Images**: Instagram-style layout with actual post images
+
+### **Supported Instances:**
+- Any Mastodon instance (mastodon.social, mastodon.online, etc.)
+- Misskey instances
+- Pleroma instances
+- Any ActivityPub-compatible server
 
 ## 🎨 Theming System
 
