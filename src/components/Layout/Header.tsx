@@ -217,7 +217,7 @@ const Header: React.FC = () => {
                   className="w-16 px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
                 />
                 <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                  ({posts.length} of {allPosts.length})
+                  ({posts.length} shown of {allPosts.length} cached)
                   {postLimit > 200 && (
                     <span className="text-yellow-600 dark:text-yellow-400 ml-1" title="Large requests may hit rate limits">
                       ⚠️
@@ -240,7 +240,7 @@ const Header: React.FC = () => {
                   className="w-16 px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
                 />
                 <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                  show
+                  from cache
                 </span>
               </div>
             </div>
@@ -420,6 +420,13 @@ const Header: React.FC = () => {
               )}
             </div>
           )}
+
+          {/* Algorithm Status (only on feed page) */}
+          {isFeedPage && auth.isAuthenticated && allPosts.length > 0 && (
+            <div className="text-xs text-neutral-500 dark:text-neutral-400 ml-2">
+              {algorithm} algorithm selecting {posts.length} from {allPosts.length} cached
+            </div>
+          )}
         </div>
 
         {/* Center - Search bar (only show on non-feed pages) */}
@@ -487,7 +494,7 @@ const Header: React.FC = () => {
                 </button>
               </div>
             )}
-          </div>
+
         </div>
       </div>
 
