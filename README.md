@@ -1,7 +1,8 @@
 # MyFace SnapJournal
 
 > **AI-Powered Personal Journal with Social Integration & Beautiful UI**
-<img width="2560" height="1394" alt="image" src="https://github.com/user-attachments/assets/a4f0db5c-c4a6-4907-8e23-fb49f831cb7d" />
+<img width="2560" height="1401" alt="image" src="https://github.com/user-attachments/assets/d33f929e-61cd-4256-ac84-577c9a254b2b" />
+
 
 A modern, feature-rich journaling application that combines personal reflection with social media integration. Built with a stunning glass morphism UI, multiple themes, and powerful features including Mastodon feed browsing, Facebook integration, and AI companionship.
 
