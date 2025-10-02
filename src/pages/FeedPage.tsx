@@ -71,8 +71,8 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
   if (displayMode === 'refined') {
     return (
       <div className="space-y-6">
-        {posts.map((post) => (
-          <div key={post.id} className={`glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 hover:glass transition-all duration-500 hover:scale-[1.02] hover:shadow-xl ${getPostAnimationClass(post.id)}`}>
+        {posts.map((post, index) => (
+          <div key={post.id} className={`glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 hover:glass transition-all duration-500 hover:scale-[1.02] hover:shadow-xl ${getPostAnimationClass(post.id, index)}`}>
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
                 <User className="w-6 h-6 text-white" />
@@ -149,8 +149,9 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
   if (displayMode === 'cards') {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {posts.map((post) => (
-          <div key={post.id} className={`glass border border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 hover:glass-strong transition-all duration-300 hover:scale-105 hover:shadow-2xl group ${getPostAnimationClass(post.id)}`}>
+        {posts.map((post, index) => (
+          <div key={post.id} className={`glass border border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 hover:glass-strong sequence-animate transition-all duration-300 hover:scale-105 hover:shadow-2xl group ${getPostAnimationClass(post.id, index)}`}
+               style={{ animationDelay: `${index * 50}ms` }}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
                 <User className="w-5 h-5 text-white" />
@@ -207,8 +208,8 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
   if (displayMode === 'instagram') {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {posts.map((post) => (
-          <div key={post.id} className={`glass border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden hover:glass-strong transition-all duration-300 hover:scale-105 group ${getPostAnimationClass(post.id)}`}>
+        {posts.map((post, index) => (
+          <div key={post.id} className={`glass border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden hover:glass-strong transition-all duration-300 hover:scale-105 group ${getPostAnimationClass(post.id, index)}`}>
             {/* Media Display - Square aspect ratio */}
             <div className="aspect-square bg-gradient-to-br from-purple-400 via-pink-400 to-red-400 relative overflow-hidden">
               {post.media_attachments && post.media_attachments.length > 0 ? (
@@ -310,7 +311,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
   if (displayMode === 'dataviz') {
     return (
       <div className="flex flex-wrap gap-1">
-        {posts.map((post) => {
+        {posts.map((post, index) => {
           const totalEngagement = post.favourites_count + post.reblogs_count + post.replies_count;
           const hasMedia = post.media_attachments && post.media_attachments.length > 0;
           const hasHashtags = post.tags && post.tags.length > 0;
@@ -353,7 +354,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 hover:glass transition-all duration-300 hover:scale-105 
                 bg-gradient-to-r ${getEngagementColor(totalEngagement)}
                 text-white shadow-md hover:shadow-lg
-                cursor-pointer group ${getPostAnimationClass(post.id)}
+                cursor-pointer group ${getPostAnimationClass(post.id, index)}
               `}
               title={`${post.account.display_name}: ${formatContent(post.content).substring(0, 100)}...`}
             >
@@ -429,8 +430,8 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
   if (displayMode === 'dense') {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-        {posts.map((post) => (
-          <div key={post.id} className={`glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 hover:glass transition-all duration-200 hover:scale-[1.02] group ${getPostAnimationClass(post.id)}`}>
+        {posts.map((post, index) => (
+          <div key={post.id} className={`glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 hover:glass transition-all duration-200 hover:scale-[1.02] group ${getPostAnimationClass(post.id, index)}`}>
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0">
                 <User className="w-3 h-3 text-white" />
@@ -551,17 +552,42 @@ const FeedPage: React.FC = () => {
     }
   }, [posts, previousPosts.length]);
 
-  // Helper function to determine animation class for a post
-  const getPostAnimationClass = (postId: string) => {
+  // Helper function to determine animation class for a post with directional context
+  const getPostAnimationClass = (postId: string, currentIndex: number) => {
     const wasPresent = previousPosts.some(p => p.id === postId);
     const isPresent = posts.some(p => p.id === postId);
     
     if (!wasPresent && isPresent) {
-      return 'animate-post-enter'; // New post - grow in
+      // New post - decide enter direction based on engagement vs current posts
+      const post = posts.find(p => p.id === postId);
+      const totalEngagement = post ? post.favourites_count + post.reblogs_count + post.replies_count : 0;
+      const isHighEngagement = totalEngagement >= 20;
+      
+      if (isHighEngagement && currentIndex < 5) {
+        return 'animate-post-enter-high'; // High engagement at top - descend from above
+      } else {
+        return 'animate-post-enter'; // Regular - grow in place
+      }
     } else if (wasPresent && !isPresent) {
-      return 'animate-post-exit'; // Disappearing post - shrink out
+      // Disappearing post - decide exit direction
+      const oldIndex = previousPosts.findIndex(p => p.id === postId);
+      if (oldIndex < 3) {
+        return 'animate-post-exit-up'; // Was at top - slide up and fade
+      } else {
+        return 'animate-post-exit-down'; // Was lower - shrink down
+      }
     } else if (wasPresent && isPresent) {
-      return 'animate-post-update'; // Staying post - subtle movement
+      // Staying post - determine movement direction
+      const oldIndex = previousPosts.findIndex(p => p.id === postId);
+      const newIndex = posts.findIndex(p => p.id === postId);
+      
+      if (newIndex < oldIndex) {
+        return 'animate-post-move-up'; // Moved up in feed
+      } else if (newIndex > oldIndex) {
+        return 'animate-post-move-down'; // Moved down in feed
+      } else {
+        return 'animate-post-stable'; // Same position - subtle wiggle
+      }
     }
     return ''; // No animation
   };
