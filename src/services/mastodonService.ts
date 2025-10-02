@@ -383,13 +383,45 @@ class MastodonService {
 
         console.log(`Request ${requestsMade}: fetched ${posts.length} posts, total: ${allPosts.length}`);
 
-        // Small delay to be respectful to the API
+        // Longer delay to be respectful to the API and avoid rate limits
         if (requestsMade < maxRequests && allPosts.length < totalLimit) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // Progressive delay: longer delays as we make more requests
+          const delay = Math.min(1000 + (requestsMade * 200), 3000); // 1s, 1.2s, 1.4s, up to 3s max
+          console.log(`Waiting ${delay}ms before next request...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       } catch (error) {
         console.error('Error fetching posts:', error);
-        break;
+        
+        // If it's a rate limit error, wait longer and retry once
+        if (error instanceof Error && error.message.includes('429')) {
+          console.log('Rate limited! Waiting 5 seconds before retry...');
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          
+          try {
+            const retryPosts = await this.getPublicTimeline(
+              instanceUrl,
+              accessToken,
+              type,
+              perRequestLimit,
+              maxId
+            );
+            
+            if (retryPosts.length > 0) {
+              allPosts.push(...retryPosts);
+              requestsMade++;
+              const oldestPost = retryPosts[retryPosts.length - 1];
+              maxId = oldestPost.id;
+              console.log(`Retry successful: fetched ${retryPosts.length} posts, total: ${allPosts.length}`);
+            }
+          } catch (retryError) {
+            console.error('Retry also failed:', retryError);
+            break;
+          }
+        } else {
+          // For other errors, just break
+          break;
+        }
       }
     }
 

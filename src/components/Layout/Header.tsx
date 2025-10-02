@@ -218,6 +218,11 @@ const Header: React.FC = () => {
                 />
                 <span className="text-xs text-neutral-600 dark:text-neutral-400">
                   ({posts.length} of {allPosts.length})
+                  {postLimit > 200 && (
+                    <span className="text-yellow-600 dark:text-yellow-400 ml-1" title="Large requests may hit rate limits">
+                      ⚠️
+                    </span>
+                  )}
                 </span>
               </div>
 

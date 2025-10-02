@@ -304,7 +304,10 @@ export const useMastodonStore = create<MastodonStore>()(
           get().applyAlgorithm();
         } catch (error) {
           console.error('Failed to fetch public timeline:', error);
-          set({ lastImportError: 'Failed to fetch posts' });
+          const errorMessage = error instanceof Error && error.message.includes('429') 
+            ? 'Rate limited by Mastodon instance. Try again in a few minutes or reduce the post limit.'
+            : 'Failed to fetch posts';
+          set({ lastImportError: errorMessage });
         } finally {
           set({ isLoadingPosts: false });
         }
