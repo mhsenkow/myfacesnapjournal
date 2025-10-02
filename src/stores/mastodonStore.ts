@@ -699,10 +699,18 @@ export const useMastodonStore = create<MastodonStore>()(
       },
 
       toggleLike: async (postId: string) => {
+        console.log('🔄 toggleLike called for post:', postId);
         const { auth, posts, allPosts, mastodonService } = get();
         
+        console.log('🔍 Auth state:', {
+          isAuthenticated: auth.isAuthenticated,
+          hasAccessToken: !!auth.accessToken,
+          instance: auth.instance
+        });
+        
         if (!auth.isAuthenticated || !auth.accessToken) {
-          console.error('Not authenticated');
+          console.error('❌ Not authenticated - user needs to log in to Mastodon first');
+          alert('Please log in to Mastodon first to like posts!');
           return;
         }
 
@@ -716,6 +724,13 @@ export const useMastodonStore = create<MastodonStore>()(
         const isLiked = post.favourited || false;
 
         try {
+          console.log('📡 Making API call to Mastodon:', {
+            instance: auth.instance,
+            postId,
+            isLiked,
+            action: isLiked ? 'unfavourite' : 'favourite'
+          });
+          
           // Call the API
           const updatedPost = await mastodonService.toggleLike(
             auth.instance,
@@ -723,6 +738,8 @@ export const useMastodonStore = create<MastodonStore>()(
             postId,
             isLiked
           );
+          
+          console.log('📥 API response:', updatedPost);
 
           // Update the post in both arrays
           const updatePostInArray = (postsArray: MastodonPost[]) => {

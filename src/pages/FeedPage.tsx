@@ -140,7 +140,12 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                     <span className="text-sm font-medium">{post.reblogs_count}</span>
                   </button>
                   <button 
-                    onClick={() => toggleLike(post.id)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('💖 Like button clicked for post:', post.id);
+                      toggleLike(post.id);
+                    }}
                     className={`post-action-button flex items-center gap-1.5 transition-colors group ${
                       post.favourited 
                         ? 'text-red-600 heart-liked' 
@@ -265,7 +270,12 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                   <span className="text-sm">{post.reblogs_count}</span>
                 </button>
                 <button 
-                  onClick={() => toggleLike(post.id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('💖 Cards like button clicked for post:', post.id);
+                    toggleLike(post.id);
+                  }}
                   className={`post-action-button flex items-center gap-1 transition-colors ${
                     post.favourited 
                       ? 'text-red-600 heart-liked' 

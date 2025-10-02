@@ -642,6 +642,14 @@ class MastodonService {
     const endpoint = isLiked ? 'unfavourite' : 'favourite';
     const url = `${instanceUrl}/api/v1/statuses/${statusId}/${endpoint}`;
     
+    console.log('🌐 Mastodon API call:', {
+      url,
+      endpoint,
+      isLiked,
+      statusId: statusId.substring(0, 10) + '...',
+      instance: instanceUrl
+    });
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -649,6 +657,8 @@ class MastodonService {
         'Content-Type': 'application/json'
       }
     });
+    
+    console.log('📡 API response status:', response.status, response.statusText);
 
     if (!response.ok) {
       const errorText = await response.text();
