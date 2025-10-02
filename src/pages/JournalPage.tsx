@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit3, Trash2, Lock, Eye, EyeOff, Heart, CheckSquare, Square } from 'lucide-react';
+import { Plus, Edit3, Trash2, Lock, Eye, EyeOff, Heart, CheckSquare, Square, Tag } from 'lucide-react';
 import { useJournalStore, JournalEntry } from '../stores/journalStore';
 import EntryModal from '../components/UI/EntryModal';
 
@@ -182,47 +182,48 @@ const JournalPage: React.FC = () => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 mb-6">
-      <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center justify-between">
+          <div>
             <h1 className="text-4xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">Journal</h1>
             <p className="text-neutral-500 dark:text-neutral-400 mt-2 text-lg font-light">Capture your thoughts, ideas, and experiences.</p>
-        </div>
-        <div className="flex gap-2">
-          {isSelectMode ? (
-            <>
-              <button 
-                onClick={handleMassDelete}
-                disabled={selectedEntries.size === 0}
-                className="btn btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete ({selectedEntries.size})
-              </button>
-              <button 
-                onClick={exitSelectMode}
-                className="btn btn-outline"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button 
-                onClick={() => setIsSelectMode(true)}
-                className="btn btn-outline"
-              >
-                <CheckSquare className="w-4 h-4 mr-2" />
-                Select
-              </button>
-              <button 
-                onClick={openNewEntryModal}
-                className="btn btn-primary"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New Entry
-              </button>
-            </>
-          )}
+          </div>
+          <div className="flex gap-2">
+            {isSelectMode ? (
+              <>
+                <button 
+                  onClick={handleMassDelete}
+                  disabled={selectedEntries.size === 0}
+                  className="btn btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete ({selectedEntries.size})
+                </button>
+                <button 
+                  onClick={exitSelectMode}
+                  className="btn btn-outline"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  onClick={() => setIsSelectMode(true)}
+                  className="btn btn-outline"
+                >
+                  <CheckSquare className="w-4 h-4 mr-2" />
+                  Select
+                </button>
+                <button 
+                  onClick={openNewEntryModal}
+                  className="btn btn-primary"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Entry
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -367,8 +368,7 @@ const JournalPage: React.FC = () => {
                 placeholder="Entry title"
                 value={editingEntry.title}
                 onChange={(e) => setEditingEntry({ ...editingEntry, title: e.target.value })}
-                className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
               />
               
               <textarea
@@ -376,8 +376,7 @@ const JournalPage: React.FC = () => {
                 value={editingEntry.content}
                 onChange={(e) => setEditingEntry({ ...editingEntry, content: e.target.value })}
                 rows={8}
-                className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
               />
 
               {/* Tags Input */}
@@ -391,7 +390,11 @@ const JournalPage: React.FC = () => {
                     >
                       {tag}
                       <button
-                        onClick={() => removeTag(tag)}
+                        onClick={() => {
+                          if (editingEntry.tags) {
+                            setEditingEntry({ ...editingEntry, tags: editingEntry.tags.filter(t => t !== tag) });
+                          }
+                        }}
                         className="hover:text-primary-600"
                       >
                         ×
@@ -403,22 +406,27 @@ const JournalPage: React.FC = () => {
                   <input
                     type="text"
                     placeholder="Add a tag..."
-                    className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                    className="flex-1 px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         const input = e.target as HTMLInputElement;
-                        addTag(input.value.trim());
+                        const tag = input.value.trim();
+                        if (tag && editingEntry.tags && !editingEntry.tags.includes(tag)) {
+                          setEditingEntry({ ...editingEntry, tags: [...editingEntry.tags, tag] });
+                        }
                         input.value = '';
                       }
                     }}
-                    className="flex-1 px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                   <button
                     onClick={() => {
                       const input = document.querySelector('input[placeholder="Add a tag..."]') as HTMLInputElement;
                       if (input && input.value.trim()) {
-                        addTag(input.value.trim());
+                        const tag = input.value.trim();
+                        if (tag && editingEntry.tags && !editingEntry.tags.includes(tag)) {
+                          setEditingEntry({ ...editingEntry, tags: [...editingEntry.tags, tag] });
+                        }
                         input.value = '';
                       }
                     }}

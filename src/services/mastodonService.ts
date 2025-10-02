@@ -80,12 +80,17 @@ class MastodonService {
       // Check if we have pre-registered credentials for this instance
       const preRegisteredClient = this.getPreRegisteredClient(instanceUrl);
       if (preRegisteredClient) {
-        console.log('Using pre-registered client for:', instanceUrl);
+        console.log('Found pre-registered client for:', instanceUrl);
         console.log('Client ID set:', preRegisteredClient.client_id ? 'Yes' : 'No');
         console.log('Client Secret set:', preRegisteredClient.client_secret ? 'Yes' : 'No');
-        this.clientId = preRegisteredClient.client_id;
-        this.clientSecret = preRegisteredClient.client_secret;
-        return preRegisteredClient;
+        console.log('⚠️  Using pre-registered client - redirect URI must match exactly!');
+        console.log('Current redirect URI:', redirectUri);
+        
+        // For now, let's use dynamic registration to avoid redirect URI mismatches
+        console.log('🔄 Using dynamic registration instead to ensure redirect URI matches...');
+        // this.clientId = preRegisteredClient.client_id;
+        // this.clientSecret = preRegisteredClient.client_secret;
+        // return preRegisteredClient;
       }
       
       const response = await fetch(`${instanceUrl}/api/v1/apps`, {
