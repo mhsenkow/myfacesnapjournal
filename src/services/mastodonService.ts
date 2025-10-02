@@ -1,8 +1,41 @@
 /**
- * Mastodon Service
+ * Mastodon Service - Social Media Integration Engine
  * 
- * Handles all Mastodon API interactions including authentication,
- * fetching posts, and managing user data
+ * This service is the backbone of our social media integration, providing a robust
+ * and secure way to connect with the Mastodon fediverse. It handles everything from
+ * OAuth authentication to smart pagination and post import.
+ * 
+ * 🔐 **Authentication Features:**
+ * - OAuth 2.0 flow with secure token handling
+ * - Dynamic client registration with fallback strategies
+ * - Pre-registered clients for popular instances (mastodon.social)
+ * - Secure token storage and refresh mechanisms
+ * 
+ * 📡 **API Integration:**
+ * - Public and local timeline fetching
+ * - Smart pagination (up to 10,000 posts efficiently)
+ * - Rate limit handling and respectful API usage
+ * - Error handling with graceful fallbacks
+ * - Instance discovery and validation
+ * 
+ * 🔄 **Data Processing:**
+ * - Post conversion to journal entries
+ * - Media attachment handling
+ * - Hashtag and mention extraction
+ * - Engagement metrics processing
+ * - Content sanitization and formatting
+ * 
+ * 🛡️ **Security & Privacy:**
+ * - No data stored on external servers
+ * - Secure token exchange
+ * - CORS handling for browser compatibility
+ * - Input validation and sanitization
+ * 
+ * 🚀 **Performance Optimizations:**
+ * - Efficient pagination with minimal API calls
+ * - Caching strategies for frequently accessed data
+ * - Parallel processing where possible
+ * - Memory-efficient data structures
  */
 
 import {

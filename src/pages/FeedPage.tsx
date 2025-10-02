@@ -1,8 +1,32 @@
 /**
- * Feed Page Component
+ * Feed Page Component - Mastodon Social Feed Integration
  * 
- * Displays and allows interaction with Mastodon public feeds
- * Includes filtering, sorting, and exploration features
+ * This is the crown jewel of MyFace SnapJournal - a sophisticated social feed browser
+ * that transforms Mastodon's public and local timelines into beautiful, interactive experiences.
+ * 
+ * 🎯 **Key Features:**
+ * - OAuth authentication with any Mastodon instance
+ * - 5 distinct display modes (Refined, Cards, Instagram, DataViz, Dense)
+ * - Real-time image loading and media display
+ * - Smart pagination (up to 10,000 posts)
+ * - Advanced filtering and search capabilities
+ * - Visual pattern encoding for data visualization
+ * - Glass morphism UI with theme-aware styling
+ * 
+ * 🔧 **Technical Implementation:**
+ * - Zustand store for state management
+ * - Paginated API calls with error handling
+ * - Responsive grid layouts with CSS Grid
+ * - Image lazy loading with fallback handling
+ * - Scroll-based animations and hover effects
+ * - TypeScript type safety throughout
+ * 
+ * 📊 **Display Modes:**
+ * 1. **Refined**: Elegant cards with enhanced typography
+ * 2. **Cards**: Responsive grid with compact info
+ * 3. **Instagram**: Square images with engagement overlays
+ * 4. **DataViz**: Compact pills with visual pattern encoding
+ * 5. **Dense**: Ultra-compact layout for power users
  */
 
 import React, { useState, useEffect, useRef } from 'react';

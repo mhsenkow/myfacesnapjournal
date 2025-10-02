@@ -1,8 +1,36 @@
 /**
  * MyFace SnapJournal - Main Stylesheet
  * 
- * This file imports Tailwind CSS and our custom theme system.
- * It also contains global styles and utility classes.
+ * This is the heart of our visual design system, implementing a sophisticated
+ * glass morphism interface with multiple themes and advanced animations.
+ * 
+ * 🎨 **Design System Features:**
+ * - Glass morphism effects with backdrop filters
+ * - Three distinct themes (Light, Dark, Brutalist)
+ * - Smooth animations and micro-interactions
+ * - Responsive design patterns
+ * - Accessibility-focused styling
+ * 
+ * ✨ **Glass Morphism Implementation:**
+ * - Translucent backgrounds with blur effects
+ * - Layered shadows and inset highlights
+ * - Theme-aware opacity and saturation
+ * - Hover effects with enhanced depth
+ * - Brutalist mode with aggressive styling
+ * 
+ * 🎭 **Theme System:**
+ * - Light Mode: Clean, elegant with subtle glass effects
+ * - Dark Mode: Dramatic with enhanced contrast
+ * - Brutalist Mode: High-contrast, aggressive styling
+ * - CSS variables for dynamic theming
+ * - Smooth transitions between modes
+ * 
+ * 🔧 **Technical Implementation:**
+ * - Tailwind CSS integration with custom utilities
+ * - CSS custom properties for theming
+ * - Advanced backdrop-filter effects
+ * - Scroll-based animations
+ * - Performance-optimized styling
  */
 
 /* Import Tailwind CSS */

@@ -1,7 +1,35 @@
 /**
- * Mastodon Store
+ * Mastodon Store - Centralized State Management for Social Integration
  * 
- * Zustand store for managing Mastodon authentication, posts, and settings
+ * This Zustand store serves as the single source of truth for all Mastodon-related
+ * state and operations. It manages authentication, feed data, display preferences,
+ * and user interactions in a reactive, persistent manner.
+ * 
+ * 🏪 **State Management:**
+ * - Authentication state (tokens, user info, connection status)
+ * - Feed data (posts, loading states, error handling)
+ * - Display preferences (theme, layout modes, filters)
+ * - User interactions (favorites, imports, settings)
+ * 
+ * 🔄 **Data Flow:**
+ * - Reactive updates across all components
+ * - Persistent storage with automatic sync
+ * - Optimistic updates for better UX
+ * - Error state management and recovery
+ * 
+ * 🎨 **Display Modes:**
+ * - Refined: Elegant cards with enhanced typography
+ * - Cards: Responsive grid with compact information
+ * - Instagram: Square images with engagement overlays
+ * - DataViz: Compact pills with visual pattern encoding
+ * - Dense: Ultra-compact layout for power users
+ * 
+ * 🔧 **Key Operations:**
+ * - OAuth authentication flow
+ * - Timeline fetching with smart pagination
+ * - Post filtering and sorting
+ * - Import to journal entries
+ * - Theme and preference management
  */
 
 import { create } from 'zustand';
