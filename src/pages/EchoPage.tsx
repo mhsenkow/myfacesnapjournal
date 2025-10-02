@@ -72,13 +72,13 @@ const EchoPage: React.FC = () => {
       <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide flex items-center gap-4">
+            <h1 className="text-4xl font-light glass-text-primary tracking-wide flex items-center gap-4">
               <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg">
                 <Users className="w-8 h-8 text-white" />
               </div>
               <span className="font-extralight">Echo Engine</span>
             </h1>
-            <p className="text-neutral-500 dark:text-neutral-400 mt-3 text-lg font-light">AI-powered insights from your journal entries</p>
+            <p className="glass-text-tertiary mt-3 text-lg font-light">AI-powered insights from your journal entries</p>
           </div>
           <button className="glass-subtle px-5 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light">
             <Brain size={20} className="mr-2 text-blue-600" />
@@ -95,8 +95,8 @@ const EchoPage: React.FC = () => {
               <Brain size={20} className="text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Total Echos</p>
-              <p className="text-3xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">{mockEchos.length}</p>
+              <p className="text-sm glass-text-muted font-light">Total Echos</p>
+              <p className="text-3xl font-light glass-text-primary tracking-wide">{mockEchos.length}</p>
             </div>
           </div>
         </div>
@@ -107,8 +107,8 @@ const EchoPage: React.FC = () => {
               <TrendingUp size={20} className="text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Active Patterns</p>
-              <p className="text-3xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">8</p>
+              <p className="text-sm glass-text-muted font-light">Active Patterns</p>
+              <p className="text-3xl font-light glass-text-primary tracking-wide">8</p>
             </div>
           </div>
         </div>
@@ -119,8 +119,8 @@ const EchoPage: React.FC = () => {
               <Users size={20} className="text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Resonance</p>
-              <p className="text-3xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">{mockResonance.length}</p>
+              <p className="text-sm glass-text-muted font-light">Resonance</p>
+              <p className="text-3xl font-light glass-text-primary tracking-wide">{mockResonance.length}</p>
             </div>
           </div>
         </div>
@@ -131,8 +131,8 @@ const EchoPage: React.FC = () => {
               <Lightbulb size={20} className="text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">New Insights</p>
-              <p className="text-3xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">3</p>
+              <p className="text-sm glass-text-muted font-light">New Insights</p>
+              <p className="text-3xl font-light glass-text-primary tracking-wide">3</p>
             </div>
           </div>
         </div>
@@ -142,7 +142,7 @@ const EchoPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Echo Cards */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">Echo Patterns</h2>
+          <h2 className="text-2xl font-light glass-text-primary tracking-wide">Echo Patterns</h2>
 
           {mockEchos.map((echo) => (
             <div
@@ -154,12 +154,12 @@ const EchoPage: React.FC = () => {
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 text-lg tracking-wide group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">{echo.title}</h3>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light mt-1">{echo.description}</p>
+                  <h3 className="font-medium glass-text-primary text-lg tracking-wide group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">{echo.title}</h3>
+                  <p className="text-sm glass-text-tertiary font-light mt-1">{echo.description}</p>
 
                   {/* Strength indicator */}
                   <div className="mt-4">
-                    <div className="flex items-center justify-between text-sm text-neutral-500 dark:text-neutral-400 mb-2 font-light">
+                    <div className="flex items-center justify-between text-sm glass-text-muted mb-2 font-light">
                       <span>Strength</span>
                       <span>{Math.round(echo.strength * 100)}%</span>
                     </div>
@@ -172,7 +172,7 @@ const EchoPage: React.FC = () => {
                   </div>
 
                   {/* Meta info */}
-                  <div className="flex items-center space-x-6 mt-4 text-sm text-neutral-400 dark:text-neutral-500 font-light">
+                  <div className="flex items-center space-x-6 mt-4 text-sm glass-text-muted font-light">
                     <div className="flex items-center gap-1">
                       <BarChart3 size={14} className="text-purple-500" />
                       {echo.entries} entries
@@ -202,13 +202,13 @@ const EchoPage: React.FC = () => {
 
         {/* Resonance View */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-neutral-900">Resonance Network</h2>
+          <h2 className="text-lg font-semibold glass-text-primary">Resonance Network</h2>
           
           {mockResonance.map((resonance) => (
-            <div key={resonance.id} className="p-4 bg-white border border-neutral-200 rounded-lg">
+            <div key={resonance.id} className="p-4 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl">
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-neutral-900">Connection</h4>
-                <span className="text-sm text-neutral-500">
+                <h4 className="font-medium glass-text-primary">Connection</h4>
+                <span className="text-sm glass-text-muted">
                   {Math.round(resonance.strength * 100)}% match
                 </span>
               </div>
@@ -216,15 +216,15 @@ const EchoPage: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
-                  <span className="text-sm text-neutral-700">{resonance.sourceEcho}</span>
+                  <span className="text-sm glass-text-secondary">{resonance.sourceEcho}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-secondary-500 rounded-full"></div>
-                  <span className="text-sm text-neutral-700">{resonance.targetEcho}</span>
+                  <span className="text-sm glass-text-secondary">{resonance.targetEcho}</span>
                 </div>
               </div>
               
-              <p className="text-sm text-neutral-600 mt-2">{resonance.description}</p>
+              <p className="text-sm glass-text-tertiary mt-2">{resonance.description}</p>
               
               {/* Connection strength */}
               <div className="mt-3">
