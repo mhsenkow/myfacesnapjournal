@@ -4,7 +4,7 @@
 
 A modern, feature-rich journaling application that combines personal reflection with social media integration. Built with a stunning glass morphism UI, multiple themes, and powerful features including Mastodon feed browsing, Facebook integration, and AI companionship.
 
-![MyFace SnapJournal Interface](https://raw.githubusercontent.com/mhsenkow/myfacesnapjournal/main/docs/screenshot.png)
+<!-- Screenshot placeholder - add your interface screenshot here -->
 
 ## 🚀 Current Status: **Feature-Complete MVP!**
 
