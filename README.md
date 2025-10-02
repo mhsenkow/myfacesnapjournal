@@ -14,19 +14,25 @@ A modern, feature-rich journaling application that combines personal reflection 
 - **🎨 Beautiful UI**: Glass morphism effects, multiple themes (Light/Dark/Brutalist)
 - **📝 Journal System**: Full CRUD operations with rich text editing
 - **🐘 Mastodon Integration**: OAuth authentication, public/local timeline browsing
-- **📊 Multiple Feed Views**: 5 display modes (Refined, Cards, Instagram, DataViz, Dense)
-- **📱 Instagram-Style Layout**: Real image loading with hover effects
+- **❤️ Interactive Posts**: Like and bookmark functionality with smooth animations
+- **📊 Smart Algorithms**: 9 post selection algorithms (latest, trending, viral, diverse, etc.)
+- **📱 Multiple Feed Views**: 5 display modes (Refined, Cards, Instagram, DataViz, Dense)
+- **📸 Instagram-Style Layout**: Real image loading with hover effects
 - **📈 Data Visualization**: Compact pill-based feed with visual patterns
 - **🔍 Advanced Filtering**: Search, sort, and filter posts by engagement
-- **📊 Pagination**: Smart fetching of large post volumes (up to 10,000)
+- **📊 Smart Pagination**: Fetch up to 10,000 posts with rate limiting
 - **🎭 Theme System**: Seamless switching between visual modes
 - **💾 State Management**: Zustand with persistent storage
-- **🔄 Real-time Updates**: Live feed refreshing and dynamic content
+- **🔄 Live Feed Mode**: Real-time updates with configurable intervals
+- **🎪 Floating UI**: Half-on/half-off patterns for menu elements
 
 ### ✅ **Social Integration:**
 - **Mastodon OAuth**: Secure authentication with any Mastodon instance
 - **Public Timeline**: Browse global fediverse content
 - **Local Timeline**: Discover posts from your instance
+- **Interactive Engagement**: Like and bookmark posts directly in the app
+- **Smart Content Discovery**: 9 algorithms for finding interesting posts
+- **Rich Post Information**: Media counts, tags, polls, mentions, content warnings
 - **Post Import**: Convert social posts to journal entries
 - **Facebook Integration**: API and web scraping methods (planned)
 
