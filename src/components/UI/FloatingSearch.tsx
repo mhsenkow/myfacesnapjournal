@@ -76,13 +76,13 @@ const FloatingSearch: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-6 right-20 z-50">
       {/* Search Container */}
       <div 
         className={`
-          glass border border-neutral-200 dark:border-neutral-700 
-          rounded-2xl transition-all duration-300 ease-in-out
-          ${isExpanded ? 'w-80 p-4 shadow-xl' : 'w-14 h-14 p-0 cursor-pointer'}
+          glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 
+          transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl
+          ${isExpanded ? 'w-80 p-4 shadow-xl rounded-2xl' : 'w-12 h-12 p-3 cursor-pointer rounded-full'}
           ${searchFocused ? 'scale-105 shadow-2xl' : ''}
         `}
         onClick={!isExpanded ? () => setIsExpanded(true) : undefined}
@@ -280,7 +280,7 @@ const FloatingSearch: React.FC = () => {
             className="w-full h-full flex items-center justify-center hover:scale-110 transition-transform duration-200"
             title="Search"
           >
-            <Search className="w-6 h-6 text-neutral-600 dark:text-neutral-400" />
+            <Search className="w-5 h-5 glass-text-primary" />
           </div>
         )}
       </div>

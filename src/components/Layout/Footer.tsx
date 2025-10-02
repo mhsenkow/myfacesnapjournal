@@ -65,9 +65,7 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
       {/* Toggle Button - Positioned to avoid footer */}
       <button
         onClick={onToggle}
-        className={`fixed bottom-16 z-50 p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ${
-          appState.sidebarCollapsed ? 'right-20' : 'right-20'
-        }`}
+        className={`fixed bottom-6 right-6 z-50 p-3 w-12 h-12 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center`}
         title={isVisible ? "Hide Feed Controls" : "Show Feed Controls"}
       >
         <Sparkles className={`w-5 h-5 glass-text-primary transition-transform duration-200 ${isVisible ? 'rotate-180' : ''}`} />
