@@ -89,6 +89,7 @@ interface MastodonStore {
   setAlgorithm: (algorithm: 'latest' | 'trending' | 'diverse' | 'balanced' | 'random') => void;
   setDisplayMode: (mode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined') => void;
   applyAlgorithm: () => void;
+  initialize: () => void;
 }
 
 const defaultAuth: MastodonAuth = {
@@ -506,13 +507,29 @@ export const useMastodonStore = create<MastodonStore>()(
 
       setDisplayMode: (mode) => {
         set({ displayMode: mode });
+      },
+
+      // Initialize algorithm when store is created
+      initialize: () => {
+        const { allPosts } = get();
+        if (allPosts.length > 0) {
+          get().applyAlgorithm();
+        }
       }
     }),
     {
       name: 'mastodon-store',
       partialize: (state) => ({
         auth: state.auth,
-        importSettings: state.importSettings
+        importSettings: state.importSettings,
+        algorithm: state.algorithm,
+        displayLimit: state.displayLimit,
+        postLimit: state.postLimit,
+        displayMode: state.displayMode,
+        feedType: state.feedType,
+        sortBy: state.sortBy,
+        filterBy: state.filterBy,
+        instanceUrl: state.instanceUrl
       })
     }
   )

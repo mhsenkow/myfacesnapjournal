@@ -71,6 +71,9 @@ const Header: React.FC = () => {
   const [showUserMenu, setShowUserMenu] = useState(false)
   
   const isFeedPage = location.pathname === '/feed'
+  
+  // Debug current algorithm state
+  console.log('Header render - current algorithm:', algorithm)
 
   // Get current page title
   const getPageTitle = () => {
