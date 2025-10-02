@@ -19,7 +19,7 @@ use database::{Database, JournalEntry};
 use serde_json::Value;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tauri::{Manager, State};
+use tauri::{Manager, State, WebviewWindowBuilder, WebviewUrl};
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
@@ -71,6 +71,7 @@ fn main() {
             analyze_echo_patterns,
             get_ai_models,
             check_ai_availability,
+            open_oauth_window,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -351,4 +352,22 @@ async fn check_ai_availability(state: State<'_, AppState>) -> Result<bool, Strin
         .check_availability()
         .await
         .map_err(|e| e.to_string())
+}
+
+// OAuth commands
+#[tauri::command]
+async fn open_oauth_window(app_handle: tauri::AppHandle, url: String) -> Result<String, String> {
+    let webview = WebviewWindowBuilder::new(
+        &app_handle,
+        "oauth",
+        WebviewUrl::External(url.parse().map_err(|e| e.to_string())?),
+    )
+    .title("Mastodon Authentication")
+    .inner_size(600.0, 700.0)
+    .center()
+    .resizable(false)
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    Ok("OAuth window opened".to_string())
 }

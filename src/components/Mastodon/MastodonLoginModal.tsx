@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Globe, X, AlertCircle, Loader2, ExternalLink, CheckCircle } from 'lucide-react';
+import { invoke } from '@tauri-apps/api/core';
 import { mastodonService } from '../../services/mastodonService';
 import { MastodonInstance } from '../../types/mastodon';
 
@@ -28,6 +29,7 @@ const MastodonLoginModal: React.FC<MastodonLoginModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [instanceInfo, setInstanceInfo] = useState<MastodonInstance | null>(null);
   const [step, setStep] = useState<'select' | 'auth'>('select');
+  const [manualCode, setManualCode] = useState('');
 
   const popularInstances = mastodonService.getPopularInstances();
 
@@ -84,49 +86,22 @@ const MastodonLoginModal: React.FC<MastodonLoginModalProps> = ({
       const clientData = await mastodonService.registerClient(selectedInstance, redirectUri);
       const authUrl = mastodonService.getAuthUrl(selectedInstance, redirectUri, clientData.client_id);
       
-      const popup = window.open(
-        authUrl,
-        'mastodon-auth',
-        'width=600,height=700,scrollbars=yes,resizable=yes'
-      );
-
-      if (!popup) {
-        setError('Popup blocked. Please allow popups for this site and try again.');
+      // Use Tauri's webview window instead of popup
+      try {
+        await invoke('open_oauth_window', { url: authUrl });
+      } catch (error) {
+        setError(`Failed to open OAuth window: ${error}`);
         setIsLoading(false);
         return;
       }
 
-      // Listen for OAuth callback using message events
-      const handleMessage = async (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return;
-        
-        if (event.data.type === 'MASTODON_OAUTH_CALLBACK') {
-          window.removeEventListener('message', handleMessage);
-          
-          if (event.data.code) {
-            await handleOAuthCallback(selectedInstance, event.data.code, redirectUri);
-          } else if (event.data.error) {
-            setError(event.data.error);
-          } else {
-            setError('No authorization code received');
-          }
-          
-          popup.close();
-          setIsLoading(false);
-        }
-      };
+      // For now, we'll use a manual code entry approach
+      // The user will copy the code from the OAuth window
+      setError('Please copy the authorization code from the OAuth window and paste it below.');
+      setIsLoading(false);
 
-      window.addEventListener('message', handleMessage);
-
-      // Check if popup is closed
-      const checkClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkClosed);
-          window.removeEventListener('message', handleMessage);
-          setIsLoading(false);
-          setError('Authentication was cancelled or failed');
-        }
-      }, 1000);
+      // OAuth window opened successfully
+      // User will need to manually copy the code from the window
     } catch (error) {
       setIsLoading(false);
       const errorMsg = error instanceof Error ? error.message : 'Failed to register with Mastodon instance';
@@ -172,7 +147,30 @@ const MastodonLoginModal: React.FC<MastodonLoginModalProps> = ({
     setError(null);
     setIsLoading(false);
     setStep('select');
+    setManualCode('');
     onClose();
+  };
+
+  const handleManualCodeSubmit = async () => {
+    if (!manualCode.trim()) {
+      setError('Please enter the authorization code');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const redirectUri = `http://localhost:8080/callback`;
+      await handleOAuthCallback(selectedInstance, manualCode.trim(), redirectUri);
+      setManualCode('');
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to authenticate with the provided code';
+      setError(errorMsg);
+      onError?.(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -326,6 +324,37 @@ const MastodonLoginModal: React.FC<MastodonLoginModalProps> = ({
                   <div className="flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 text-red-600" />
                     <p className="text-sm text-red-800">{error}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Manual Code Entry */}
+              {error && error.includes('copy the authorization code') && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-800 mb-3">Enter Authorization Code</h4>
+                  <p className="text-sm text-blue-600 mb-3">
+                    Copy the authorization code from the OAuth window and paste it below:
+                  </p>
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={manualCode}
+                      onChange={(e) => setManualCode(e.target.value)}
+                      placeholder="Paste authorization code here..."
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      disabled={isLoading}
+                    />
+                    <button
+                      onClick={handleManualCodeSubmit}
+                      disabled={isLoading || !manualCode.trim()}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        'Submit'
+                      )}
+                    </button>
                   </div>
                 </div>
               )}
