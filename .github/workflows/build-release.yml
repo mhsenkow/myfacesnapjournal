@@ -1,0 +1,101 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+  TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+  APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+  APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+  APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+  APPLE_ID: ${{ secrets.APPLE_ID }}
+  APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli
+
+      - name: Setup macOS dependencies
+        if: matrix.platform == 'macos-latest'
+        run: |
+          brew install create-dmg
+          brew install --cask basictex
+
+      - name: Setup Linux dependencies
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Setup Windows dependencies
+        if: matrix.platform == 'windows-latest'
+        run: |
+          choco install -y visualstudio2022-workload-vctools
+
+      - name: Build the app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'MyFace SnapJournal ${{ github.ref_name }}'
+          releaseBody: |
+            ## 🎉 MyFace SnapJournal ${{ github.ref_name }}
+            
+            ### ✨ Features:
+            - **🐘 Mastodon Integration**: Browse public/local timelines
+            - **❤️ Interactive Likes**: Like posts directly in the app
+            - **📱 5 Display Modes**: Refined, Cards, Instagram, DataViz, Dense
+            - **🎨 Beautiful UI**: Glass morphism with multiple themes
+            - **📝 Journal System**: Full journaling capabilities
+            - **🔍 Smart Algorithms**: 9 ways to discover content
+            
+            ### 📥 Downloads:
+            - **macOS**: Download the `.dmg` file
+            - **Windows**: Download the `.msi` installer
+            - **Linux**: Download the `.AppImage` or `.deb` package
+            
+            ### 🚀 Quick Start:
+            1. Download and install the app for your platform
+            2. Open the Feed tab
+            3. Connect to Mastodon
+            4. Start browsing and liking posts!
+            
+            ### 🐛 Issues?
+            Report bugs at: https://github.com/mhsenkow/myfacesnapjournal/issues
+          releaseDraft: true
+          prerelease: false
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}

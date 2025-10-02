@@ -82,16 +82,35 @@ A modern, feature-rich journaling application that combines personal reflection 
 
 ## 🚀 Getting Started
 
-### **Quick Start (Recommended)**
+### **📱 Download Ready-to-Run App (Easiest)**
+1. **Go to [Releases](https://github.com/mhsenkow/myfacesnapjournal/releases)**
+2. **Download the app for your platform:**
+   - **macOS**: Download `.dmg` file → Double-click to install
+   - **Windows**: Download `.msi` installer → Run to install
+   - **Linux**: Download `.AppImage` → Make executable and run
+3. **Launch and start using!** No setup required! 🎉
+
+> **🎯 What You Get:**
+> - **Native desktop app** (not a web app)
+> - **No Node.js/Rust installation needed**
+> - **Works offline** after first launch
+> - **Full Mastodon integration** with working likes
+> - **Beautiful glass morphism UI**
+> - **All features included** (journal, feeds, themes)
+
+### **🔧 Build from Source (For Developers)**
 ```bash
 # Clone the repository
 git clone https://github.com/mhsenkow/myfacesnapjournal.git
 cd myfacesnapjournal
 
-# Run the automated setup script
+# Quick setup
 ./setup.sh
 
-# Start the app
+# Build the app
+./build-app.sh
+
+# Or run in development
 npm run tauri:dev
 ```
 
