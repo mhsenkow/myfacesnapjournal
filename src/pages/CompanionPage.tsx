@@ -1,15 +1,15 @@
 /**
- * Companion Page for MyFace SnapJournal
+ * AI Introspection Page for MyFace SnapJournal
  * 
- * This page provides an AI companion for reflection and conversation:
- * - Chat interface with AI persona
- * - Reflection prompts and questions
- * - Mood tracking and analysis
- * - Personalized insights and advice
+ * This page provides AI-powered introspection and deep reflection:
+ * - Advanced chat interface with AI introspection specialist
+ * - Deep reflection prompts and psychological insights
+ * - Emotional intelligence analysis and mood tracking
+ * - Personalized introspection exercises and mindfulness
  */
 
 import React, { useState } from 'react'
-import { Send, Brain, Heart, Lightbulb, Bot } from 'lucide-react'
+import { Send, Brain, Heart, Lightbulb, Bot, Moon, Sun, Eye, Zap, Target, Sparkles } from 'lucide-react'
 
 const CompanionPage: React.FC = () => {
   const [message, setMessage] = useState('')
@@ -17,7 +17,7 @@ const CompanionPage: React.FC = () => {
     {
       id: '1',
       type: 'bot',
-      content: 'Hello! I\'m here to help you reflect and explore your thoughts. How are you feeling today?',
+      content: 'Welcome to your AI Introspection session. I\'m here to guide you through deep self-reflection and help you explore the inner workings of your mind. What would you like to explore today?',
       timestamp: new Date()
     }
   ])
@@ -36,12 +36,12 @@ const CompanionPage: React.FC = () => {
     setConversation(prev => [...prev, userMessage])
     setMessage('')
 
-    // Simulate AI response
+    // Simulate AI response with more introspective language
     setTimeout(() => {
       const aiResponse = {
         id: (Date.now() + 1).toString(),
         type: 'bot' as const,
-        content: 'That\'s interesting! Tell me more about that feeling.',
+        content: 'That\'s a fascinating insight. Let\'s dive deeper into that thought pattern. What underlying emotions do you think are driving this perspective?',
         timestamp: new Date()
       }
       setConversation(prev => [...prev, aiResponse])
@@ -55,54 +55,79 @@ const CompanionPage: React.FC = () => {
     }
   }
 
+  const introspectionPrompts = [
+    { icon: Eye, text: "What patterns do I notice in my thoughts?", color: "purple" },
+    { icon: Heart, text: "How do my emotions guide my decisions?", color: "pink" },
+    { icon: Target, text: "What core values drive my actions?", color: "blue" },
+    { icon: Zap, text: "Where do I find my greatest energy?", color: "yellow" }
+  ]
+
+  const mindfulnessExercises = [
+    { title: "Body Scan Meditation", duration: "10 min", icon: Moon },
+    { title: "Gratitude Reflection", duration: "5 min", icon: Sun },
+    { title: "Emotional Check-in", duration: "3 min", icon: Heart },
+    { title: "Future Self Visualization", duration: "8 min", icon: Sparkles }
+  ]
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-900">AI Companion</h1>
-          <p className="text-neutral-600 mt-1">Your personal AI friend for reflection and growth</p>
+    <div className="min-h-screen space-y-6">
+      {/* Page Header with Glass Morphism */}
+      <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-light text-neutral-900 dark:text-neutral-100 flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl shadow-lg">
+                <Brain className="w-8 h-8 text-white" />
+              </div>
+              <span className="font-extralight tracking-wide">AI Introspection</span>
+            </h1>
+            <p className="text-neutral-500 dark:text-neutral-400 mt-3 text-lg font-light">
+              Deep self-reflection powered by artificial intelligence
+            </p>
+          </div>
+          <button className="glass-subtle px-5 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light">
+            <Brain size={20} className="mr-2 text-purple-600" />
+            New Session
+          </button>
         </div>
-        <button className="btn-primary">
-          <Brain size={20} className="mr-2" />
-          New Conversation
-        </button>
       </div>
 
       {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chat Interface */}
-        <div className="lg:col-span-2">
-          <div className="bg-white border border-neutral-200 rounded-lg h-[600px] flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Main Chat Interface */}
+        <div className="lg:col-span-3">
+          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 h-[700px] flex flex-col overflow-hidden">
             {/* Chat Header */}
-            <div className="p-4 border-b border-neutral-200 bg-neutral-50">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
-                  <Bot size={20} className="text-white" />
+            <div className="p-6 border-b border-neutral-200 dark:border-neutral-700 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Bot size={24} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-neutral-900">Reflection Companion</h3>
-                  <p className="text-sm text-neutral-600">Always here to listen and help</p>
+                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 text-xl tracking-wide">Introspection Specialist</h3>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Guiding your journey of self-discovery</p>
                 </div>
               </div>
             </div>
 
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {conversation.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                    className={`max-w-2xl px-6 py-4 rounded-2xl ${
                       msg.type === 'user'
-                        ? 'bg-primary-500 text-white'
-                        : 'bg-neutral-100 text-neutral-900'
+                        ? 'bg-gradient-to-br from-purple-500 to-blue-600 text-white shadow-lg'
+                        : 'glass-subtle border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100'
                     }`}
                   >
-                    <p className="text-sm">{msg.content}</p>
-                    <p className="text-xs opacity-70 mt-1">
+                    <p className="text-sm leading-relaxed font-light">{msg.content}</p>
+                    <p className={`text-xs mt-2 font-light ${
+                      msg.type === 'user' ? 'text-purple-100' : 'text-neutral-400 dark:text-neutral-500'
+                    }`}>
                       {msg.timestamp.toLocaleTimeString()}
                     </p>
                   </div>
@@ -111,22 +136,24 @@ const CompanionPage: React.FC = () => {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-neutral-200">
-              <div className="flex space-x-2">
-                <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Type your message..."
-                  className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg resize-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  rows={2}
-                />
+            <div className="p-6 border-t border-neutral-200 dark:border-neutral-700">
+              <div className="flex space-x-4">
+                <div className="flex-1 relative">
+                  <textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Share your thoughts, feelings, or questions for deep introspection..."
+                    className="w-full px-4 py-3 glass-subtle border border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100 rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-neutral-400 dark:placeholder-neutral-500 font-light"
+                    rows={3}
+                  />
+                </div>
                 <button
                   onClick={handleSendMessage}
                   disabled={!message.trim()}
-                  className="btn-primary self-end"
+                  className="px-6 py-3 bg-gradient-to-br from-purple-500 to-blue-600 text-white rounded-xl hover:from-purple-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg flex items-center gap-2"
                 >
-                  <Send size={16} />
+                  <Send size={18} />
                 </button>
               </div>
             </div>
@@ -134,56 +161,78 @@ const CompanionPage: React.FC = () => {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-4">
-          {/* Quick Actions */}
-          <div className="bg-white border border-neutral-200 rounded-lg p-4">
-            <h3 className="font-medium text-neutral-900 mb-3">Quick Actions</h3>
-            <div className="space-y-2">
-              <button className="w-full btn-outline text-left">
-                <Heart size={16} className="mr-2" />
-                How am I feeling?
-              </button>
-              <button className="w-full btn-outline text-left">
-                <Lightbulb size={16} className="mr-2" />
-                Give me a prompt
-              </button>
-              <button className="w-full btn-outline text-left">
-                <Brain size={16} className="mr-2" />
-                Analyze my mood
-              </button>
-            </div>
-          </div>
-
-          {/* Mood Tracker */}
-          <div className="bg-white border border-neutral-200 rounded-lg p-4">
-            <h3 className="font-medium text-neutral-900 mb-3">Today's Mood</h3>
-            <div className="space-y-2">
-              {['😊', '😐', '😔', '😤', '😴'].map((emoji, index) => (
+        <div className="space-y-6">
+          {/* Introspection Prompts */}
+          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6">
+            <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2 text-lg tracking-wide">
+              <Lightbulb size={18} className="text-yellow-500" />
+              Introspection Prompts
+            </h3>
+            <div className="space-y-3">
+              {introspectionPrompts.map((prompt, index) => (
                 <button
                   key={index}
-                  className="w-full p-2 text-center hover:bg-neutral-100 rounded transition-colors"
+                  className="w-full p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group"
                 >
-                  <span className="text-2xl">{emoji}</span>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg bg-${prompt.color}-100 dark:bg-${prompt.color}-900/30`}>
+                      <prompt.icon size={16} className={`text-${prompt.color}-600 dark:text-${prompt.color}-400`} />
+                    </div>
+                    <span className="text-sm text-neutral-700 dark:text-neutral-300 group-hover:text-neutral-900 dark:group-hover:text-neutral-100 font-light">
+                      {prompt.text}
+                    </span>
+                  </div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Conversation History */}
-          <div className="bg-white border border-neutral-200 rounded-lg p-4">
-            <h3 className="font-medium text-neutral-900 mb-3">Recent Conversations</h3>
-            <div className="space-y-2 text-sm text-neutral-600">
-              <div className="p-2 hover:bg-neutral-100 rounded cursor-pointer">
-                <p className="font-medium text-neutral-900">Morning Reflection</p>
-                <p className="text-xs">2 hours ago</p>
+          {/* Mindfulness Exercises */}
+          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6">
+            <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2 text-lg tracking-wide">
+              <Moon size={18} className="text-blue-500" />
+              Mindfulness Exercises
+            </h3>
+            <div className="space-y-3">
+              {mindfulnessExercises.map((exercise, index) => (
+                <button
+                  key={index}
+                  className="w-full p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <exercise.icon size={16} className="text-neutral-600 dark:text-neutral-400" />
+                      <span className="text-sm font-light text-neutral-700 dark:text-neutral-300 group-hover:text-neutral-900 dark:group-hover:text-neutral-100">
+                        {exercise.title}
+                      </span>
+                    </div>
+                    <span className="text-xs text-neutral-500 dark:text-neutral-400 font-light">
+                      {exercise.duration}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Session History */}
+          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6">
+            <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2 text-lg tracking-wide">
+              <Eye size={18} className="text-purple-500" />
+              Recent Sessions
+            </h3>
+            <div className="space-y-3 text-sm">
+              <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer">
+                <p className="font-light text-neutral-900 dark:text-neutral-100">Deep Self-Analysis</p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 font-light">2 hours ago</p>
               </div>
-              <div className="p-2 hover:bg-neutral-100 rounded cursor-pointer">
-                <p className="font-medium text-neutral-900">Project Discussion</p>
-                <p className="text-xs">Yesterday</p>
+              <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer">
+                <p className="font-light text-neutral-900 dark:text-neutral-100">Emotional Processing</p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 font-light">Yesterday</p>
               </div>
-              <div className="p-2 hover:bg-neutral-100 rounded cursor-pointer">
-                <p className="font-medium text-neutral-900">Stress Management</p>
-                <p className="text-xs">3 days ago</p>
+              <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer">
+                <p className="font-light text-neutral-900 dark:text-neutral-100">Values Exploration</p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 font-light">3 days ago</p>
               </div>
             </div>
           </div>
