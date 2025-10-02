@@ -17,7 +17,8 @@ import {
   Dice1,
   Play,
   Pause,
-  Radio
+  Radio,
+  X
 } from 'lucide-react';
 
 interface FooterProps {
@@ -73,20 +74,20 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
 
       {/* Footer Panel - Responsive positioning */}
       {isVisible && (
-        <div className={`fixed bottom-6 z-40 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-2xl backdrop-blur-xl p-3 sm:p-6 space-y-3 sm:space-y-4 transition-all duration-300 
-          left-4 sm:left-20 lg:left-80 right-4 sm:right-6 
+        <div className={`fixed bottom-6 z-40 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-2xl backdrop-blur-xl p-4 sm:p-6 space-y-4 transition-all duration-300 
+          left-6 right-6 sm:left-20 sm:right-20 
           ${appState.sidebarCollapsed ? 'lg:left-20' : 'lg:left-64'} 
-          max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-5xl xl:max-w-6xl`}>
+          max-w-7xl mx-auto`}>
           {/* Main Controls Row */}
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             {/* Feed Type */}
-            <div className="flex bg-neutral-100 dark:bg-neutral-700 rounded-lg">
+            <div className="flex glass-subtle rounded-lg p-1">
               <button
                 onClick={() => setFeedType('public')}
-                className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                className={`px-3 py-2 text-sm rounded-md transition-colors ${
                   feedType === 'public'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                 }`}
               >
                 <Globe className="w-4 h-4 mr-2 inline" />
@@ -94,10 +95,10 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
               </button>
               <button
                 onClick={() => setFeedType('local')}
-                className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                className={`px-3 py-2 text-sm rounded-md transition-colors ${
                   feedType === 'local'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                 }`}
               >
                 <Server className="w-4 h-4 mr-2 inline" />
@@ -144,14 +145,29 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
               <span className="text-xs glass-text-muted mt-1">Filter</span>
             </div>
 
-            {/* Refresh Button */}
-            <button
-              onClick={() => fetchPublicTimeline()}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </button>
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => fetchPublicTimeline()}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 transition-colors shadow-sm"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </button>
+              <button
+                onClick={() => {
+                  // Clear cache functionality
+                  if (allPosts.length > 0) {
+                    useMastodonStore.setState({ allPosts: [], posts: [] });
+                  }
+                }}
+                className="flex items-center gap-2 px-3 py-2 glass-subtle glass-text-secondary rounded-lg text-sm hover:bg-white/20 dark:hover:bg-black/20 transition-colors"
+                title="Clear cached posts"
+              >
+                <X className="w-4 h-4" />
+                Clear
+              </button>
+            </div>
           </div>
 
           {/* Data Controls Row */}
@@ -218,13 +234,13 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
           <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
             {/* Display Mode */}
             <div className="flex flex-col">
-              <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
+              <div className="flex items-center gap-1 glass-subtle rounded-lg p-1">
                 <button
                   onClick={() => setDisplayMode('refined')}
-                  className={`p-2 rounded transition-colors ${
+                  className={`p-2 rounded-md transition-colors ${
                     displayMode === 'refined'
-                      ? 'bg-purple-600 text-white'
-                      : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
                   title="Refined Feed"
                 >
@@ -232,10 +248,10 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 </button>
                 <button
                   onClick={() => setDisplayMode('cards')}
-                  className={`p-2 rounded transition-colors ${
+                  className={`p-2 rounded-md transition-colors ${
                     displayMode === 'cards'
-                      ? 'bg-purple-600 text-white'
-                      : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
                   title="Card Layout"
                 >
@@ -243,10 +259,10 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 </button>
                 <button
                   onClick={() => setDisplayMode('instagram')}
-                  className={`p-2 rounded transition-colors ${
+                  className={`p-2 rounded-md transition-colors ${
                     displayMode === 'instagram'
-                      ? 'bg-purple-600 text-white'
-                      : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
                   title="Instagram Style"
                 >
@@ -254,10 +270,10 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 </button>
                 <button
                   onClick={() => setDisplayMode('dataviz')}
-                  className={`p-2 rounded transition-colors ${
+                  className={`p-2 rounded-md transition-colors ${
                     displayMode === 'dataviz'
-                      ? 'bg-purple-600 text-white'
-                      : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
                   title="Data Visualization"
                 >
@@ -265,10 +281,10 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 </button>
                 <button
                   onClick={() => setDisplayMode('dense')}
-                  className={`p-2 rounded transition-colors ${
+                  className={`p-2 rounded-md transition-colors ${
                     displayMode === 'dense'
-                      ? 'bg-purple-600 text-white'
-                      : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
                   title="Dense Grid"
                 >
@@ -280,13 +296,13 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
 
             {/* Algorithm Selection */}
             <div className="flex flex-col">
-              <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
+              <div className="flex items-center gap-1 glass-subtle rounded-lg p-1">
                 <button
                   onClick={() => setAlgorithm('latest')}
-                  className={`p-2 rounded transition-colors ${
+                  className={`p-2 rounded-md transition-colors ${
                     algorithm === 'latest'
-                      ? 'bg-purple-600 text-white'
-                      : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
                   title="Latest Posts"
                 >
@@ -294,10 +310,10 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 </button>
                 <button
                   onClick={() => setAlgorithm('trending')}
-                  className={`p-2 rounded transition-colors ${
+                  className={`p-2 rounded-md transition-colors ${
                     algorithm === 'trending'
-                      ? 'bg-purple-600 text-white'
-                      : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
                   title="Trending Posts"
                 >
@@ -305,10 +321,10 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 </button>
                 <button
                   onClick={() => setAlgorithm('diverse')}
-                  className={`p-2 rounded transition-colors ${
+                  className={`p-2 rounded-md transition-colors ${
                     algorithm === 'diverse'
-                      ? 'bg-purple-600 text-white'
-                      : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
                   title="Diverse Mix"
                 >
@@ -316,10 +332,10 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 </button>
                 <button
                   onClick={() => setAlgorithm('balanced')}
-                  className={`p-2 rounded transition-colors ${
+                  className={`p-2 rounded-md transition-colors ${
                     algorithm === 'balanced'
-                      ? 'bg-purple-600 text-white'
-                      : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
                   title="Balanced Selection"
                 >
@@ -327,10 +343,10 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 </button>
                 <button
                   onClick={() => setAlgorithm('random')}
-                  className={`p-2 rounded transition-colors ${
+                  className={`p-2 rounded-md transition-colors ${
                     algorithm === 'random'
-                      ? 'bg-purple-600 text-white'
-                      : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
                   title="Random Selection"
                 >
@@ -349,8 +365,8 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 onClick={() => setIsLiveFeed(!isLiveFeed)}
                 className={`flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors ${
                   isLiveFeed
-                    ? 'bg-green-600 text-white'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                    ? 'bg-green-600 text-white shadow-sm'
+                    : 'glass-subtle glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                 }`}
                 title={isLiveFeed ? "Live Feed Active" : "Static Feed"}
               >

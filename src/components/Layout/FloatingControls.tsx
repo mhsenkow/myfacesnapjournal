@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Bell, Sun, Moon, User, Settings, Zap } from 'lucide-react';
+import { Bell, Sun, Moon, Zap } from 'lucide-react';
 
 const FloatingControls: React.FC = () => {
   const { theme, toggleMode } = useTheme();
@@ -49,21 +49,6 @@ const FloatingControls: React.FC = () => {
         <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
       </button>
 
-      {/* User Profile */}
-      <button
-        className="p-2 sm:p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
-        title="User Profile"
-      >
-        <User className="w-5 h-5 glass-text-primary" />
-      </button>
-
-      {/* Settings */}
-      <button
-        className="p-2 sm:p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
-        title="Settings"
-      >
-        <Settings className="w-5 h-5 glass-text-primary" />
-      </button>
     </div>
   );
 };
