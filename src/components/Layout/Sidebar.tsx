@@ -39,14 +39,14 @@ const Sidebar: React.FC = () => {
     {
       id: 'echo',
       label: 'Echo',
-      icon: Brain,
+      icon: Users,
       path: '/echo',
       description: 'AI-powered insights and patterns'
     },
     {
       id: 'companion',
       label: 'Companion',
-      icon: Users,
+      icon: Brain,
       path: '/companion',
       description: 'AI companion for reflection'
     },
