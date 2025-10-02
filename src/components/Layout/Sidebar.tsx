@@ -45,10 +45,10 @@ const Sidebar: React.FC = () => {
     },
     {
       id: 'companion',
-      label: 'Companion',
+      label: 'AI Introspection',
       icon: Brain,
       path: '/companion',
-      description: 'AI companion for reflection'
+      description: 'AI-powered introspection and reflection'
     },
     {
       id: 'feed',

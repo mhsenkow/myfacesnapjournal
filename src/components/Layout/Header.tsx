@@ -91,7 +91,7 @@ const Header: React.FC = () => {
       case '/echo':
         return 'Echo Engine'
       case '/companion':
-        return 'AI Companion'
+        return 'AI Introspection'
       case '/feed':
         return 'Feed'
       case '/settings':

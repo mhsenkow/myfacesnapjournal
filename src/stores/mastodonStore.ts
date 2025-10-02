@@ -97,6 +97,10 @@ interface MastodonStore {
   setLiveFeedBatchSize: (size: number) => void;
   setLiveFeedInterval: (interval: number) => void;
   refreshLiveFeed: () => Promise<void>;
+  
+  // Background service integration
+  toggleBackgroundLoading: (enable: boolean) => void;
+  updateBackgroundRefreshInterval: (interval: number) => void;
 }
 
 const defaultAuth: MastodonAuth = {
@@ -569,6 +573,17 @@ export const useMastodonStore = create<MastodonStore>()(
         if (allPosts.length > 0) {
           get().applyAlgorithm();
         }
+      },
+
+      // Background service integration
+      toggleBackgroundLoading: (enable: boolean) => {
+        // This will be called by the background service
+        console.log(`🔄 Background loading ${enable ? 'enabled' : 'disabled'}`);
+      },
+
+      updateBackgroundRefreshInterval: (interval: number) => {
+        // This will be called by the background service
+        console.log(`⏰ Background refresh interval updated to ${interval}ms`);
       }
     }),
     {

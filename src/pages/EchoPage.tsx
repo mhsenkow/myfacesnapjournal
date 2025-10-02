@@ -69,63 +69,70 @@ const EchoPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-900">Echo Engine</h1>
-          <p className="text-neutral-600 mt-1">AI-powered insights from your journal entries</p>
+      <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              <span className="font-extralight">Echo Engine</span>
+            </h1>
+            <p className="text-neutral-500 dark:text-neutral-400 mt-3 text-lg font-light">AI-powered insights from your journal entries</p>
+          </div>
+          <button className="glass-subtle px-5 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light">
+            <Brain size={20} className="mr-2 text-blue-600" />
+            Generate Insights
+          </button>
         </div>
-        <button className="btn-primary">
-          <Brain size={20} className="mr-2" />
-          Generate Insights
-        </button>
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-neutral-200">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="glass-subtle p-6 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:glass transition-all duration-300">
           <div className="flex items-center">
-            <div className="p-2 bg-primary-100 rounded-lg">
-              <Brain size={20} className="text-primary-600" />
+            <div className="p-3 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl shadow-lg">
+              <Brain size={20} className="text-white" />
             </div>
-            <div className="ml-3">
-              <p className="text-sm text-neutral-600">Total Echos</p>
-              <p className="text-2xl font-bold text-neutral-900">{mockEchos.length}</p>
+            <div className="ml-4">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Total Echos</p>
+              <p className="text-3xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">{mockEchos.length}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-subtle p-6 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:glass transition-all duration-300">
+          <div className="flex items-center">
+            <div className="p-3 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl shadow-lg">
+              <TrendingUp size={20} className="text-white" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Active Patterns</p>
+              <p className="text-3xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">8</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-subtle p-6 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:glass transition-all duration-300">
+          <div className="flex items-center">
+            <div className="p-3 bg-gradient-to-br from-pink-500 to-red-600 rounded-xl shadow-lg">
+              <Users size={20} className="text-white" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Resonance</p>
+              <p className="text-3xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">{mockResonance.length}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white p-4 rounded-lg border border-neutral-200">
+        <div className="glass-subtle p-6 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:glass transition-all duration-300">
           <div className="flex items-center">
-            <div className="p-2 bg-secondary-100 rounded-lg">
-              <TrendingUp size={20} className="text-secondary-600" />
+            <div className="p-3 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl shadow-lg">
+              <Lightbulb size={20} className="text-white" />
             </div>
-            <div className="ml-3">
-              <p className="text-sm text-neutral-600">Active Patterns</p>
-              <p className="text-2xl font-bold text-neutral-900">8</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-4 rounded-lg border border-neutral-200">
-          <div className="flex items-center">
-            <div className="p-2 bg-success-100 rounded-lg">
-              <Users size={20} className="text-success-600" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-neutral-600">Resonance</p>
-              <p className="text-2xl font-bold text-neutral-900">{mockResonance.length}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-4 rounded-lg border border-neutral-200">
-          <div className="flex items-center">
-            <div className="p-2 bg-warning-100 rounded-lg">
-              <Lightbulb size={20} className="text-warning-600" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-neutral-600">New Insights</p>
-              <p className="text-2xl font-bold text-neutral-900">3</p>
+            <div className="ml-4">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">New Insights</p>
+              <p className="text-3xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">3</p>
             </div>
           </div>
         </div>
@@ -134,54 +141,54 @@ const EchoPage: React.FC = () => {
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Echo Cards */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-neutral-900">Echo Patterns</h2>
-          
+        <div className="space-y-6">
+          <h2 className="text-2xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">Echo Patterns</h2>
+
           {mockEchos.map((echo) => (
             <div
               key={echo.id}
-              className={`p-4 bg-white border rounded-lg cursor-pointer transition-all duration-fast hover:shadow-md ${
-                selectedEcho === echo.id ? 'border-primary-500 bg-primary-50' : 'border-neutral-200'
+              className={`p-6 glass-subtle border rounded-xl cursor-pointer transition-all duration-300 hover:glass group ${
+                selectedEcho === echo.id ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-900/20' : 'border-neutral-200 dark:border-neutral-700'
               }`}
               onClick={() => setSelectedEcho(echo.id)}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="font-medium text-neutral-900">{echo.title}</h3>
-                  <p className="text-sm text-neutral-600 mt-1">{echo.description}</p>
-                  
+                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 text-lg tracking-wide group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">{echo.title}</h3>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light mt-1">{echo.description}</p>
+
                   {/* Strength indicator */}
-                  <div className="mt-3">
-                    <div className="flex items-center justify-between text-sm text-neutral-600 mb-1">
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between text-sm text-neutral-500 dark:text-neutral-400 mb-2 font-light">
                       <span>Strength</span>
                       <span>{Math.round(echo.strength * 100)}%</span>
                     </div>
-                    <div className="w-full bg-neutral-200 rounded-full h-2">
+                    <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
                       <div
-                        className="bg-primary-500 h-2 rounded-full transition-all duration-300"
+                        className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${echo.strength * 100}%` }}
                       />
                     </div>
                   </div>
-                  
+
                   {/* Meta info */}
-                  <div className="flex items-center space-x-4 mt-3 text-xs text-neutral-500">
-                    <div className="flex items-center">
-                      <BarChart3 size={14} className="mr-1" />
+                  <div className="flex items-center space-x-6 mt-4 text-sm text-neutral-400 dark:text-neutral-500 font-light">
+                    <div className="flex items-center gap-1">
+                      <BarChart3 size={14} className="text-purple-500" />
                       {echo.entries} entries
                     </div>
-                    <div className="flex items-center">
-                      <Calendar size={14} className="mr-1" />
+                    <div className="flex items-center gap-1">
+                      <Calendar size={14} className="text-blue-500" />
                       {echo.lastSeen.toLocaleDateString()}
                     </div>
                   </div>
-                  
+
                   {/* Tags */}
-                  <div className="flex flex-wrap gap-1 mt-2">
+                  <div className="flex flex-wrap gap-2 mt-3">
                     {echo.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-1 text-xs bg-neutral-100 text-neutral-600 rounded-full"
+                        className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg font-light"
                       >
                         {tag}
                       </span>

@@ -34,15 +34,17 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-neutral-900">Settings</h1>
-        <p className="text-neutral-600 mt-1">Configure your journaling experience</p>
+      <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 mb-6">
+        <div>
+          <h1 className="text-4xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">Settings</h1>
+          <p className="text-neutral-500 dark:text-neutral-400 mt-2 text-lg font-light">Configure your journaling experience</p>
+        </div>
       </div>
 
       {/* Settings Tabs */}
-      <div className="bg-white border border-neutral-200 rounded-lg">
+      <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700">
         {/* Tab Navigation */}
-        <div className="border-b border-neutral-200">
+        <div className="border-b border-neutral-200 dark:border-neutral-700">
           <nav className="flex space-x-8 px-6">
             {tabs.map((tab) => {
               const Icon = tab.icon

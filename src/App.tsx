@@ -20,6 +20,8 @@ import DatabaseSettingsPage from './pages/DatabaseSettingsPage'
 import VaultPage from './pages/VaultPage'
 import ToastContainer from './components/UI/ToastContainer'
 import LoadingScreen from './components/UI/LoadingScreen'
+import BackgroundLoadingIndicator from './components/UI/BackgroundLoadingIndicator'
+import backgroundFeedService from './services/backgroundFeedService'
 
 function AppContent() {
   const { state } = useApp()
@@ -52,6 +54,9 @@ function AppContent() {
       
       {/* Global toast notifications */}
       <ToastContainer toasts={state.toastQueue} />
+      
+      {/* Background loading indicator */}
+      <BackgroundLoadingIndicator />
     </div>
   )
 }

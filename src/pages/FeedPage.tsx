@@ -496,12 +496,8 @@ const FeedPage: React.FC = () => {
   const [previousPosts, setPreviousPosts] = useState<MastodonPost[]>([]);
   const [animationKey, setAnimationKey] = useState(0);
 
-  // Fetch posts when component mounts
-  useEffect(() => {
-    if (auth.isAuthenticated) {
-      fetchPublicTimeline();
-    }
-  }, [auth.isAuthenticated, fetchPublicTimeline]);
+  // Note: Feed loading is now handled by background service
+  // This ensures feeds load even when user is on other pages
 
   // Handle scroll events for bounce animation
   useEffect(() => {

@@ -49,59 +49,66 @@ const VaultPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-900">Vault</h1>
-          <p className="text-neutral-600 mt-1">Secure storage and data management</p>
-        </div>
-        <div className="flex space-x-3">
-          <button className="btn-outline">
-            <Download size={20} className="mr-2" />
-            Create Backup
-          </button>
-          <button className="btn-primary">
-            <Upload size={20} className="mr-2" />
-            Restore Backup
-          </button>
+      <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl shadow-lg">
+                <Shield className="w-8 h-8 text-white" />
+              </div>
+              <span className="font-extralight">Vault</span>
+            </h1>
+            <p className="text-neutral-500 dark:text-neutral-400 mt-3 text-lg font-light">Secure storage and data management</p>
+          </div>
+          <div className="flex gap-3">
+            <button className="glass-subtle px-4 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light">
+              <Download size={18} className="mr-2 text-blue-600" />
+              Create Backup
+            </button>
+            <button className="glass-subtle px-4 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light">
+              <Upload size={18} className="mr-2 text-green-600" />
+              Restore Backup
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Security Status */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-neutral-200">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="glass-subtle p-6 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:glass transition-all duration-300">
           <div className="flex items-center">
-            <div className={`p-2 rounded-lg ${isLocked ? 'bg-success-100' : 'bg-warning-100'}`}>
-              {isLocked ? <Lock size={20} className="text-success-600" /> : <Unlock size={20} className="text-warning-600" />}
+            <div className={`p-3 rounded-xl shadow-lg ${isLocked ? 'bg-green-100 dark:bg-green-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'}`}>
+              {isLocked ? <Lock size={20} className="text-green-600 dark:text-green-400" /> : <Unlock size={20} className="text-yellow-600 dark:text-yellow-400" />}
             </div>
-            <div className="ml-3">
-              <p className="text-sm text-neutral-600">Vault Status</p>
-              <p className={`text-lg font-semibold ${isLocked ? 'text-success-600' : 'text-warning-600'}`}>
+            <div className="ml-4">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Vault Status</p>
+              <p className={`text-2xl font-light ${isLocked ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
                 {isLocked ? 'Locked' : 'Unlocked'}
               </p>
             </div>
           </div>
         </div>
-        
-        <div className="bg-white p-4 rounded-lg border border-neutral-200">
+
+        <div className="glass-subtle p-6 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:glass transition-all duration-300">
           <div className="flex items-center">
-            <div className="p-2 bg-primary-100 rounded-lg">
-              <Key size={20} className="text-primary-600" />
+            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg">
+              <Key size={20} className="text-white" />
             </div>
-            <div className="ml-3">
-              <p className="text-sm text-neutral-600">Encryption</p>
-              <p className="text-lg font-semibold text-neutral-900">AES-256</p>
+            <div className="ml-4">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Encryption</p>
+              <p className="text-2xl font-light text-purple-600 dark:text-purple-400 tracking-wide">AES-256</p>
             </div>
           </div>
         </div>
-        
-        <div className="bg-white p-4 rounded-lg border border-neutral-200">
+
+        <div className="glass-subtle p-6 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:glass transition-all duration-300">
           <div className="flex items-center">
-            <div className="p-2 bg-secondary-100 rounded-lg">
-              <Database size={20} className="text-secondary-600" />
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-teal-600 rounded-xl shadow-lg">
+              <Database size={20} className="text-white" />
             </div>
-            <div className="ml-3">
-              <p className="text-sm text-neutral-600">Storage Used</p>
-              <p className="text-lg font-semibold text-neutral-900">2.4 MB</p>
+            <div className="ml-4">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Storage Used</p>
+              <p className="text-2xl font-light text-blue-600 dark:text-blue-400 tracking-wide">2.4 MB</p>
             </div>
           </div>
         </div>
@@ -110,53 +117,59 @@ const VaultPage: React.FC = () => {
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Backup Management */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-neutral-900">Backup Management</h2>
-          
-          <div className="space-y-3">
+        <div className="space-y-6">
+          <h2 className="text-2xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">Backup Management</h2>
+
+          <div className="space-y-4">
             {mockBackups.map((backup) => (
               <div
                 key={backup.id}
-                className={`p-4 bg-white border rounded-lg cursor-pointer transition-all duration-fast hover:shadow-md ${
-                  selectedBackup === backup.id ? 'border-primary-500 bg-primary-50' : 'border-neutral-200'
+                className={`p-6 glass-subtle border rounded-xl cursor-pointer transition-all duration-300 hover:glass group ${
+                  selectedBackup === backup.id ? 'border-green-500 bg-green-50/50 dark:bg-green-900/20' : 'border-neutral-200 dark:border-neutral-700'
                 }`}
                 onClick={() => setSelectedBackup(backup.id)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <h3 className="font-medium text-neutral-900">{backup.name}</h3>
+                    <div className="flex items-center gap-3 mb-3">
+                      <h3 className="font-medium text-neutral-900 dark:text-neutral-100 text-lg tracking-wide group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">{backup.name}</h3>
                       {backup.encrypted && (
-                        <span className="px-2 py-1 text-xs bg-success-100 text-success-700 rounded-full">
+                        <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg font-light">
                           Encrypted
                         </span>
                       )}
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        backup.type === 'full' ? 'bg-primary-100 text-primary-700' :
-                        backup.type === 'incremental' ? 'bg-secondary-100 text-secondary-700' :
-                        'bg-neutral-100 text-neutral-700'
+                      <span className={`px-2 py-1 text-xs rounded-lg font-light ${
+                        backup.type === 'full' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' :
+                        backup.type === 'incremental' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
+                        'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300'
                       }`}>
                         {backup.type}
                       </span>
                     </div>
-                    
-                    <div className="flex items-center space-x-4 text-sm text-neutral-600 mb-2">
-                      <span>{backup.size}</span>
-                      <span>{backup.entries} entries</span>
+
+                    <div className="flex items-center gap-6 text-sm text-neutral-400 dark:text-neutral-500 font-light mb-3">
+                      <span className="flex items-center gap-1">
+                        <Database size={14} className="text-blue-500" />
+                        {backup.size}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Shield size={14} className="text-green-500" />
+                        {backup.entries} entries
+                      </span>
                       <span>{backup.createdAt.toLocaleDateString()}</span>
                     </div>
-                    
-                    <p className="text-xs text-neutral-500">
+
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500 font-light">
                       Created {backup.createdAt.toLocaleString()}
                     </p>
                   </div>
                   
-                  <div className="flex space-x-2">
-                    <button className="p-2 hover:bg-neutral-100 rounded transition-colors">
-                      <Download size={16} />
+                  <div className="flex gap-2">
+                    <button className="p-2 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                      <Download size={16} className="text-blue-600" />
                     </button>
-                    <button className="p-2 hover:bg-neutral-100 rounded transition-colors">
-                      <Trash2 size={16} />
+                    <button className="p-2 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                      <Trash2 size={16} className="text-red-600" />
                     </button>
                   </div>
                 </div>

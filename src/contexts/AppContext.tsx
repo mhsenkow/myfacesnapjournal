@@ -21,7 +21,7 @@ export interface AppSettings {
   
   // AI settings
   enableEchoEngine: boolean
-  enableCompanionPersona: boolean
+  enableIntrospectionAI: boolean
   aiModel: 'ollama' | 'llama.cpp' | 'disabled'
   aiModelPath: string
   
@@ -87,7 +87,7 @@ const defaultAppSettings: AppSettings = {
   enableNotifications: true,
   enableSounds: true,
   enableEchoEngine: true,
-  enableCompanionPersona: true,
+  enableIntrospectionAI: true,
   aiModel: 'ollama',
   aiModelPath: '',
   enableSync: false,
