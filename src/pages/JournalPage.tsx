@@ -436,8 +436,7 @@ const JournalPage: React.FC = () => {
                   <select
                     value={editingEntry.mood}
                     onChange={(e) => setEditingEntry({ ...editingEntry, mood: e.target.value as any })}
-                    className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
                     <option value="happy">Happy</option>
                     <option value="grateful">Grateful</option>
@@ -453,8 +452,7 @@ const JournalPage: React.FC = () => {
                   <select
                     value={editingEntry.privacy}
                     onChange={(e) => setEditingEntry({ ...editingEntry, privacy: e.target.value as any })}
-                    className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
                     <option value="public">Public</option>
                     <option value="private">Private</option>
