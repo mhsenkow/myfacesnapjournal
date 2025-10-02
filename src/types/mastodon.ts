@@ -40,6 +40,9 @@ export interface MastodonPost {
   replies_count: number;
   reblogs_count: number;
   favourites_count: number;
+  favourited?: boolean;
+  reblogged?: boolean;
+  bookmarked?: boolean;
   content: string;
   reblog?: MastodonPost;
   account: MastodonUser;

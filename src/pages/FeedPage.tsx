@@ -45,7 +45,8 @@ import {
   BarChart3,
   AtSign,
   Lock,
-  Globe
+  Globe,
+  Bookmark
 } from 'lucide-react';
 import { useMastodonStore } from '../stores/mastodonStore';
 import { mastodonService } from '../services/mastodonService';
@@ -60,6 +61,8 @@ interface FeedLayoutProps {
   formatRelativeTime: (dateString: string) => string;
   getPostAnimationClass: (postId: string) => string;
   animationKey: number;
+  toggleLike: (postId: string) => Promise<void>;
+  toggleBookmark: (postId: string) => Promise<void>;
 }
 
 const FeedLayout: React.FC<FeedLayoutProps> = ({ 
@@ -69,7 +72,9 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
   formatContent, 
   formatRelativeTime,
   getPostAnimationClass,
-  animationKey
+  animationKey,
+  toggleLike,
+  toggleBookmark
 }) => {
   // Refined Layout (Default)
   if (displayMode === 'refined') {
@@ -134,9 +139,34 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                     <Repeat2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span className="text-sm font-medium">{post.reblogs_count}</span>
                   </button>
-                  <button className="flex items-center gap-1.5 hover:text-red-600 transition-colors group">
-                    <Heart className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <button 
+                    onClick={() => toggleLike(post.id)}
+                    className={`post-action-button flex items-center gap-1.5 transition-colors group ${
+                      post.favourited 
+                        ? 'text-red-600 heart-liked' 
+                        : 'text-neutral-500 dark:text-neutral-400 hover:text-red-600'
+                    }`}
+                  >
+                    <Heart 
+                      className={`w-4 h-4 group-hover:scale-110 transition-transform ${
+                        post.favourited ? 'fill-current' : ''
+                      }`} 
+                    />
                     <span className="text-sm font-medium">{post.favourites_count}</span>
+                  </button>
+                  <button 
+                    onClick={() => toggleBookmark(post.id)}
+                    className={`post-action-button flex items-center gap-1.5 transition-colors group ${
+                      post.bookmarked 
+                        ? 'text-yellow-600 bookmark-saved' 
+                        : 'text-neutral-500 dark:text-neutral-400 hover:text-yellow-600'
+                    }`}
+                  >
+                    <Bookmark 
+                      className={`w-4 h-4 group-hover:scale-110 transition-transform ${
+                        post.bookmarked ? 'fill-current' : ''
+                      }`} 
+                    />
                   </button>
                   
                   {/* Content Indicators */}
@@ -234,9 +264,30 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                   <Repeat2 className="w-4 h-4" />
                   <span className="text-sm">{post.reblogs_count}</span>
                 </button>
-                <button className="flex items-center gap-1 hover:text-red-600 transition-colors">
-                  <Heart className="w-4 h-4" />
+                <button 
+                  onClick={() => toggleLike(post.id)}
+                  className={`post-action-button flex items-center gap-1 transition-colors ${
+                    post.favourited 
+                      ? 'text-red-600 heart-liked' 
+                      : 'text-neutral-500 dark:text-neutral-400 hover:text-red-600'
+                  }`}
+                >
+                  <Heart 
+                    className={`w-4 h-4 ${post.favourited ? 'fill-current' : ''}`} 
+                  />
                   <span className="text-sm">{post.favourites_count}</span>
+                </button>
+                <button 
+                  onClick={() => toggleBookmark(post.id)}
+                  className={`post-action-button flex items-center gap-1 transition-colors ${
+                    post.bookmarked 
+                      ? 'text-yellow-600 bookmark-saved' 
+                      : 'text-neutral-500 dark:text-neutral-400 hover:text-yellow-600'
+                  }`}
+                >
+                  <Bookmark 
+                    className={`w-4 h-4 ${post.bookmarked ? 'fill-current' : ''}`} 
+                  />
                 </button>
                 
                 {/* Content Indicators */}
@@ -563,7 +614,9 @@ const FeedPage: React.FC = () => {
     isLiveFeed,
     liveFeedBatchSize,
     liveFeedInterval,
-    refreshLiveFeed
+    refreshLiveFeed,
+    toggleLike,
+    toggleBookmark
   } = useMastodonStore();
   
   const [isScrolling, setIsScrolling] = useState(false);
@@ -754,6 +807,8 @@ const FeedPage: React.FC = () => {
               formatRelativeTime={formatRelativeTime}
               getPostAnimationClass={getPostAnimationClass}
               animationKey={animationKey}
+              toggleLike={toggleLike}
+              toggleBookmark={toggleBookmark}
             />
           )}
         </>

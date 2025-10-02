@@ -101,6 +101,10 @@ interface MastodonStore {
   // Background service integration
   toggleBackgroundLoading: (enable: boolean) => void;
   updateBackgroundRefreshInterval: (interval: number) => void;
+  
+  // Post interactions
+  toggleLike: (postId: string) => Promise<void>;
+  toggleBookmark: (postId: string) => Promise<void>;
 }
 
 const defaultAuth: MastodonAuth = {
@@ -692,6 +696,100 @@ export const useMastodonStore = create<MastodonStore>()(
       updateBackgroundRefreshInterval: (interval: number) => {
         // This will be called by the background service
         console.log(`⏰ Background refresh interval updated to ${interval}ms`);
+      },
+
+      toggleLike: async (postId: string) => {
+        const { auth, posts, allPosts, mastodonService } = get();
+        
+        if (!auth.isAuthenticated || !auth.accessToken) {
+          console.error('Not authenticated');
+          return;
+        }
+
+        // Find the post in both arrays
+        const post = posts.find(p => p.id === postId) || allPosts.find(p => p.id === postId);
+        if (!post) {
+          console.error('Post not found');
+          return;
+        }
+
+        const isLiked = post.favourited || false;
+
+        try {
+          // Call the API
+          const updatedPost = await mastodonService.toggleLike(
+            auth.instance,
+            auth.accessToken,
+            postId,
+            isLiked
+          );
+
+          // Update the post in both arrays
+          const updatePostInArray = (postsArray: MastodonPost[]) => {
+            return postsArray.map(p => 
+              p.id === postId 
+                ? { ...p, favourited: updatedPost.favourited, favourites_count: updatedPost.favourites_count }
+                : p
+            );
+          };
+
+          set({
+            posts: updatePostInArray(posts),
+            allPosts: updatePostInArray(allPosts)
+          });
+
+          console.log(`✅ Post ${isLiked ? 'unliked' : 'liked'} successfully`);
+        } catch (error) {
+          console.error('Failed to toggle like:', error);
+          // Could add toast notification here
+        }
+      },
+
+      toggleBookmark: async (postId: string) => {
+        const { auth, posts, allPosts, mastodonService } = get();
+        
+        if (!auth.isAuthenticated || !auth.accessToken) {
+          console.error('Not authenticated');
+          return;
+        }
+
+        // Find the post in both arrays
+        const post = posts.find(p => p.id === postId) || allPosts.find(p => p.id === postId);
+        if (!post) {
+          console.error('Post not found');
+          return;
+        }
+
+        const isBookmarked = post.bookmarked || false;
+
+        try {
+          // Call the API
+          const updatedPost = await mastodonService.toggleBookmark(
+            auth.instance,
+            auth.accessToken,
+            postId,
+            isBookmarked
+          );
+
+          // Update the post in both arrays
+          const updatePostInArray = (postsArray: MastodonPost[]) => {
+            return postsArray.map(p => 
+              p.id === postId 
+                ? { ...p, bookmarked: updatedPost.bookmarked }
+                : p
+            );
+          };
+
+          set({
+            posts: updatePostInArray(posts),
+            allPosts: updatePostInArray(allPosts)
+          });
+
+          console.log(`✅ Post ${isBookmarked ? 'unbookmarked' : 'bookmarked'} successfully`);
+        } catch (error) {
+          console.error('Failed to toggle bookmark:', error);
+          // Could add toast notification here
+        }
       }
     }),
     {

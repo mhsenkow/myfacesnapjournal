@@ -101,7 +101,7 @@ class MastodonService {
         body: JSON.stringify({
           client_name: 'MyFace SnapJournal',
           redirect_uris: redirectUri,
-          scopes: 'read:accounts read:statuses',
+          scopes: 'read:accounts read:statuses write:favourites write:bookmarks',
           website: window.location.origin
         })
       });
@@ -152,7 +152,7 @@ class MastodonService {
         body: JSON.stringify({
           client_name: fallbackName,
           redirect_uris: redirectUri,
-          scopes: 'read:accounts read:statuses',
+          scopes: 'read:accounts read:statuses write:favourites write:bookmarks',
           website: window.location.origin
         })
       });
@@ -193,7 +193,7 @@ class MastodonService {
       client_id: clientId || this.clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
-      scope: 'read:accounts read:statuses',
+      scope: 'read:accounts read:statuses write:favourites write:bookmarks',
       force_login: 'false'
     });
 
@@ -628,6 +628,62 @@ class MastodonService {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Like/Unlike a post
+   */
+  async toggleLike(
+    instanceUrl: string,
+    accessToken: string,
+    statusId: string,
+    isLiked: boolean
+  ): Promise<MastodonPost> {
+    const endpoint = isLiked ? 'unfavourite' : 'favourite';
+    const url = `${instanceUrl}/api/v1/statuses/${statusId}/${endpoint}`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to ${isLiked ? 'unlike' : 'like'} post: ${response.status} ${errorText}`);
+    }
+
+    return await response.json();
+  }
+
+  /**
+   * Bookmark/Unbookmark a post
+   */
+  async toggleBookmark(
+    instanceUrl: string,
+    accessToken: string,
+    statusId: string,
+    isBookmarked: boolean
+  ): Promise<MastodonPost> {
+    const endpoint = isBookmarked ? 'unbookmark' : 'bookmark';
+    const url = `${instanceUrl}/api/v1/statuses/${statusId}/${endpoint}`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to ${isBookmarked ? 'unbookmark' : 'bookmark'} post: ${response.status} ${errorText}`);
+    }
+
+    return await response.json();
   }
 }
 
