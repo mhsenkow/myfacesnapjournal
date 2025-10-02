@@ -1,0 +1,738 @@
+/**
+ * Journal Page - Main journaling interface
+ * 
+ * This page provides:
+ * - List of journal entries with search and filtering
+ * - Entry editor for creating/editing entries
+ * - Tags and mood management
+ * - Privacy controls
+ */
+
+import React, { useState, useEffect } from 'react';
+import { Search, Filter, Plus, Edit3, Trash2, Lock, Eye, EyeOff, Tag, Heart, CheckSquare, Square, ChevronDown, ChevronUp, Facebook } from 'lucide-react';
+import { useJournalStore, JournalEntry } from '../stores/journalStore';
+import FacebookImport from '../components/Facebook/FacebookImport';
+import FacebookScrapingImport from '../components/Facebook/FacebookScrapingImport';
+
+const JournalPage: React.FC = () => {
+  const {
+    selectedEntry,
+    searchQuery,
+    selectedTags,
+    selectedMood,
+    selectedPrivacy,
+    selectedSource,
+    createEntry,
+    updateEntry,
+    deleteEntry,
+    deleteEntries,
+    selectEntry,
+    setSearchQuery,
+    setSelectedTags,
+    setSelectedMood,
+    setSelectedPrivacy,
+    setSelectedSource,
+    filteredEntries,
+    allTags,
+    allMoods,
+    clearFilters,
+    loadEntries,
+  } = useJournalStore();
+
+  const [showFilters, setShowFilters] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<Partial<JournalEntry>>({
+    title: '',
+    content: '',
+    tags: [],
+    mood: 'neutral',
+    privacy: 'private',
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [isNewEntryOpen, setIsNewEntryOpen] = useState(false);
+  const [showScrapingImport, setShowScrapingImport] = useState(false);
+  const [showFacebookImport, setShowFacebookImport] = useState(false);
+
+  // Load entries from database on mount
+  useEffect(() => {
+    loadEntries();
+  }, [loadEntries]);
+
+  // Note: Sample data creation removed to prevent duplicate entries
+  // Users can create their own entries using the "New Entry" button
+
+  const handleSave = async () => {
+    console.log('handleSave called, isEditing:', isEditing, 'selectedEntry:', selectedEntry);
+    console.log('editingEntry:', editingEntry);
+    
+    try {
+      if (isEditing && selectedEntry) {
+        console.log('Updating existing entry');
+        await updateEntry(selectedEntry.id, editingEntry);
+        setIsEditing(false);
+        setEditingEntry({ title: '', content: '', tags: [], mood: 'neutral', privacy: 'private' });
+      } else {
+        console.log('Creating new entry');
+        await createEntry(editingEntry as Omit<JournalEntry, 'id' | 'createdAt' | 'updatedAt'>);
+        setEditingEntry({ title: '', content: '', tags: [], mood: 'neutral', privacy: 'private' });
+        setIsNewEntryOpen(false);
+      }
+    } catch (error) {
+      console.error('Failed to save entry:', error);
+      // TODO: Show error toast
+    }
+  };
+
+  const handleEdit = (entry: JournalEntry) => {
+    setEditingEntry({
+      title: entry.title,
+      content: entry.content,
+      tags: entry.tags,
+      mood: entry.mood,
+      privacy: entry.privacy,
+    });
+    setIsEditing(true);
+    selectEntry(entry);
+  };
+
+  const handleDelete = async (entry: JournalEntry) => {
+    if (confirm('Are you sure you want to delete this entry?')) {
+      try {
+        await deleteEntry(entry.id);
+        if (selectedEntry?.id === entry.id) {
+          selectEntry(null);
+        }
+      } catch (error) {
+        console.error('Failed to delete entry:', error);
+        // TODO: Show error toast
+      }
+    }
+  };
+
+
+  const toggleNewEntry = () => {
+    setIsNewEntryOpen(!isNewEntryOpen);
+    if (!isNewEntryOpen) {
+      // Opening - reset form
+      setIsEditing(false);
+      setEditingEntry({ title: '', content: '', tags: [], mood: 'neutral', privacy: 'private' });
+      selectEntry(null);
+    }
+  };
+
+  const addTag = (tag: string) => {
+    if (tag && editingEntry.tags && !editingEntry.tags.includes(tag)) {
+      setEditingEntry({ ...editingEntry, tags: [...editingEntry.tags, tag] });
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    if (editingEntry.tags) {
+      setEditingEntry({ ...editingEntry, tags: editingEntry.tags.filter(tag => tag !== tagToRemove) });
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    return new Date(date).toLocaleDateString();
+  };
+
+  const handleSelectEntry = (entryId: string) => {
+    setSelectedEntries(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(entryId)) {
+        newSet.delete(entryId);
+      } else {
+        newSet.add(entryId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    const filtered = filteredEntries();
+    const allSelected = filtered.every(entry => selectedEntries.has(entry.id));
+    
+    if (allSelected) {
+      setSelectedEntries(new Set());
+    } else {
+      setSelectedEntries(new Set(filtered.map(entry => entry.id)));
+    }
+  };
+
+  const handleMassDelete = async () => {
+    if (selectedEntries.size === 0) return;
+    
+    const confirmMessage = `Are you sure you want to delete ${selectedEntries.size} entry(ies)? This action cannot be undone.`;
+    if (confirm(confirmMessage)) {
+      try {
+        await deleteEntries(Array.from(selectedEntries));
+        setSelectedEntries(new Set());
+        setIsSelectMode(false);
+      } catch (error) {
+        console.error('Failed to delete entries:', error);
+        // TODO: Show error toast
+      }
+    }
+  };
+
+  const exitSelectMode = () => {
+    setIsSelectMode(false);
+    setSelectedEntries(new Set());
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Journal</h1>
+          <p className="text-gray-600">Capture your thoughts, ideas, and experiences.</p>
+        </div>
+        <div className="flex gap-2">
+          {isSelectMode ? (
+            <>
+              <button 
+                onClick={handleMassDelete}
+                disabled={selectedEntries.size === 0}
+                className="btn btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete ({selectedEntries.size})
+              </button>
+              <button 
+                onClick={exitSelectMode}
+                className="btn btn-outline"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={() => setIsSelectMode(true)}
+                className="btn btn-outline"
+              >
+                <CheckSquare className="w-4 h-4 mr-2" />
+                Select
+              </button>
+              <button 
+                onClick={() => setShowFacebookImport(!showFacebookImport)}
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+              >
+                <Facebook className="w-4 h-4" />
+                Facebook API
+              </button>
+              <button 
+                onClick={() => setShowScrapingImport(!showScrapingImport)}
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              >
+                <Facebook className="w-4 h-4" />
+                Facebook Scraping
+              </button>
+              <button 
+                onClick={toggleNewEntry}
+                className="btn btn-primary"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Entry
+                {isNewEntryOpen ? (
+                  <ChevronUp className="w-4 h-4 ml-2" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 ml-2" />
+                )}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="flex gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Search entries..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          />
+        </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`btn ${showFilters ? 'btn-primary' : 'btn-outline'}`}
+        >
+          <Filter className="w-4 h-4 mr-2" />
+          Filters
+        </button>
+        <button
+          onClick={() => setShowFacebookImport(!showFacebookImport)}
+          className={`btn ${showFacebookImport ? 'btn-primary' : 'btn-outline'}`}
+        >
+          <Facebook className="w-4 h-4 mr-2" />
+          Facebook
+        </button>
+      </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Tags Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+              <select
+                multiple
+                value={selectedTags}
+                onChange={(e) => setSelectedTags(Array.from(e.target.selectedOptions, option => option.value))}
+                style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              >
+                {allTags().map(tag => (
+                  <option key={tag} value={tag}>{tag}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Mood Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Mood</label>
+              <select
+                value={selectedMood}
+                onChange={(e) => setSelectedMood(e.target.value)}
+                style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">All moods</option>
+                {allMoods().map(mood => (
+                  <option key={mood} value={mood}>{mood}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Privacy Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Privacy</label>
+              <select
+                value={selectedPrivacy}
+                onChange={(e) => setSelectedPrivacy(e.target.value)}
+                style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">All privacy levels</option>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+                <option value="secret">Secret</option>
+              </select>
+            </div>
+
+            {/* Source Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Source</label>
+              <select
+                value={selectedSource}
+                onChange={(e) => setSelectedSource(e.target.value)}
+                style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">All sources</option>
+                <option value="local">Local</option>
+                <option value="facebook">Facebook</option>
+                <option value="instagram">Instagram</option>
+                <option value="twitter">Twitter</option>
+              </select>
+            </div>
+          </div>
+          
+          <button
+            onClick={clearFilters}
+            className="btn btn-outline text-sm"
+          >
+            Clear Filters
+          </button>
+        </div>
+      )}
+
+      {/* Facebook Import Panel */}
+      {showFacebookImport && (
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <FacebookImport />
+        </div>
+      )}
+
+      {showScrapingImport && (
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <FacebookScrapingImport />
+        </div>
+      )}
+
+      {/* New Entry Accordion */}
+      {isNewEntryOpen && (
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">New Entry</h2>
+          </div>
+          <div className="p-4 space-y-4">
+            <input
+              type="text"
+              placeholder="Entry title"
+              value={editingEntry.title}
+              onChange={(e) => setEditingEntry({ ...editingEntry, title: e.target.value })}
+              style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+            
+            <textarea
+              placeholder="Write your thoughts..."
+              value={editingEntry.content}
+              onChange={(e) => setEditingEntry({ ...editingEntry, content: e.target.value })}
+              rows={6}
+              style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+            />
+
+            {/* Tags Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {editingEntry.tags?.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2 py-1 text-sm bg-primary-100 text-primary-800 rounded-full flex items-center gap-1"
+                  >
+                    {tag}
+                    <button
+                      onClick={() => removeTag(tag)}
+                      className="hover:text-primary-600"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Add a tag..."
+                  style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const input = e.target as HTMLInputElement;
+                      addTag(input.value.trim());
+                      input.value = '';
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+                <button
+                  onClick={() => {
+                    const input = document.querySelector('input[placeholder="Add a tag..."]') as HTMLInputElement;
+                    if (input && input.value.trim()) {
+                      addTag(input.value.trim());
+                      input.value = '';
+                    }
+                  }}
+                  className="btn btn-outline"
+                >
+                  <Tag className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Mood and Privacy */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mood</label>
+                <select
+                  value={editingEntry.mood}
+                  onChange={(e) => setEditingEntry({ ...editingEntry, mood: e.target.value as any })}
+                  style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="happy">Happy</option>
+                  <option value="grateful">Grateful</option>
+                  <option value="excited">Excited</option>
+                  <option value="neutral">Neutral</option>
+                  <option value="sad">Sad</option>
+                  <option value="anxious">Anxious</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Privacy</label>
+                <select
+                  value={editingEntry.privacy}
+                  onChange={(e) => setEditingEntry({ ...editingEntry, privacy: e.target.value as any })}
+                  style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                  <option value="secret">Secret</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button 
+                onClick={handleSave}
+                disabled={!editingEntry.title?.trim() || !editingEntry.content?.trim()}
+                className="btn btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save Entry
+              </button>
+              <button 
+                onClick={() => setIsNewEntryOpen(false)}
+                className="btn btn-outline"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Entries */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">Recent Entries</h2>
+            {isSelectMode && (
+              <button
+                onClick={handleSelectAll}
+                className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+              >
+                {filteredEntries().every(entry => selectedEntries.has(entry.id)) ? (
+                  <CheckSquare className="w-4 h-4" />
+                ) : (
+                  <Square className="w-4 h-4" />
+                )}
+                Select All
+              </button>
+            )}
+          </div>
+          <div className="space-y-3">
+            {filteredEntries().map((entry) => (
+              <div
+                key={entry.id}
+                className={`card-hover p-4 ${
+                  selectedEntry?.id === entry.id ? 'ring-2 ring-primary-500' : ''
+                } ${
+                  isSelectMode ? 'cursor-pointer' : 'cursor-pointer'
+                } ${
+                  selectedEntries.has(entry.id) ? 'bg-primary-50 border-primary-200' : ''
+                }`}
+                onClick={() => {
+                  if (isSelectMode) {
+                    handleSelectEntry(entry.id);
+                  } else {
+                    selectEntry(entry);
+                  }
+                }}
+              >
+                <div className="flex items-start justify-between">
+                  {isSelectMode && (
+                    <div className="mr-3 mt-1">
+                      {selectedEntries.has(entry.id) ? (
+                        <CheckSquare className="w-5 h-5 text-primary-600" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-400" />
+                      )}
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-900">{entry.title}</h3>
+                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{entry.content}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      {entry.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-2 py-1 text-xs bg-primary-100 text-primary-800 rounded-full"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-xs text-gray-500">{formatDate(entry.createdAt)}</span>
+                      <div className="flex items-center gap-2">
+                        {entry.mood && (
+                          <span className="flex items-center gap-1 text-xs text-gray-500">
+                            <Heart className="w-3 h-3" />
+                            {entry.mood}
+                          </span>
+                        )}
+                        <div className="flex items-center gap-1">
+                          {entry.privacy === 'private' && <Lock className="w-3 h-3 text-gray-400" />}
+                          {entry.privacy === 'secret' && <EyeOff className="w-3 h-3 text-gray-400" />}
+                          {entry.privacy === 'public' && <Eye className="w-3 h-3 text-gray-400" />}
+                          <span className="text-xs text-gray-500 capitalize">{entry.privacy}</span>
+                        </div>
+                        {entry.source && (
+                          <div className="flex items-center gap-1">
+                            {entry.source === 'facebook' && <Facebook className="w-3 h-3 text-blue-600" />}
+                            <span className="text-xs text-gray-500 capitalize">{entry.source}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {!isSelectMode && (
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleEdit(entry); }}
+                        className="p-1 hover:bg-gray-100 rounded"
+                      >
+                        <Edit3 className="w-4 h-4 text-gray-400" />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleDelete(entry); }}
+                        className="p-1 hover:bg-gray-100 rounded"
+                      >
+                        <Trash2 className="w-4 h-4 text-gray-400" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Edit Entry */}
+        {isEditing && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-gray-900">Edit Entry</h2>
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="Entry title"
+                value={editingEntry.title}
+                onChange={(e) => setEditingEntry({ ...editingEntry, title: e.target.value })}
+                style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              
+              <textarea
+                placeholder="Write your thoughts..."
+                value={editingEntry.content}
+                onChange={(e) => setEditingEntry({ ...editingEntry, content: e.target.value })}
+                rows={8}
+                style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+              />
+
+              {/* Tags Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {editingEntry.tags?.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-2 py-1 text-sm bg-primary-100 text-primary-800 rounded-full flex items-center gap-1"
+                    >
+                      {tag}
+                      <button
+                        onClick={() => removeTag(tag)}
+                        className="hover:text-primary-600"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Add a tag..."
+                    style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const input = e.target as HTMLInputElement;
+                        addTag(input.value.trim());
+                        input.value = '';
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                  <button
+                    onClick={() => {
+                      const input = document.querySelector('input[placeholder="Add a tag..."]') as HTMLInputElement;
+                      if (input && input.value.trim()) {
+                        addTag(input.value.trim());
+                        input.value = '';
+                      }
+                    }}
+                    className="btn btn-outline"
+                  >
+                    <Tag className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Mood and Privacy */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Mood</label>
+                  <select
+                    value={editingEntry.mood}
+                    onChange={(e) => setEditingEntry({ ...editingEntry, mood: e.target.value as any })}
+                    style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="happy">Happy</option>
+                    <option value="grateful">Grateful</option>
+                    <option value="excited">Excited</option>
+                    <option value="neutral">Neutral</option>
+                    <option value="sad">Sad</option>
+                    <option value="anxious">Anxious</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Privacy</label>
+                  <select
+                    value={editingEntry.privacy}
+                    onChange={(e) => setEditingEntry({ ...editingEntry, privacy: e.target.value as any })}
+                    style={{backgroundColor: 'var(--color-background-primary)', color: 'var(--color-neutral-900)'}}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="public">Public</option>
+                    <option value="private">Private</option>
+                    <option value="secret">Secret</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button 
+                  onClick={handleSave}
+                  disabled={!editingEntry.title?.trim() || !editingEntry.content?.trim()}
+                  className="btn btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Update Entry
+                </button>
+                <button 
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditingEntry({ title: '', content: '', tags: [], mood: 'neutral', privacy: 'private' });
+                  }}
+                  className="btn btn-outline"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default JournalPage;
