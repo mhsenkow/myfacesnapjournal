@@ -41,6 +41,8 @@ const MastodonLoginModal: React.FC<MastodonLoginModalProps> = ({
     }
   }, [isOpen]);
 
+  // OAuth callback is handled manually via code entry
+
   const handleInstanceSelect = async (instanceUrl: string) => {
     setSelectedInstance(instanceUrl);
     setIsLoading(true);
@@ -95,13 +97,9 @@ const MastodonLoginModal: React.FC<MastodonLoginModalProps> = ({
         return;
       }
 
-      // For now, we'll use a manual code entry approach
-      // The user will copy the code from the OAuth window
-      setError('Please copy the authorization code from the OAuth window and paste it below.');
+      // OAuth window opened successfully - please copy the code manually
+      setError('Please complete the authorization in the OAuth window, then copy the authorization code and paste it below.');
       setIsLoading(false);
-
-      // OAuth window opened successfully
-      // User will need to manually copy the code from the window
     } catch (error) {
       setIsLoading(false);
       const errorMsg = error instanceof Error ? error.message : 'Failed to register with Mastodon instance';

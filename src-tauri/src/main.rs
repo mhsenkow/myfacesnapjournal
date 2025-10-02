@@ -369,5 +369,9 @@ async fn open_oauth_window(app_handle: tauri::AppHandle, url: String) -> Result<
     .build()
     .map_err(|e| e.to_string())?;
 
+    // For now, we'll rely on the manual code entry fallback
+    // The navigation API in Tauri 2.0 is more complex
+    println!("OAuth window opened for URL: {}", url);
+
     Ok("OAuth window opened".to_string())
 }
