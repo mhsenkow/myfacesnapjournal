@@ -79,7 +79,7 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
           left-4 right-4 sm:left-6 sm:right-6 md:left-20 md:right-20 
           ${appState.sidebarCollapsed ? 'lg:left-6' : 'lg:left-64'} 
           max-w-6xl mx-auto`}>
-        <div className={`glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-2xl backdrop-blur-xl p-3 sm:p-4 space-y-3 sm:space-y-4 transition-all duration-300 ease-in-out relative
+        <div className={`glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-2xl backdrop-blur-xl p-3 sm:p-4 space-y-2 sm:space-y-3 transition-all duration-300 ease-in-out relative
           ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'}`}>
           
           {/* Menu Action Buttons - Half On/Half Off the footer panel */}
@@ -109,13 +109,17 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
             </div>
           </div>
           
-          {/* Header Row with Title */}
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium glass-text-primary">Feed Controls</h3>
+          {/* Floating Title Bubble - Half On/Half Off */}
+          <div className={`absolute -top-8 left-4 z-50 transition-all duration-300 ease-in-out ${
+            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'
+          }`}>
+            <div className="glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-1.5 shadow-lg backdrop-blur-xl">
+              <h3 className="text-sm font-medium glass-text-primary">Feed Controls</h3>
+            </div>
           </div>
 
           {/* Main Controls Row */}
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap pt-2">
             {/* Feed Type */}
             <div className="flex glass-subtle rounded-lg p-1">
               <button
@@ -184,7 +188,7 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
           </div>
 
           {/* Data Controls Row */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {/* Fetch Limit */}
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
@@ -244,7 +248,7 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
           </div>
 
           {/* Display Controls Row */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {/* Display Mode */}
             <div className="flex flex-col">
               <div className="flex items-center gap-1 glass-subtle rounded-lg p-1">
@@ -415,7 +419,7 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
           </div>
 
           {/* Live Feed Controls Row */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {/* Live Feed Toggle */}
             <div className="flex flex-col">
               <button
