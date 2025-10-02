@@ -124,9 +124,9 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="px-3 py-2 text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="newest">Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="popular">Popular</option>
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="random">Random Order</option>
               </select>
               <span className="text-xs glass-text-muted mt-1">Sort</span>
             </div>

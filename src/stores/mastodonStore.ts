@@ -56,7 +56,7 @@ interface MastodonStore {
   
   // Feed controls state
   feedType: 'public' | 'local';
-  sortBy: 'newest' | 'oldest' | 'popular';
+  sortBy: 'newest' | 'oldest' | 'random';
   filterBy: 'all' | 'with_media' | 'with_hashtags';
   searchQuery: string;
   instanceUrl: string;
@@ -358,8 +358,8 @@ export const useMastodonStore = create<MastodonStore>()(
           switch (sort) {
             case 'oldest':
               return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-            case 'popular':
-              return (b.favourites_count + b.reblogs_count) - (a.favourites_count + a.reblogs_count);
+            case 'random':
+              return Math.random() - 0.5; // Random shuffle
             case 'newest':
             default:
               return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -444,8 +444,8 @@ export const useMastodonStore = create<MastodonStore>()(
           switch (sortBy) {
             case 'oldest':
               return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-            case 'popular':
-              return (b.favourites_count + b.reblogs_count) - (a.favourites_count + a.reblogs_count);
+            case 'random':
+              return Math.random() - 0.5; // Random shuffle
             case 'newest':
             default:
               return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
