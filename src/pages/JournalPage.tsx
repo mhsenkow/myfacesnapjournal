@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Plus, Edit3, Trash2, Lock, Eye, EyeOff, Tag, Heart, CheckSquare, Square, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Edit3, Trash2, Lock, Eye, EyeOff, Tag, Heart, CheckSquare, Square, ChevronDown, ChevronUp } from 'lucide-react';
 import { useJournalStore, JournalEntry } from '../stores/journalStore';
 
 const JournalPage: React.FC = () => {
@@ -37,7 +37,6 @@ const JournalPage: React.FC = () => {
     loadEntries,
   } = useJournalStore();
 
-  const [showFilters, setShowFilters] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Partial<JournalEntry>>({
     title: '',
     content: '',
@@ -229,103 +228,6 @@ const JournalPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 dark:text-neutral-500 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search entries..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-neutral-300 dark:border-neutral-600 glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          />
-        </div>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`btn ${showFilters ? 'btn-primary' : 'btn-outline'}`}
-        >
-          <Filter className="w-4 h-4 mr-2" />
-          Filters
-        </button>
-      </div>
-
-      {/* Filters Panel */}
-      {showFilters && (
-        <div className="glass-subtle p-4 rounded-lg space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Tags Filter */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Tags</label>
-              <select
-                multiple
-                value={selectedTags}
-                onChange={(e) => setSelectedTags(Array.from(e.target.selectedOptions, option => option.value))}
-                className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg"
-              >
-                {allTags().map(tag => (
-                  <option key={tag} value={tag}>{tag}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Mood Filter */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Mood</label>
-              <select
-                value={selectedMood}
-                onChange={(e) => setSelectedMood(e.target.value)}
-                className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg"
-              >
-                <option value="">All moods</option>
-                {allMoods().map(mood => (
-                  <option key={mood} value={mood}>{mood}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Privacy Filter */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Privacy</label>
-              <select
-                value={selectedPrivacy}
-                onChange={(e) => setSelectedPrivacy(e.target.value)}
-                className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg"
-              >
-                <option value="">All privacy levels</option>
-                <option value="public">Public</option>
-                <option value="private">Private</option>
-                <option value="secret">Secret</option>
-              </select>
-            </div>
-
-            {/* Source Filter */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Source</label>
-              <select
-                value={selectedSource}
-                onChange={(e) => setSelectedSource(e.target.value)}
-                className="glass dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg"
-              >
-                <option value="">All sources</option>
-                <option value="local">Local</option>
-                <option value="mastodon">Mastodon</option>
-              </select>
-            </div>
-          </div>
-          
-          <button
-            onClick={clearFilters}
-            className="btn btn-outline text-sm"
-          >
-            Clear Filters
-          </button>
-        </div>
-      )}
 
 
       {/* New Entry Accordion */}
