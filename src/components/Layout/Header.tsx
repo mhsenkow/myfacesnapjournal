@@ -491,22 +491,6 @@ const Header: React.FC = () => {
       </div>
 
 
-      {/* Breadcrumb navigation (only show on non-feed pages) */}
-      {!isFeedPage && (
-      <nav className="mt-2">
-        <ol className="flex items-center space-x-2 text-sm text-neutral-500">
-          <li>
-            <span className="hover:text-neutral-700 cursor-pointer">Home</span>
-          </li>
-          <li>
-            <span className="text-neutral-400">/</span>
-          </li>
-          <li>
-              <span className="text-neutral-900 dark:text-neutral-100 font-medium">{getPageTitle()}</span>
-          </li>
-        </ol>
-      </nav>
-      )}
     </header>
   )
 }
