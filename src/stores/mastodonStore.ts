@@ -758,7 +758,23 @@ export const useMastodonStore = create<MastodonStore>()(
           console.log(`✅ Post ${isLiked ? 'unliked' : 'liked'} successfully`);
         } catch (error) {
           console.error('Failed to toggle like:', error);
-          // Could add toast notification here
+          
+          // Check if it's a scope error
+          if (error instanceof Error && error.message.includes('outside the authorized scopes')) {
+            console.log('🔐 Scope error detected - user needs to re-authenticate');
+            
+            // Show a more helpful error message with action
+            const shouldReauth = confirm(
+              'Your Mastodon permissions are outdated and don\'t include like/bookmark access.\n\n' +
+              'Would you like to log out and log back in to enable likes and bookmarks?\n\n' +
+              'Click OK to logout now, or Cancel to continue without likes.'
+            );
+            
+            if (shouldReauth) {
+              console.log('🔄 User chose to re-authenticate');
+              get().logout();
+            }
+          }
         }
       },
 
@@ -805,7 +821,23 @@ export const useMastodonStore = create<MastodonStore>()(
           console.log(`✅ Post ${isBookmarked ? 'unbookmarked' : 'bookmarked'} successfully`);
         } catch (error) {
           console.error('Failed to toggle bookmark:', error);
-          // Could add toast notification here
+          
+          // Check if it's a scope error
+          if (error instanceof Error && error.message.includes('outside the authorized scopes')) {
+            console.log('🔐 Scope error detected - user needs to re-authenticate');
+            
+            // Show a more helpful error message with action
+            const shouldReauth = confirm(
+              'Your Mastodon permissions are outdated and don\'t include like/bookmark access.\n\n' +
+              'Would you like to log out and log back in to enable likes and bookmarks?\n\n' +
+              'Click OK to logout now, or Cancel to continue without likes.'
+            );
+            
+            if (shouldReauth) {
+              console.log('🔄 User chose to re-authenticate');
+              get().logout();
+            }
+          }
         }
       }
     }),
