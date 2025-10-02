@@ -36,8 +36,8 @@ const SettingsPage: React.FC = () => {
       {/* Page Header */}
       <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 mb-6">
         <div>
-          <h1 className="text-4xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">Settings</h1>
-          <p className="text-neutral-500 dark:text-neutral-400 mt-2 text-lg font-light">Configure your journaling experience</p>
+          <h1 className="text-4xl font-light glass-text-primary tracking-wide">Settings</h1>
+          <p className="glass-text-tertiary mt-2 text-lg font-light">Configure your journaling experience</p>
         </div>
       </div>
 

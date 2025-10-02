@@ -75,13 +75,13 @@ const CompanionPage: React.FC = () => {
       <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-light text-neutral-900 dark:text-neutral-100 flex items-center gap-4">
+            <h1 className="text-4xl font-light glass-text-primary flex items-center gap-4">
               <div className="p-3 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl shadow-lg">
                 <Brain className="w-8 h-8 text-white" />
               </div>
               <span className="font-extralight tracking-wide">AI Introspection</span>
             </h1>
-            <p className="text-neutral-500 dark:text-neutral-400 mt-3 text-lg font-light">
+            <p className="glass-text-tertiary mt-3 text-lg font-light">
               Deep self-reflection powered by artificial intelligence
             </p>
           </div>
@@ -104,8 +104,8 @@ const CompanionPage: React.FC = () => {
                   <Bot size={24} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-neutral-900 dark:text-neutral-100 text-xl tracking-wide">Introspection Specialist</h3>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Guiding your journey of self-discovery</p>
+                  <h3 className="font-medium glass-text-primary text-xl tracking-wide">Introspection Specialist</h3>
+                  <p className="text-sm glass-text-tertiary font-light">Guiding your journey of self-discovery</p>
                 </div>
               </div>
             </div>

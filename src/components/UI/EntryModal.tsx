@@ -115,14 +115,14 @@ const EntryModal: React.FC<EntryModalProps> = ({
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-700">
-          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <h2 className="text-xl font-semibold glass-text-primary">
             {title}
           </h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors"
           >
-            <X className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
+            <X className="w-5 h-5 glass-text-muted" />
           </button>
         </div>
 
@@ -130,7 +130,7 @@ const EntryModal: React.FC<EntryModalProps> = ({
         <div className="p-6 space-y-6">
           {/* Title Input */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <label className="block text-sm font-medium glass-text-secondary mb-2">
               Entry Title
             </label>
             <input
@@ -145,7 +145,7 @@ const EntryModal: React.FC<EntryModalProps> = ({
 
           {/* Content Textarea */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <label className="block text-sm font-medium glass-text-secondary mb-2">
               Content
             </label>
             <textarea

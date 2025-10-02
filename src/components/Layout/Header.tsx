@@ -133,7 +133,7 @@ const Header: React.FC = () => {
           {/* Page title with icon */}
           <div className="flex items-center gap-2">
             {isFeedPage && <Rss className="w-5 h-5 text-purple-600" />}
-            <h1 className="text-xl font-bold text-primary">{getPageTitle()}</h1>
+            <h1 className="text-xl font-bold glass-text-primary">{getPageTitle()}</h1>
           </div>
 
           {/* Feed controls inline (only on feed page) */}

@@ -113,7 +113,7 @@ const Sidebar: React.FC = () => {
                   className={`w-full flex items-center px-3 py-2 rounded-md transition-all duration-fast ${
                     isActive(item.path)
                       ? 'bg-primary-100 text-primary-700 border-r-2 border-primary-500'
-                      : 'text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900'
+                      : 'glass-text-secondary hover:bg-neutral-100 hover:text-neutral-900'
                   }`}
                   title={state.sidebarCollapsed ? item.description : undefined}
                 >
@@ -136,8 +136,8 @@ const Sidebar: React.FC = () => {
               <span className="text-white text-sm font-medium">U</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-neutral-900 truncate">User</p>
-              <p className="text-xs text-neutral-500 truncate">user@example.com</p>
+              <p className="text-sm font-medium glass-text-primary truncate">User</p>
+              <p className="text-xs glass-text-muted truncate">user@example.com</p>
             </div>
           </div>
         </div>

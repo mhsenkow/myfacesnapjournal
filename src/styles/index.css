@@ -888,3 +888,43 @@ body {
     color: black !important;
   }
 }
+
+/* ===== TEXT COLOR UTILITIES ===== */
+/* These classes use CSS custom properties for proper theme-aware text colors */
+
+.text-theme-primary {
+  color: var(--color-text-primary) !important;
+}
+
+.text-theme-secondary {
+  color: var(--color-text-secondary) !important;
+}
+
+.text-theme-tertiary {
+  color: var(--color-text-tertiary) !important;
+}
+
+.text-theme-quaternary {
+  color: var(--color-text-quaternary) !important;
+}
+
+.text-theme-muted {
+  color: var(--color-text-muted) !important;
+}
+
+/* Glass panel text - should have good contrast against glass backgrounds */
+.glass-text-primary {
+  color: var(--color-text-primary) !important;
+}
+
+.glass-text-secondary {
+  color: var(--color-text-secondary) !important;
+}
+
+.glass-text-tertiary {
+  color: var(--color-text-tertiary) !important;
+}
+
+.glass-text-muted {
+  color: var(--color-text-muted) !important;
+}

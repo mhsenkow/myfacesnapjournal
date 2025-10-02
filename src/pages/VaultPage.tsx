@@ -52,13 +52,13 @@ const VaultPage: React.FC = () => {
       <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide flex items-center gap-4">
+            <h1 className="text-4xl font-light glass-text-primary tracking-wide flex items-center gap-4">
               <div className="p-3 bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl shadow-lg">
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <span className="font-extralight">Vault</span>
             </h1>
-            <p className="text-neutral-500 dark:text-neutral-400 mt-3 text-lg font-light">Secure storage and data management</p>
+            <p className="glass-text-tertiary mt-3 text-lg font-light">Secure storage and data management</p>
           </div>
           <div className="flex gap-3">
             <button className="glass-subtle px-4 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light">

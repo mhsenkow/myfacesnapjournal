@@ -182,49 +182,49 @@ const JournalPage: React.FC = () => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">Journal</h1>
-            <p className="text-neutral-500 dark:text-neutral-400 mt-2 text-lg font-light">Capture your thoughts, ideas, and experiences.</p>
-          </div>
-          <div className="flex gap-2">
-            {isSelectMode ? (
-              <>
-                <button 
-                  onClick={handleMassDelete}
-                  disabled={selectedEntries.size === 0}
-                  className="btn btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete ({selectedEntries.size})
-                </button>
-                <button 
-                  onClick={exitSelectMode}
-                  className="btn btn-outline"
-                >
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <>
-                <button 
-                  onClick={() => setIsSelectMode(true)}
-                  className="btn btn-outline"
-                >
-                  <CheckSquare className="w-4 h-4 mr-2" />
-                  Select
-                </button>
-                <button 
-                  onClick={openNewEntryModal}
-                  className="btn btn-primary"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Entry
-                </button>
-              </>
-            )}
-          </div>
+      <div className="flex items-center justify-between">
+        <div>
+            <h1 className="text-4xl font-light glass-text-primary tracking-wide">Journal</h1>
+            <p className="glass-text-tertiary mt-2 text-lg font-light">Capture your thoughts, ideas, and experiences.</p>
         </div>
+        <div className="flex gap-2">
+          {isSelectMode ? (
+            <>
+              <button 
+                onClick={handleMassDelete}
+                disabled={selectedEntries.size === 0}
+                className="btn btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete ({selectedEntries.size})
+              </button>
+              <button 
+                onClick={exitSelectMode}
+                className="btn btn-outline"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={() => setIsSelectMode(true)}
+                className="btn btn-outline"
+              >
+                <CheckSquare className="w-4 h-4 mr-2" />
+                Select
+              </button>
+              <button 
+                  onClick={openNewEntryModal}
+                className="btn btn-primary"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Entry
+              </button>
+            </>
+          )}
+        </div>
+      </div>
       </div>
 
 
@@ -256,7 +256,7 @@ const JournalPage: React.FC = () => {
         {/* Recent Entries */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">Recent Entries</h2>
+            <h2 className="text-xl font-semibold glass-text-primary">Recent Entries</h2>
             {isSelectMode && (
               <button
                 onClick={handleSelectAll}
@@ -301,8 +301,8 @@ const JournalPage: React.FC = () => {
                     </div>
                   )}
                   <div className="flex-1">
-                    <h3 className="font-medium text-neutral-900 dark:text-neutral-100">{entry.title}</h3>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1 line-clamp-2">{entry.content}</p>
+                    <h3 className="font-medium glass-text-primary">{entry.title}</h3>
+                    <p className="text-sm glass-text-tertiary mt-1 line-clamp-2">{entry.content}</p>
                     <div className="flex items-center gap-2 mt-2">
                       {entry.tags.map((tag) => (
                         <span
@@ -314,23 +314,23 @@ const JournalPage: React.FC = () => {
                       ))}
                     </div>
                     <div className="flex items-center justify-between mt-3">
-                      <span className="text-xs text-neutral-500 dark:text-neutral-400">{formatDate(entry.createdAt)}</span>
+                      <span className="text-xs glass-text-muted">{formatDate(entry.createdAt)}</span>
                       <div className="flex items-center gap-2">
                         {entry.mood && (
-                          <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                          <span className="flex items-center gap-1 text-xs glass-text-muted">
                             <Heart className="w-3 h-3" />
                             {entry.mood}
                           </span>
                         )}
                         <div className="flex items-center gap-1">
-                          {entry.privacy === 'private' && <Lock className="w-3 h-3 text-neutral-400 dark:text-neutral-500" />}
-                          {entry.privacy === 'secret' && <EyeOff className="w-3 h-3 text-neutral-400 dark:text-neutral-500" />}
-                          {entry.privacy === 'public' && <Eye className="w-3 h-3 text-neutral-400 dark:text-neutral-500" />}
-                          <span className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">{entry.privacy}</span>
+                          {entry.privacy === 'private' && <Lock className="w-3 h-3 glass-text-muted" />}
+                          {entry.privacy === 'secret' && <EyeOff className="w-3 h-3 glass-text-muted" />}
+                          {entry.privacy === 'public' && <Eye className="w-3 h-3 glass-text-muted" />}
+                          <span className="text-xs glass-text-muted capitalize">{entry.privacy}</span>
                         </div>
                         {entry.source && (
                           <div className="flex items-center gap-1">
-                            <span className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">{entry.source}</span>
+                            <span className="text-xs glass-text-muted capitalize">{entry.source}</span>
                           </div>
                         )}
                       </div>
