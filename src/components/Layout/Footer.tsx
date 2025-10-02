@@ -74,14 +74,48 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
         <Sparkles className={`w-5 h-5 glass-text-primary transition-transform duration-200 ${isVisible ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* Footer Panel - Responsive positioning */}
-      {isVisible && (
-        <div className={`fixed bottom-6 z-40 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-2xl backdrop-blur-xl p-4 sm:p-6 space-y-4 transition-all duration-300 
-          left-6 right-6 sm:left-20 sm:right-20 
-          ${appState.sidebarCollapsed ? 'lg:left-20' : 'lg:left-64'} 
-          max-w-7xl mx-auto`}>
+      {/* Footer Panel - Responsive positioning with slide-up motion */}
+      <div className={`fixed bottom-6 z-40 transition-all duration-300 ease-in-out
+          left-4 right-4 sm:left-6 sm:right-6 md:left-20 md:right-20 
+          ${appState.sidebarCollapsed ? 'lg:left-6' : 'lg:left-64'} 
+          max-w-6xl mx-auto`}>
+        <div className={`glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-2xl backdrop-blur-xl p-3 sm:p-4 space-y-3 sm:space-y-4 transition-all duration-300 ease-in-out relative
+          ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'}`}>
+          
+          {/* Menu Action Buttons - Half On/Half Off the footer panel */}
+          <div className={`absolute -top-6 right-4 z-50 transition-all duration-300 ease-in-out ${
+            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'
+          }`}>
+            <div className="flex items-center gap-1 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-lg p-1 shadow-lg backdrop-blur-xl">
+              <button
+                onClick={() => fetchPublicTimeline()}
+                className="p-2 rounded-md transition-all duration-200 hover:bg-white/20 dark:hover:bg-black/20 hover:scale-105"
+                title="Refresh Feed"
+              >
+                <RefreshCw className="w-4 h-4 glass-text-primary" />
+              </button>
+              <button
+                onClick={() => {
+                  // Clear cache functionality
+                  if (allPosts.length > 0) {
+                    useMastodonStore.setState({ allPosts: [], posts: [] });
+                  }
+                }}
+                className="p-2 rounded-md transition-all duration-200 hover:bg-white/20 dark:hover:bg-black/20 hover:scale-105"
+                title="Clear Cache"
+              >
+                <X className="w-4 h-4 glass-text-primary" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Header Row with Title */}
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium glass-text-primary">Feed Controls</h3>
+          </div>
+
           {/* Main Controls Row */}
-          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {/* Feed Type */}
             <div className="flex glass-subtle rounded-lg p-1">
               <button
@@ -114,7 +148,7 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 type="text"
                 value={instanceUrl}
                 onChange={(e) => setInstanceUrl(e.target.value)}
-                className="w-48 px-3 py-2 text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-36 sm:w-48 px-2 py-1.5 text-xs sm:text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="mastodon.social"
               />
               <span className="text-xs glass-text-muted mt-1">Instance</span>
@@ -122,11 +156,11 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
 
             {/* Sort & Filter */}
             <div className="flex flex-col">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-3 py-2 text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="px-2 py-1.5 text-xs sm:text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
                 <option value="random">Random Order</option>
@@ -135,11 +169,11 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
             </div>
 
             <div className="flex flex-col">
-              <select
-                value={filterBy}
-                onChange={(e) => setFilterBy(e.target.value as any)}
-                className="px-3 py-2 text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
+                  <select
+                    value={filterBy}
+                    onChange={(e) => setFilterBy(e.target.value as any)}
+                    className="px-2 py-1.5 text-xs sm:text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
                 <option value="all">All</option>
                 <option value="with_media">Media</option>
                 <option value="with_hashtags">Tags</option>
@@ -147,47 +181,24 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
               <span className="text-xs glass-text-muted mt-1">Filter</span>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => fetchPublicTimeline()}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 transition-colors shadow-sm"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh
-              </button>
-              <button
-                onClick={() => {
-                  // Clear cache functionality
-                  if (allPosts.length > 0) {
-                    useMastodonStore.setState({ allPosts: [], posts: [] });
-                  }
-                }}
-                className="flex items-center gap-2 px-3 py-2 glass-subtle glass-text-secondary rounded-lg text-sm hover:bg-white/20 dark:hover:bg-black/20 transition-colors"
-                title="Clear cached posts"
-              >
-                <X className="w-4 h-4" />
-                Clear
-              </button>
-            </div>
           </div>
 
           {/* Data Controls Row */}
-          <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {/* Fetch Limit */}
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={postLimit}
-                  onChange={(e) => {
-                    const newLimit = parseInt(e.target.value) || 1;
-                    setPostLimit(newLimit);
-                  }}
-                  min="1"
-                  max="10000"
-                  className="w-24 px-3 py-2 text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
+                    <input
+                      type="number"
+                      value={postLimit}
+                      onChange={(e) => {
+                        const newLimit = parseInt(e.target.value) || 1;
+                        setPostLimit(newLimit);
+                      }}
+                      min="1"
+                      max="10000"
+                      className="w-16 sm:w-20 px-2 py-1.5 text-xs sm:text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
                 <span className="text-sm glass-text-muted">posts</span>
               </div>
               <span className="text-xs glass-text-muted mt-1">
@@ -198,17 +209,17 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
             {/* Display Limit */}
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={displayLimit}
-                  onChange={(e) => {
-                    const newLimit = parseInt(e.target.value) || 1;
-                    setDisplayLimit(newLimit);
-                  }}
-                  min="1"
-                  max="1000"
-                  className="w-24 px-3 py-2 text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
+                    <input
+                      type="number"
+                      value={displayLimit}
+                      onChange={(e) => {
+                        const newLimit = parseInt(e.target.value) || 1;
+                        setDisplayLimit(newLimit);
+                      }}
+                      min="1"
+                      max="1000"
+                      className="w-16 sm:w-20 px-2 py-1.5 text-xs sm:text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
                 <span className="text-sm glass-text-muted">shown</span>
               </div>
               <span className="text-xs glass-text-muted mt-1">From {allPosts.length} cached</span>
@@ -233,7 +244,7 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
           </div>
 
           {/* Display Controls Row */}
-          <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {/* Display Mode */}
             <div className="flex flex-col">
               <div className="flex items-center gap-1 glass-subtle rounded-lg p-1">
@@ -404,16 +415,16 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
           </div>
 
           {/* Live Feed Controls Row */}
-          <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {/* Live Feed Toggle */}
             <div className="flex flex-col">
               <button
                 onClick={() => setIsLiveFeed(!isLiveFeed)}
-                className={`flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors ${
-                  isLiveFeed
-                    ? 'bg-green-600 text-white shadow-sm'
-                    : 'glass-subtle glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
-                }`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors ${
+                      isLiveFeed
+                        ? 'bg-green-600 text-white shadow-sm'
+                        : 'glass-subtle glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
+                    }`}
                 title={isLiveFeed ? "Live Feed Active" : "Static Feed"}
               >
                 {isLiveFeed ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -424,12 +435,12 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
 
             {/* Batch Size Selector */}
             <div className="flex flex-col">
-              <select
-                value={liveFeedBatchSize}
-                onChange={(e) => setLiveFeedBatchSize(parseInt(e.target.value))}
-                className="px-3 py-2 text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                disabled={!isLiveFeed}
-              >
+                  <select
+                    value={liveFeedBatchSize}
+                    onChange={(e) => setLiveFeedBatchSize(parseInt(e.target.value))}
+                    className="px-2 py-1.5 text-xs sm:text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    disabled={!isLiveFeed}
+                  >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
                 <option value={50}>50</option>
@@ -439,12 +450,12 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
 
             {/* Interval Selector */}
             <div className="flex flex-col">
-              <select
-                value={liveFeedInterval}
-                onChange={(e) => setLiveFeedInterval(parseInt(e.target.value))}
-                className="px-3 py-2 text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                disabled={!isLiveFeed}
-              >
+                  <select
+                    value={liveFeedInterval}
+                    onChange={(e) => setLiveFeedInterval(parseInt(e.target.value))}
+                    className="px-2 py-1.5 text-xs sm:text-sm glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    disabled={!isLiveFeed}
+                  >
                 <option value={10000}>10s</option>
                 <option value={30000}>30s</option>
                 <option value={60000}>1m</option>
@@ -466,7 +477,7 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
             )}
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 };
