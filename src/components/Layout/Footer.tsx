@@ -1,5 +1,6 @@
 import React from 'react';
 import { useMastodonStore } from '../../stores/mastodonStore';
+import { useApp } from '../../contexts/AppContext';
 import { 
   Globe, 
   Server, 
@@ -25,6 +26,7 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
+  const { state: appState } = useApp();
   const {
     auth,
     feedType,
@@ -60,20 +62,24 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
 
   return (
     <>
-      {/* Toggle Button - Fixed position */}
+      {/* Toggle Button - Positioned to avoid footer */}
       <button
         onClick={onToggle}
-        className="fixed bottom-6 right-20 z-50 p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+        className={`fixed bottom-16 z-50 p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ${
+          appState.sidebarCollapsed ? 'right-20' : 'right-20'
+        }`}
         title={isVisible ? "Hide Feed Controls" : "Show Feed Controls"}
       >
         <Sparkles className={`w-5 h-5 glass-text-primary transition-transform duration-200 ${isVisible ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* Footer Panel - Fixed position */}
+      {/* Footer Panel - Responsive positioning */}
       {isVisible && (
-        <div className="fixed bottom-6 left-6 right-6 z-40 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-2xl backdrop-blur-xl p-6 space-y-4">
+        <div className={`fixed bottom-6 z-40 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-2xl backdrop-blur-xl p-4 sm:p-6 space-y-3 sm:space-y-4 transition-all duration-300 ${
+          appState.sidebarCollapsed ? 'left-20' : 'left-64'
+        } right-6 max-w-6xl`}>
           {/* Main Controls Row */}
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             {/* Feed Type */}
             <div className="flex bg-neutral-100 dark:bg-neutral-700 rounded-lg">
               <button
@@ -150,7 +156,7 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
           </div>
 
           {/* Data Controls Row */}
-          <div className="flex items-center gap-6 flex-wrap">
+          <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
             {/* Fetch Limit */}
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
@@ -210,7 +216,7 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
           </div>
 
           {/* Display Controls Row */}
-          <div className="flex items-center gap-6 flex-wrap">
+          <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
             {/* Display Mode */}
             <div className="flex flex-col">
               <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
@@ -337,7 +343,7 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
           </div>
 
           {/* Live Feed Controls Row */}
-          <div className="flex items-center gap-6 flex-wrap">
+          <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
             {/* Live Feed Toggle */}
             <div className="flex flex-col">
               <button
