@@ -71,9 +71,6 @@ const Header: React.FC = () => {
   const [showUserMenu, setShowUserMenu] = useState(false)
   
   const isFeedPage = location.pathname === '/feed'
-  
-  // Debug current algorithm state
-  console.log('Header render - current algorithm:', algorithm)
 
   // Get current page title
   const getPageTitle = () => {
@@ -299,10 +296,7 @@ const Header: React.FC = () => {
           {isFeedPage && auth.isAuthenticated && (
             <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
               <button
-                onClick={() => {
-                  console.log('Latest button clicked');
-                  setAlgorithm('latest');
-                }}
+                onClick={() => setAlgorithm('latest')}
                 className={`p-1.5 rounded transition-colors ${
                   algorithm === 'latest'
                     ? 'bg-purple-600 text-white'
@@ -313,10 +307,7 @@ const Header: React.FC = () => {
                 <Clock className="w-3 h-3" />
               </button>
               <button
-                onClick={() => {
-                  console.log('Trending button clicked');
-                  setAlgorithm('trending');
-                }}
+                onClick={() => setAlgorithm('trending')}
                 className={`p-1.5 rounded transition-colors ${
                   algorithm === 'trending'
                     ? 'bg-purple-600 text-white'

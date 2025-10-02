@@ -374,7 +374,6 @@ export const useMastodonStore = create<MastodonStore>()(
       },
 
       setAlgorithm: (algorithm) => {
-        console.log('Setting algorithm to:', algorithm);
         set({ algorithm });
         // Apply new algorithm
         get().applyAlgorithm();
@@ -383,17 +382,7 @@ export const useMastodonStore = create<MastodonStore>()(
       applyAlgorithm: () => {
         const { allPosts, displayLimit, algorithm, sortBy, filterBy, searchQuery } = get();
         
-        console.log('Applying algorithm:', { 
-          algorithm, 
-          displayLimit, 
-          allPostsLength: allPosts.length,
-          sortBy,
-          filterBy,
-          searchQuery 
-        });
-        
         if (allPosts.length === 0) {
-          console.log('No posts to apply algorithm to');
           set({ posts: [] });
           return;
         }
@@ -494,13 +483,6 @@ export const useMastodonStore = create<MastodonStore>()(
             selectedPosts = shuffled.slice(0, displayLimit);
             break;
         }
-        
-        console.log('Algorithm completed:', {
-          algorithm,
-          selectedPostsCount: selectedPosts.length,
-          displayLimit,
-          filteredPostsCount: filteredPosts.length
-        });
         
         set({ posts: selectedPosts });
       },
