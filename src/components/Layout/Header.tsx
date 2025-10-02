@@ -494,9 +494,8 @@ const Header: React.FC = () => {
                 </button>
               </div>
             )}
-
+          </div>
         </div>
-      </div>
 
       {/* Search bar for feed page (below main row) */}
       {isFeedPage && auth.isAuthenticated && (
