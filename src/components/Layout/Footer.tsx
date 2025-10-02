@@ -75,9 +75,10 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
 
       {/* Footer Panel - Responsive positioning */}
       {isVisible && (
-        <div className={`fixed bottom-6 z-40 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-2xl backdrop-blur-xl p-4 sm:p-6 space-y-3 sm:space-y-4 transition-all duration-300 ${
-          appState.sidebarCollapsed ? 'left-20' : 'left-64'
-        } right-6 max-w-6xl`}>
+        <div className={`fixed bottom-6 z-40 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-2xl backdrop-blur-xl p-3 sm:p-6 space-y-3 sm:space-y-4 transition-all duration-300 
+          left-4 sm:left-20 lg:left-80 right-4 sm:right-6 
+          ${appState.sidebarCollapsed ? 'lg:left-20' : 'lg:left-64'} 
+          max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-5xl xl:max-w-6xl`}>
           {/* Main Controls Row */}
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             {/* Feed Type */}

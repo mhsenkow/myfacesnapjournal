@@ -1,28 +1,47 @@
 import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Bell, Sun, Moon, User, Settings } from 'lucide-react';
+import { Bell, Sun, Moon, User, Settings, Zap } from 'lucide-react';
 
 const FloatingControls: React.FC = () => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleMode } = useTheme();
+
+  // Get appropriate icon and title for current theme mode
+  const getThemeIcon = () => {
+    switch (theme.mode) {
+      case 'light':
+        return <Moon className="w-5 h-5 glass-text-primary" />;
+      case 'dark':
+        return <Sun className="w-5 h-5 glass-text-primary" />;
+      case 'brutalist':
+        return <Zap className="w-5 h-5 glass-text-primary" />;
+      default:
+        return <Sun className="w-5 h-5 glass-text-primary" />;
+    }
+  };
+
+  const getNextModeName = () => {
+    switch (theme.mode) {
+      case 'light': return 'dark';
+      case 'dark': return 'brutalist';
+      case 'brutalist': return 'light';
+      default: return 'dark';
+    }
+  };
 
   return (
-    <div className="fixed top-6 right-6 z-50 flex flex-col gap-3">
+    <div className="fixed top-6 right-6 z-50 flex flex-col gap-2 sm:gap-3">
       {/* Theme Toggle */}
       <button
-        onClick={toggleTheme}
-        className="p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
-        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        onClick={toggleMode}
+        className="p-2 sm:p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+        title={`Switch to ${getNextModeName()} mode`}
       >
-        {theme === 'dark' ? (
-          <Sun className="w-5 h-5 glass-text-primary" />
-        ) : (
-          <Moon className="w-5 h-5 glass-text-primary" />
-        )}
+        {getThemeIcon()}
       </button>
 
       {/* Notifications */}
       <button
-        className="p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 relative"
+        className="p-2 sm:p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 relative"
         title="Notifications"
       >
         <Bell className="w-5 h-5 glass-text-primary" />
@@ -32,7 +51,7 @@ const FloatingControls: React.FC = () => {
 
       {/* User Profile */}
       <button
-        className="p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+        className="p-2 sm:p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
         title="User Profile"
       >
         <User className="w-5 h-5 glass-text-primary" />
@@ -40,7 +59,7 @@ const FloatingControls: React.FC = () => {
 
       {/* Settings */}
       <button
-        className="p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+        className="p-2 sm:p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
         title="Settings"
       >
         <Settings className="w-5 h-5 glass-text-primary" />
