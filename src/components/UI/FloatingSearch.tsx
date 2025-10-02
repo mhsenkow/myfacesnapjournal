@@ -91,7 +91,7 @@ const FloatingSearch: React.FC = () => {
           <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+              <h3 className="text-sm font-semibold glass-text-primary">
                 {isJournalPage ? (
                   'Search Journal'
                 ) : isFeedPage && auth.isAuthenticated && feedType ? (
@@ -104,7 +104,7 @@ const FloatingSearch: React.FC = () => {
                 onClick={toggleExpanded}
                 className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded-full transition-colors"
               >
-                <X className="w-4 h-4 text-neutral-500" />
+                <X className="w-4 h-4 glass-text-muted" />
               </button>
             </div>
 
@@ -124,14 +124,14 @@ const FloatingSearch: React.FC = () => {
                     ? "Search posts, users, hashtags..."
                     : "Search..."
                 }
-                className="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                className="w-full pl-10 pr-3 py-2.5 glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                 autoFocus
               />
             </form>
 
             {/* Search Filters */}
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1 text-xs text-neutral-500">
+              <div className="flex items-center gap-1 text-xs glass-text-muted">
                 <Filter className="w-3 h-3" />
                 <span>Filters:</span>
               </div>
@@ -194,7 +194,7 @@ const FloatingSearch: React.FC = () => {
                 </button>
               )}
               
-              <button className="flex items-center gap-1 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-600 text-neutral-700 dark:text-neutral-200 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-500 transition-colors text-xs">
+              <button className="flex items-center gap-1 px-3 py-1.5 glass-subtle glass-text-primary rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-500 transition-colors text-xs">
                 <Calendar className="w-3 h-3" />
                 Recent
               </button>
@@ -206,12 +206,12 @@ const FloatingSearch: React.FC = () => {
                 <div className="grid grid-cols-1 gap-3">
                   {/* Tags Filter */}
                   <div>
-                    <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">Tags</label>
+                    <label className="block text-xs font-medium glass-text-secondary mb-1">Tags</label>
                     <select
                       multiple
                       value={selectedTags}
                       onChange={(e) => setSelectedTags(Array.from(e.target.selectedOptions, option => option.value))}
-                      className="w-full px-2 py-1.5 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg text-xs"
+                      className="w-full px-2 py-1.5 glass-subtle glass-text-primary border border-neutral-300 dark:border-neutral-600 rounded-lg text-xs"
                       size={3}
                     >
                       {allTags().map(tag => (
@@ -222,11 +222,11 @@ const FloatingSearch: React.FC = () => {
 
                   {/* Mood Filter */}
                   <div>
-                    <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">Mood</label>
+                    <label className="block text-xs font-medium glass-text-secondary mb-1">Mood</label>
                     <select
                       value={selectedMood}
                       onChange={(e) => setSelectedMood(e.target.value)}
-                      className="w-full px-2 py-1.5 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg text-xs"
+                      className="w-full px-2 py-1.5 glass-subtle glass-text-primary border border-neutral-300 dark:border-neutral-600 rounded-lg text-xs"
                     >
                       <option value="">All moods</option>
                       {allMoods().map(mood => (
@@ -237,11 +237,11 @@ const FloatingSearch: React.FC = () => {
 
                   {/* Privacy Filter */}
                   <div>
-                    <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">Privacy</label>
+                    <label className="block text-xs font-medium glass-text-secondary mb-1">Privacy</label>
                     <select
                       value={selectedPrivacy}
                       onChange={(e) => setSelectedPrivacy(e.target.value)}
-                      className="w-full px-2 py-1.5 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg text-xs"
+                      className="w-full px-2 py-1.5 glass-subtle glass-text-primary border border-neutral-300 dark:border-neutral-600 rounded-lg text-xs"
                     >
                       <option value="">All privacy levels</option>
                       <option value="public">Public</option>
@@ -252,11 +252,11 @@ const FloatingSearch: React.FC = () => {
 
                   {/* Source Filter */}
                   <div>
-                    <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">Source</label>
+                    <label className="block text-xs font-medium glass-text-secondary mb-1">Source</label>
                     <select
                       value={selectedSource}
                       onChange={(e) => setSelectedSource(e.target.value)}
-                      className="w-full px-2 py-1.5 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-600 rounded-lg text-xs"
+                      className="w-full px-2 py-1.5 glass-subtle glass-text-primary border border-neutral-300 dark:border-neutral-600 rounded-lg text-xs"
                     >
                       <option value="">All sources</option>
                       <option value="local">Local</option>
