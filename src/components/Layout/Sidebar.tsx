@@ -13,6 +13,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useApp } from '../../contexts/AppContext'
 import { useMastodonStore } from '../../stores/mastodonStore'
 import { useBlueskyStore } from '../../stores/blueskyStore'
+import FeedbackButtonSimple from '../UI/FeedbackButtonSimple'
 import { 
   BookOpen, 
   Brain, 
@@ -175,6 +176,16 @@ const Sidebar: React.FC = () => {
         </ul>
 
       </nav>
+
+      {/* Feedback Section - Above Profile */}
+      {!state.sidebarCollapsed && (
+        <div className="p-4 border-t border-neutral-200 dark:border-neutral-700 flex-shrink-0">
+          <div className="mb-4">
+            <h3 className="text-sm font-medium glass-text-secondary mb-3">Feedback</h3>
+            <FeedbackButtonSimple variant="inline" />
+          </div>
+        </div>
+      )}
 
       {/* User Profile Section - Now at Bottom */}
       {!state.sidebarCollapsed && (

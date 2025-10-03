@@ -3,7 +3,7 @@ mod ai_service;
  * MyFace SnapJournal - Tauri Backend
  *
  * This is the main Rust entry point for the desktop application backend.
- * It handles database operations, AI integration, and provides Tauri commands.
+ * It handles database operations, AI integration, GitHub integration, and provides Tauri commands.
  */
 
 #[cfg_attr(
@@ -11,11 +11,13 @@ mod ai_service;
     windows_subsystem = "windows"
 )]
 mod database;
+mod github_service;
 
 use ai_service::{AIService, ChatRequest, EmbeddingRequest};
 use anyhow::Result;
 use chrono::Utc;
 use database::{Database, JournalEntry};
+use github_service::{CreateIssueRequest, CreateIssueResponse, GitHubIssue, GitHubService};
 use serde_json::Value;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -27,6 +29,7 @@ use uuid::Uuid;
 struct AppState {
     database: Arc<Mutex<Option<Database>>>,
     ai_service: Arc<Mutex<Option<AIService>>>,
+    github_service: Arc<Mutex<Option<GitHubService>>>,
     database_path: Arc<Mutex<Option<PathBuf>>>,
 }
 
@@ -36,6 +39,7 @@ fn main() {
         .manage(AppState {
             database: Arc::new(Mutex::new(None)),
             ai_service: Arc::new(Mutex::new(None)),
+            github_service: Arc::new(Mutex::new(None)),
             database_path: Arc::new(Mutex::new(None)),
         })
         .setup(|app| {
@@ -72,6 +76,11 @@ fn main() {
             get_ai_models,
             check_ai_availability,
             open_oauth_window,
+            create_github_issue,
+            get_github_issue,
+            get_github_issues,
+            get_github_repository_info,
+            fetch_rss_feed,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -87,10 +96,14 @@ async fn initialize_services(app_handle: tauri::AppHandle) -> Result<()> {
     // Initialize AI service (default to Ollama)
     let ai_service = AIService::new("ollama", "")?;
 
+    // Initialize GitHub service
+    let github_service = GitHubService::new();
+
     // Store in app state
     let state = app_handle.state::<AppState>();
     *state.database.lock().await = Some(database);
     *state.ai_service.lock().await = Some(ai_service);
+    *state.github_service.lock().await = Some(github_service);
     *state.database_path.lock().await = Some(db_path);
 
     Ok(())
@@ -374,4 +387,99 @@ async fn open_oauth_window(app_handle: tauri::AppHandle, url: String) -> Result<
     println!("OAuth window opened for URL: {}", url);
 
     Ok("OAuth window opened".to_string())
+}
+
+// GitHub commands
+#[tauri::command]
+async fn create_github_issue(
+    state: State<'_, AppState>,
+    title: String,
+    body: String,
+    labels: Vec<String>,
+    token: String,
+) -> Result<CreateIssueResponse, String> {
+    let github_guard = state.github_service.lock().await;
+    let github_service = github_guard.as_ref().ok_or("GitHub service not initialized")?;
+
+    let issue_request = CreateIssueRequest {
+        title,
+        body,
+        labels,
+    };
+
+    github_service
+        .create_issue(issue_request, token)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn get_github_issue(
+    state: State<'_, AppState>,
+    issue_number: u32,
+) -> Result<serde_json::Value, String> {
+    let github_guard = state.github_service.lock().await;
+    let github_service = github_guard.as_ref().ok_or("GitHub service not initialized")?;
+
+    let issue = github_service
+        .get_issue(issue_number)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(serde_json::to_value(issue).map_err(|e| e.to_string())?)
+}
+
+#[tauri::command]
+async fn get_github_issues(
+    state: State<'_, AppState>,
+    token: String,
+) -> Result<Vec<GitHubIssue>, String> {
+    let github_guard = state.github_service.lock().await;
+    let github_service = github_guard.as_ref().ok_or("GitHub service not initialized")?;
+
+    github_service
+        .get_issues(token)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn get_github_repository_info(
+    state: State<'_, AppState>,
+) -> Result<serde_json::Value, String> {
+    let github_guard = state.github_service.lock().await;
+    let github_service = github_guard.as_ref().ok_or("GitHub service not initialized")?;
+
+    let repo_info = github_service
+        .get_repository_info()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(repo_info)
+}
+
+#[tauri::command]
+async fn fetch_rss_feed(url: String) -> Result<String, String> {
+    let client = reqwest::Client::new();
+    
+    let response = client
+        .get(&url)
+        .header("User-Agent", "MyFaceSnapJournal/1.0")
+        .header("Accept", "application/rss+xml, application/xml, text/xml, */*")
+        .timeout(std::time::Duration::from_secs(30))
+        .send()
+        .await
+        .map_err(|e| format!("Failed to fetch RSS feed: {}", e))?;
+
+    if !response.status().is_success() {
+        return Err(format!("RSS feed returned status: {}", response.status()));
+    }
+
+    let content = response.text().await.map_err(|e| format!("Failed to read RSS content: {}", e))?;
+    
+    if content.trim().is_empty() {
+        return Err("RSS feed returned empty content".to_string());
+    }
+    
+    Ok(content)
 }

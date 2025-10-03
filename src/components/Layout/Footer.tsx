@@ -2,6 +2,7 @@ import React from 'react';
 import { useMastodonStore } from '../../stores/mastodonStore';
 import { useBlueskyStore } from '../../stores/blueskyStore';
 import { useApp } from '../../contexts/AppContext';
+import { substackService } from '../../services/substackService';
 import { 
   Globe, 
   Server, 
@@ -23,7 +24,11 @@ import {
   Zap,
   MessageCircle,
   SprayCan,
-  Focus
+  Focus,
+  Rss,
+  Plus,
+  Settings,
+  Wrench
 } from 'lucide-react';
 
 interface FooterProps {
@@ -33,6 +38,7 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
   const { state: appState, toggleFeedSource } = useApp();
+  const [substackSources] = React.useState(() => substackService.getSources());
   const {
     auth,
     feedType,
@@ -119,6 +125,73 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 <Server className="w-4 h-4 glass-text-primary" />
               </button>
               <button
+                onClick={() => {
+                  // Quick add Substack source
+                  const url = prompt('Enter Substack newsletter URL (e.g., https://newsletter.substack.com):');
+                  if (url) {
+                    const rssUrl = substackService.extractRSSUrl(url);
+                    const source = substackService.addSource({
+                      name: url.split('/')[2] || 'New Substack',
+                      rssUrl,
+                      enabled: true
+                    });
+                    console.log('Added Substack source:', source);
+                    // Refresh the footer to show updated count
+                    window.location.reload();
+                  }
+                }}
+                className="p-2 rounded-md transition-all duration-200 hover:bg-white/20 dark:hover:bg-black/20 hover:scale-105"
+                title="Add Substack Source"
+              >
+                <Plus className="w-4 h-4 glass-text-primary" />
+              </button>
+              <button
+                onClick={async () => {
+                  console.log('Manually refreshing Substack feeds...');
+                  try {
+                    const posts = await substackService.fetchAllFeeds();
+                    console.log('Manual Substack refresh completed:', posts.length, 'posts');
+                    alert(`Substack refresh completed! Found ${posts.length} posts.`);
+                  } catch (error) {
+                    console.error('Manual Substack refresh failed:', error);
+                    alert('Substack refresh failed. Check console for details.');
+                  }
+                }}
+                className="p-2 rounded-md transition-all duration-200 hover:bg-white/20 dark:hover:bg-black/20 hover:scale-105"
+                title="Refresh Substack Feeds"
+              >
+                <Rss className="w-4 h-4 glass-text-primary" />
+              </button>
+              <button
+                onClick={() => {
+                  const sources = substackService.getSources();
+                  const enabledSources = sources.filter(s => s.enabled);
+                  console.log('Current Substack sources:', sources);
+                  console.log('Enabled sources:', enabledSources);
+                  alert(`Substack Debug:\nTotal sources: ${sources.length}\nEnabled sources: ${enabledSources.length}\n\nCheck console for details.`);
+                }}
+                className="p-2 rounded-md transition-all duration-200 hover:bg-white/20 dark:hover:bg-black/20 hover:scale-105"
+                title="Debug Substack Sources"
+              >
+                <Settings className="w-4 h-4 glass-text-primary" />
+              </button>
+              <button
+                onClick={async () => {
+                  const testUrl = 'https://notboring.substack.com/feed';
+                  const isWorking = await substackService.testCORSExtension(testUrl);
+                  if (isWorking) {
+                    alert('✅ CORS extension is working! RSS feeds should now load properly.');
+                  } else {
+                    substackService.startLocalProxy();
+                    alert('❌ CORS extension not working. Check console for setup instructions.');
+                  }
+                }}
+                className="p-2 rounded-md transition-all duration-200 hover:bg-white/20 dark:hover:bg-black/20 hover:scale-105"
+                title="Test CORS Extension"
+              >
+                <Wrench className="w-4 h-4 glass-text-primary" />
+              </button>
+              <button
                 onClick={onToggle}
                 className="p-2 rounded-md transition-all duration-200 hover:bg-white/20 dark:hover:bg-black/20 hover:scale-105"
                 title="Close Feed Controls"
@@ -174,6 +247,18 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                       <span className="text-xs font-bold text-current">BS</span>
                     </div>
                     <span className="text-xs font-medium hidden sm:inline">Bluesky</span>
+                  </button>
+                  <button
+                    onClick={() => toggleFeedSource('substack')}
+                    className={`p-2 rounded-md transition-colors flex items-center gap-1.5 ${
+                      appState.activeFeedSources.substack
+                        ? 'bg-orange-600 text-white shadow-sm' 
+                        : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
+                    }`}
+                    title={`Toggle Substack feed (${substackSources.filter(s => s.enabled).length} sources)`}
+                  >
+                    <Rss className="w-4 h-4" />
+                    <span className="text-xs font-medium hidden sm:inline">Substack</span>
                   </button>
                 </div>
                 <span className="text-xs glass-text-muted mt-1">Feed Source</span>

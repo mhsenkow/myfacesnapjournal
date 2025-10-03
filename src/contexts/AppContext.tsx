@@ -60,12 +60,14 @@ export interface AppState {
   activeFeedSources: {
     mastodon: boolean
     bluesky: boolean
+    substack: boolean
   }
   
   // Track manual user actions to prevent auto-override
   userFeedPreferences: {
     mastodon: boolean | null // null = auto, true/false = manual
     bluesky: boolean | null
+    substack: boolean | null
   }
   
   // Feature capabilities
@@ -126,11 +128,13 @@ const defaultAppState: AppState = {
   syncStatus: 'idle',
   activeFeedSources: {
     mastodon: true,
-    bluesky: false
+    bluesky: false,
+    substack: false
   },
   userFeedPreferences: {
     mastodon: null, // null = auto-manage
-    bluesky: null
+    bluesky: null,
+    substack: null
   },
   features: {
     ai: true,
@@ -350,7 +354,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }
 
   // Toggle feed source
-  const toggleFeedSource = (source: 'mastodon' | 'bluesky') => {
+  const toggleFeedSource = (source: 'mastodon' | 'bluesky' | 'substack') => {
     setState(prev => {
       const newValue = !prev.activeFeedSources[source];
       return {

@@ -11,6 +11,7 @@ import { BrowserRouter } from 'react-router-dom'
 import AppContent from './App'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AppProvider } from './contexts/AppContext'
+import { FeedbackModalProvider } from './contexts/FeedbackModalContext'
 import './styles/index.css'
 
 // Initialize the app
@@ -24,7 +25,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     >
       <ThemeProvider>
         <AppProvider>
-          <AppContent />
+          <FeedbackModalProvider>
+            <AppContent />
+          </FeedbackModalProvider>
         </AppProvider>
       </ThemeProvider>
     </BrowserRouter>

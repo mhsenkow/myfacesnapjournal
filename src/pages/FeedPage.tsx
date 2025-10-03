@@ -51,6 +51,7 @@ import {
 import { useMastodonStore } from '../stores/mastodonStore';
 import { useBlueskyStore } from '../stores/blueskyStore';
 import { useApp } from '../contexts/AppContext';
+import { substackService, SubstackFeedItem } from '../services/substackService';
 import { MastodonPost } from '../types/mastodon';
 import PostInspector from '../components/UI/PostInspector';
 
@@ -1083,6 +1084,30 @@ const FeedPage: React.FC = () => {
   const [, setAnimationKey] = useState(0);
   const [inspectedPost, setInspectedPost] = useState<any>(null);
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
+  const [substackPosts, setSubstackPosts] = useState<SubstackFeedItem[]>([]);
+
+  // Fetch Substack posts when source is active
+  const fetchSubstackPosts = async () => {
+    if (appState.activeFeedSources.substack) {
+      console.log('Fetching Substack posts...');
+      try {
+        const posts = await substackService.fetchAllFeeds();
+        setSubstackPosts(posts);
+        console.log('Fetched Substack posts:', posts.length);
+        return posts;
+      } catch (error) {
+        console.error('Error fetching Substack posts:', error);
+        return [];
+      }
+    } else {
+      setSubstackPosts([]);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    fetchSubstackPosts();
+  }, [appState.activeFeedSources.substack]);
 
   // Handle post inspection
   const handleInspectPost = (post: any) => {
@@ -1363,6 +1388,82 @@ const FeedPage: React.FC = () => {
               }));
               combinedPosts = [...combinedPosts, ...convertedBlueskyPosts];
             }
+
+            if (appState.activeFeedSources.substack) {
+              // Convert Substack posts to Mastodon format for compatibility
+              const convertedSubstackPosts = substackPosts.map(substackPost => ({
+                id: substackPost.id,
+                created_at: substackPost.publishedAt,
+                content: substackPost.content,
+                account: {
+                  id: substackPost.author.toLowerCase().replace(/\s+/g, '_'),
+                  username: substackPost.author.toLowerCase().replace(/\s+/g, '_'),
+                  acct: substackPost.author.toLowerCase().replace(/\s+/g, '_'),
+                  display_name: substackPost.author,
+                  locked: false,
+                  bot: false,
+                  discoverable: true,
+                  group: false,
+                  created_at: new Date().toISOString(),
+                  note: `Author of ${substackPost.publication}`,
+                  url: substackPost.sourceUrl,
+                  avatar: null,
+                  avatar_static: null,
+                  header: null,
+                  header_static: null,
+                  followers_count: 0,
+                  following_count: 0,
+                  statuses_count: 0,
+                  last_status_at: null,
+                  emojis: [],
+                  fields: []
+                },
+                media_attachments: substackPost.imageUrl ? [{
+                  id: substackPost.imageUrl,
+                  type: 'image' as const,
+                  url: substackPost.imageUrl,
+                  preview_url: substackPost.imageUrl,
+                  remote_url: substackPost.imageUrl,
+                  text_url: substackPost.imageUrl,
+                  meta: {
+                    original: { width: 400, height: 300 },
+                    small: { width: 400, height: 300 }
+                  },
+                  description: null,
+                  blurhash: null
+                }] : [],
+                mentions: [],
+                tags: substackPost.tags.map(tag => ({
+                  name: tag,
+                  url: `https://substack.com/tag/${tag}`
+                })),
+                favourites_count: 0,
+                reblogs_count: 0,
+                replies_count: 0,
+                uri: substackPost.url,
+                url: substackPost.url,
+                cid: substackPost.id,
+                in_reply_to_uri: null,
+                in_reply_to_cid: null,
+                reblog: null,
+                poll: null,
+                card: null,
+                language: 'en',
+                text: substackPost.content,
+                edited_at: null,
+                platform: 'substack' as const,
+                visibility: 'public' as const,
+                in_reply_to_id: null,
+                in_reply_to_account_id: null,
+                // Substack-specific fields
+                substack: {
+                  publication: substackPost.publication,
+                  excerpt: substackPost.excerpt,
+                  sourceUrl: substackPost.sourceUrl
+                }
+              }));
+              combinedPosts = [...combinedPosts, ...convertedSubstackPosts];
+            }
             
             // Deduplicate posts by ID to prevent React key conflicts
             const combinedPostsMap = new Map();
@@ -1386,6 +1487,7 @@ const FeedPage: React.FC = () => {
               total: combinedPosts.length,
               mastodon: combinedPosts.filter(p => p.platform === 'mastodon').length,
               bluesky: combinedPosts.filter(p => p.platform === 'bluesky').length,
+              substack: combinedPosts.filter(p => p.platform === 'substack').length,
               unknown: combinedPosts.filter(p => !p.platform).length
             });
             

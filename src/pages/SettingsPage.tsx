@@ -10,7 +10,7 @@
  */
 
 import React, { useState } from 'react'
-import { Settings, Palette, Shield, Brain, Database, Download, Upload, ArrowRight, Link, User } from 'lucide-react'
+import { Settings, Palette, Shield, Brain, Database, Download, Upload, ArrowRight, Link, User, MessageCircle } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { useNavigate } from 'react-router-dom'
@@ -18,6 +18,9 @@ import MastodonImport from '../components/Mastodon/MastodonImport'
 import MastodonProfileInfo from '../components/Profile/MastodonProfileInfo'
 import BlueskyProfileInfo from '../components/Profile/BlueskyProfileInfo'
 import BlueskyIntegration from '../components/Bluesky/BlueskyIntegration'
+import GitHubIntegration from '../components/GitHub/GitHubIntegration'
+import SubstackIntegration from '../components/Substack/SubstackIntegration'
+import IssuesTab from '../components/UI/IssuesTab'
 import { useMastodonStore } from '../stores/mastodonStore'
 import { useBlueskyStore } from '../stores/blueskyStore'
 
@@ -42,8 +45,8 @@ const SettingsPage: React.FC = () => {
     { id: 'theme', label: 'Theme', icon: Palette },
     { id: 'ai', label: 'AI Settings', icon: Brain },
     { id: 'integrations', label: 'Integrations', icon: Link },
+    { id: 'issues', label: 'Issues', icon: MessageCircle },
     { id: 'privacy', label: 'Privacy', icon: Shield },
-
     { id: 'data', label: 'Data', icon: Database }
   ]
 
@@ -352,6 +355,16 @@ const SettingsPage: React.FC = () => {
                 <div className="bg-white border border-neutral-200 rounded-lg p-6">
                   <BlueskyIntegration />
                 </div>
+
+                {/* GitHub Integration */}
+                <div className="bg-white border border-neutral-200 rounded-lg p-6">
+                  <GitHubIntegration />
+                </div>
+
+                {/* Substack Integration */}
+                <div className="bg-white border border-neutral-200 rounded-lg p-6">
+                  <SubstackIntegration />
+                </div>
                 
                 {/* Future integrations placeholder */}
                 <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-6">
@@ -363,6 +376,11 @@ const SettingsPage: React.FC = () => {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Issues Tab */}
+          {activeTab === 'issues' && (
+            <IssuesTab />
           )}
 
           {/* Privacy Settings */}
