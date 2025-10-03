@@ -115,8 +115,23 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
             {renderPlatformBadge(post)}
             
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-                <User className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden">
+                {post.account.avatar ? (
+                  <img
+                    src={post.account.avatar}
+                    alt={post.account.display_name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className={`w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center ${post.account.avatar ? 'hidden' : ''}`}>
+                  <User className="w-6 h-6 text-white" />
+                </div>
               </div>
               
               <div className="flex-1 min-w-0">
@@ -274,8 +289,23 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
             {/* Platform Badge */}
             {renderPlatformBadge(post)}
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
-                <User className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-md overflow-hidden">
+                {post.account.avatar ? (
+                  <img
+                    src={post.account.avatar}
+                    alt={post.account.display_name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className={`w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center ${post.account.avatar ? 'hidden' : ''}`}>
+                  <User className="w-5 h-5 text-white" />
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-primary truncate">{post.account.display_name}</div>
@@ -450,7 +480,22 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-white text-center">
-                    <User className="w-12 h-12 mx-auto mb-2" />
+                    {post.account.avatar ? (
+                      <img
+                        src={post.account.avatar}
+                        alt={post.account.display_name}
+                        className="w-16 h-16 rounded-full mx-auto mb-2 object-cover border-2 border-white shadow-lg"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const fallback = target.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className={`${post.account.avatar ? 'hidden' : ''}`}>
+                      <User className="w-12 h-12 mx-auto mb-2" />
+                    </div>
                     <div className="text-sm font-medium">{post.account.display_name}</div>
                   </div>
                 </div>
@@ -515,8 +560,23 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
             {/* Content */}
             <div className="p-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="w-3 h-3 text-white" />
+                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {post.account.avatar ? (
+                    <img
+                      src={post.account.avatar}
+                      alt={post.account.display_name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const fallback = target.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <div className={`w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center ${post.account.avatar ? 'hidden' : ''}`}>
+                    <User className="w-3 h-3 text-white" />
+                  </div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-primary text-sm truncate">{post.account.display_name}</div>
@@ -699,8 +759,23 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
             {/* Platform Badge */}
             {renderPlatformBadge(post)}
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0">
-                <User className="w-3 h-3 text-white" />
+              <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {post.account.avatar ? (
+                  <img
+                    src={post.account.avatar}
+                    alt={post.account.display_name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className={`w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center ${post.account.avatar ? 'hidden' : ''}`}>
+                  <User className="w-3 h-3 text-white" />
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-primary text-xs truncate">{post.account.display_name}</div>
@@ -773,8 +848,23 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
             {renderPlatformBadge(post)}
             {/* Header */}
             <div className="flex items-center gap-4 p-6 pb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-                <User className="w-7 h-7 text-white" />
+              <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden">
+                {post.account.avatar ? (
+                  <img
+                    src={post.account.avatar}
+                    alt={post.account.display_name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className={`w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center ${post.account.avatar ? 'hidden' : ''}`}>
+                  <User className="w-7 h-7 text-white" />
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-1">
