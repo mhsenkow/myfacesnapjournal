@@ -5,7 +5,7 @@
  * for cross-browser compatibility.
  */
 
-export default {
+module.exports = {
   plugins: {
     tailwindcss: {},
     autoprefixer: {},
