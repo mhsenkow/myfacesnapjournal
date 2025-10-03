@@ -42,6 +42,9 @@ interface JournalActions {
   selectEntry: (entry: JournalEntry | null) => void;
   loadEntries: () => Promise<void>;
   
+  // Social media mirroring
+  createEntryFromSocialPost: (post: any, platform: 'mastodon' | 'bluesky') => Promise<void>;
+  
   // Search and filtering
   setSearchQuery: (query: string) => void;
   setSelectedTags: (tags: string[]) => void;
@@ -131,6 +134,84 @@ export const useJournalStore = create<JournalState & JournalActions>()(
             return newState;
           });
         }
+      },
+
+      createEntryFromSocialPost: async (post, platform) => {
+        // Check if this post already exists in the journal
+        const existingEntry = get().entries.find(entry => 
+          entry.source === platform && entry.tags.includes(`post-${post.id}`)
+        );
+        
+        if (existingEntry) {
+          console.log(`Post ${post.id} from ${platform} already exists in journal, skipping`);
+          return;
+        }
+
+        // Check if this post is authored by the authenticated user
+        let isMyPost = false;
+        
+        if (platform === 'mastodon') {
+          // Get the authenticated user from Mastodon store
+          const mastodonStore = await import('./mastodonStore');
+          const mastodonAuth = mastodonStore.useMastodonStore.getState().auth;
+          
+          if (mastodonAuth.user && post.account.id === mastodonAuth.user.id) {
+            isMyPost = true;
+          }
+        } else if (platform === 'bluesky') {
+          // Get the authenticated user from Bluesky store
+          const blueskyStore = await import('./blueskyStore');
+          const blueskyAuth = blueskyStore.useBlueskyStore.getState().auth;
+          
+          if (blueskyAuth.session && post.author.did === blueskyAuth.session.did) {
+            isMyPost = true;
+          }
+        }
+        
+        if (!isMyPost) {
+          console.log(`Skipping ${platform} post ${post.id} - not authored by authenticated user`);
+          return;
+        }
+
+        // Extract content and metadata based on platform
+        let title: string, content: string, tags: string[], mood: string, privacy: string;
+        
+        if (platform === 'mastodon') {
+          title = `My Mastodon Post`;
+          content = post.content || '';
+          tags = [
+            'mastodon',
+            'my-posts',
+            `post-${post.id}`,
+            ...(post.tags?.map((tag: any) => tag.name) || [])
+          ];
+          mood = 'neutral';
+          privacy = post.visibility === 'public' ? 'public' : 'private';
+        } else if (platform === 'bluesky') {
+          title = `My Bluesky Post`;
+          content = post.record.text || '';
+          tags = [
+            'bluesky',
+            'my-posts',
+            `post-${post.id}`
+          ];
+          mood = 'neutral';
+          privacy = 'public';
+        } else {
+          throw new Error(`Unsupported platform: ${platform}`);
+        }
+
+        // Create the journal entry
+        await get().createEntry({
+          title,
+          content,
+          tags,
+          mood: mood as 'happy' | 'sad' | 'neutral' | 'excited' | 'anxious' | 'grateful' | undefined,
+          privacy: privacy as 'public' | 'private' | 'secret',
+          source: platform as EntrySource
+        });
+
+        console.log(`✅ Created journal entry from my ${platform} post:`, post.id);
       },
 
       updateEntry: async (id, updates) => {

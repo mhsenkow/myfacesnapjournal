@@ -56,6 +56,18 @@ export interface AppState {
   lastSyncTime: Date | null
   syncStatus: 'idle' | 'syncing' | 'error' | 'success'
   
+  // Feed source state
+  activeFeedSources: {
+    mastodon: boolean
+    bluesky: boolean
+  }
+  
+  // Track manual user actions to prevent auto-override
+  userFeedPreferences: {
+    mastodon: boolean | null // null = auto, true/false = manual
+    bluesky: boolean | null
+  }
+  
   // Feature capabilities
   features: {
     ai: boolean
@@ -112,6 +124,14 @@ const defaultAppState: AppState = {
   isOnline: navigator.onLine,
   lastSyncTime: null,
   syncStatus: 'idle',
+  activeFeedSources: {
+    mastodon: true,
+    bluesky: false
+  },
+  userFeedPreferences: {
+    mastodon: null, // null = auto-manage
+    bluesky: null
+  },
   features: {
     ai: true,
     sync: false,
@@ -134,6 +154,7 @@ interface AppContextType {
   removeToast: (id: string) => void
   resetSettings: () => void
   checkCapabilities: () => Promise<void>
+  toggleFeedSource: (source: 'mastodon' | 'bluesky') => void
 }
 
 // Create context
@@ -328,6 +349,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }
 
+  // Toggle feed source
+  const toggleFeedSource = (source: 'mastodon' | 'bluesky') => {
+    setState(prev => {
+      const newValue = !prev.activeFeedSources[source];
+      return {
+        ...prev,
+        activeFeedSources: {
+          ...prev.activeFeedSources,
+          [source]: newValue
+        },
+        userFeedPreferences: {
+          ...prev.userFeedPreferences,
+          [source]: newValue // Mark as manual user preference
+        }
+      };
+    });
+  }
+
   const value: AppContextType = {
     settings,
     state,
@@ -340,7 +379,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     addToast,
     removeToast,
     resetSettings,
-    checkCapabilities
+    checkCapabilities,
+    toggleFeedSource
   }
 
   return (

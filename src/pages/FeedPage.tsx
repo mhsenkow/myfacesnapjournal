@@ -45,11 +45,14 @@ import {
   AtSign,
   Lock,
   Globe,
-  Bookmark
+  Bookmark,
+  Search
 } from 'lucide-react';
 import { useMastodonStore } from '../stores/mastodonStore';
 import { useBlueskyStore } from '../stores/blueskyStore';
+import { useApp } from '../contexts/AppContext';
 import { MastodonPost } from '../types/mastodon';
+import PostInspector from '../components/UI/PostInspector';
 
 // Feed Layout Component
 interface FeedLayoutProps {
@@ -61,6 +64,7 @@ interface FeedLayoutProps {
   getPostAnimationClass: (postId: string, currentIndex: number) => string;
   toggleLike: (postId: string) => Promise<void>;
   toggleBookmark: (postId: string) => Promise<void>;
+  onInspectPost: (post: any) => void;
 }
 
 const FeedLayout: React.FC<FeedLayoutProps> = ({ 
@@ -71,14 +75,45 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
   formatRelativeTime,
   getPostAnimationClass,
   toggleLike,
-  toggleBookmark
+  toggleBookmark,
+  onInspectPost
 }) => {
+  // Helper function to render platform badge
+  const renderPlatformBadge = (post: any) => {
+    const isBluesky = post.url?.includes('bsky.app');
+    if (isBluesky) {
+      return (
+        <div className="absolute top-3 right-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-1 z-10">
+          <div className="w-2 h-2 bg-white rounded-full"></div>
+          <span>Bluesky</span>
+        </div>
+      );
+    } else {
+      return (
+        <div className="absolute top-3 right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-1 z-10">
+          <div className="w-2 h-2 bg-white rounded-full"></div>
+          <span>Mastodon</span>
+        </div>
+      );
+    }
+  };
+
+  // Helper function to get platform-specific border classes
+  const getPlatformBorderClasses = (post: any) => {
+    const isBluesky = post.url?.includes('bsky.app');
+    return isBluesky 
+      ? 'border-blue-300 dark:border-blue-600' 
+      : 'border-purple-300 dark:border-purple-600';
+  };
   // Refined Layout (Default)
   if (displayMode === 'refined') {
     return (
       <div className="space-y-6">
         {posts.map((post, index) => (
-          <div key={post.id} className={`glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 hover:glass transition-all duration-500 hover:scale-[1.02] hover:shadow-xl ${getPostAnimationClass(post.id, index)}`}>
+          <div key={`${post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon'}-${post.id}`} className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-xl p-6 hover:glass transition-all duration-500 hover:scale-[1.02] hover:shadow-xl relative ${getPostAnimationClass(post.id, index)}`}>
+            {/* Platform Badge */}
+            {renderPlatformBadge(post)}
+            
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
                 <User className="w-6 h-6 text-white" />
@@ -156,20 +191,31 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                     />
                     <span className="text-sm font-medium">{post.favourites_count}</span>
                   </button>
-                  <button 
-                    onClick={() => toggleBookmark(post.id)}
-                    className={`post-action-button flex items-center gap-1.5 transition-colors group ${
-                      post.bookmarked 
-                        ? 'text-yellow-600 bookmark-saved' 
-                        : 'text-neutral-500 dark:text-neutral-400 hover:text-yellow-600'
-                    }`}
-                  >
-                    <Bookmark 
-                      className={`w-4 h-4 group-hover:scale-110 transition-transform ${
-                        post.bookmarked ? 'fill-current' : ''
-                      }`} 
-                    />
-                  </button>
+                      <button 
+                        onClick={() => toggleBookmark(post.id)}
+                        className={`post-action-button flex items-center gap-1.5 transition-colors group ${
+                          post.bookmarked 
+                            ? 'text-yellow-600 bookmark-saved' 
+                            : 'text-neutral-500 dark:text-neutral-400 hover:text-yellow-600'
+                        }`}
+                      >
+                        <Bookmark 
+                          className={`w-4 h-4 group-hover:scale-110 transition-transform ${
+                            post.bookmarked ? 'fill-current' : ''
+                          }`} 
+                        />
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onInspectPost(post);
+                        }}
+                        className="post-action-button flex items-center gap-1.5 transition-colors group text-neutral-500 dark:text-neutral-400 hover:text-blue-600"
+                        title="Inspect post details"
+                      >
+                        <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                      </button>
                   
                   {/* Content Indicators */}
                   {post.media_attachments.length > 0 && (
@@ -223,8 +269,10 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {posts.map((post, index) => (
-          <div key={post.id} className={`glass border border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 hover:glass-strong sequence-animate transition-all duration-300 hover:scale-105 hover:shadow-2xl group ${getPostAnimationClass(post.id, index)}`}
+          <div key={`${post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon'}-${post.id}`} className={`glass border ${getPlatformBorderClasses(post)} rounded-2xl p-6 hover:glass-strong sequence-animate transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative ${getPostAnimationClass(post.id, index)}`}
                style={{ animationDelay: `${index * 50}ms` }}>
+            {/* Platform Badge */}
+            {renderPlatformBadge(post)}
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
                 <User className="w-5 h-5 text-white" />
@@ -296,6 +344,17 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                     className={`w-4 h-4 ${post.bookmarked ? 'fill-current' : ''}`} 
                   />
                 </button>
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onInspectPost(post);
+                  }}
+                  className="post-action-button flex items-center gap-1 transition-colors text-neutral-500 dark:text-neutral-400 hover:text-blue-600"
+                  title="Inspect post details"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
                 
                 {/* Content Indicators */}
                 {post.media_attachments.length > 0 && (
@@ -342,7 +401,9 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {posts.map((post, index) => (
-          <div key={post.id} className={`glass border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden hover:glass-strong transition-all duration-300 hover:scale-105 group ${getPostAnimationClass(post.id, index)}`}>
+          <div key={`${post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon'}-${post.id}`} className={`glass border ${getPlatformBorderClasses(post)} rounded-xl overflow-hidden hover:glass-strong transition-all duration-300 hover:scale-105 group relative ${getPostAnimationClass(post.id, index)}`}>
+            {/* Platform Badge */}
+            {renderPlatformBadge(post)}
             {/* Media Display - Square aspect ratio */}
             <div className="aspect-square bg-gradient-to-br from-purple-400 via-pink-400 to-red-400 relative overflow-hidden">
               {post.media_attachments && post.media_attachments.length > 0 ? (
@@ -513,7 +574,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
           
           return (
             <div 
-              key={post.id} 
+              key={`${post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon'}-${post.id}`} 
               className={`
                 relative glass-subtle border border-neutral-200 dark:border-neutral-700 
                 ${getBorderRadius(contentLength)} ${getSize(totalEngagement)}
@@ -634,7 +695,9 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {posts.map((post, index) => (
-          <div key={post.id} className={`glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 hover:glass transition-all duration-200 hover:scale-[1.02] group ${getPostAnimationClass(post.id, index)}`}>
+          <div key={`${post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon'}-${post.id}`} className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-lg p-3 hover:glass transition-all duration-200 hover:scale-[1.02] group relative ${getPostAnimationClass(post.id, index)}`}>
+            {/* Platform Badge */}
+            {renderPlatformBadge(post)}
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0">
                 <User className="w-3 h-3 text-white" />
@@ -705,7 +768,9 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="max-w-2xl mx-auto space-y-8">
         {posts.map((post, index) => (
-          <div key={post.id} className={`glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-2xl overflow-hidden hover:glass transition-all duration-500 hover:scale-[1.01] hover:shadow-2xl group ${getPostAnimationClass(post.id, index)}`}>
+          <div key={`${post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon'}-${post.id}`} className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-2xl overflow-hidden hover:glass transition-all duration-500 hover:scale-[1.01] hover:shadow-2xl group relative ${getPostAnimationClass(post.id, index)}`}>
+            {/* Platform Badge */}
+            {renderPlatformBadge(post)}
             {/* Header */}
             <div className="flex items-center gap-4 p-6 pb-4">
               <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
@@ -878,6 +943,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
 };
 
 const FeedPage: React.FC = () => {
+  const { state: appState, toggleFeedSource } = useApp();
   const { 
     auth, 
     posts, 
@@ -894,13 +960,28 @@ const FeedPage: React.FC = () => {
   const { 
     auth: blueskyAuth,
     posts: blueskyPosts,
-    logout: blueskyLogout
+    isLoading: blueskyIsLoading,
+    fetchPosts: fetchBlueskyPosts,
+    restoreSession: restoreBlueskySession
   } = useBlueskyStore();
   
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
   const [previousPosts, setPreviousPosts] = useState<MastodonPost[]>([]);
   const [, setAnimationKey] = useState(0);
+  const [inspectedPost, setInspectedPost] = useState<any>(null);
+  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
+
+  // Handle post inspection
+  const handleInspectPost = (post: any) => {
+    setInspectedPost(post);
+    setIsInspectorOpen(true);
+  };
+
+  const handleCloseInspector = () => {
+    setIsInspectorOpen(false);
+    setInspectedPost(null);
+  };
 
   // Note: Feed loading is now handled by background service
   // This ensures feeds load even when user is on other pages
@@ -972,6 +1053,62 @@ const FeedPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [isLiveFeed, auth.isAuthenticated, liveFeedInterval, refreshLiveFeed]);
 
+  // Fetch Bluesky posts when authenticated and Bluesky feed is active
+  useEffect(() => {
+    console.log('Bluesky useEffect triggered:', { 
+      isAuthenticated: blueskyAuth.isAuthenticated, 
+      activeFeedSources: appState.activeFeedSources,
+      blueskyActive: appState.activeFeedSources.bluesky 
+    });
+    
+    if (blueskyAuth.isAuthenticated && appState.activeFeedSources.bluesky) {
+      console.log('Fetching Bluesky posts...', { blueskyAuth, appState });
+      fetchBlueskyPosts();
+    } else {
+      console.log('Bluesky fetch skipped:', { 
+        authenticated: blueskyAuth.isAuthenticated, 
+        blueskyActive: appState.activeFeedSources.bluesky 
+      });
+    }
+  }, [blueskyAuth.isAuthenticated, appState.activeFeedSources.bluesky, fetchBlueskyPosts]);
+
+  // Restore Bluesky session on mount
+  useEffect(() => {
+    const initializeBluesky = async () => {
+      console.log('Initializing Bluesky session...');
+      const restored = await restoreBlueskySession();
+      console.log('Bluesky session restoration result:', restored);
+    };
+    initializeBluesky();
+  }, [restoreBlueskySession]);
+
+  // Auto-enable feed sources when authenticated (only if user hasn't manually set preference)
+  useEffect(() => {
+    if (auth.isAuthenticated && 
+        !appState.activeFeedSources.mastodon && 
+        appState.userFeedPreferences.mastodon === null) {
+      console.log('Auto-enabling Mastodon feed source');
+      toggleFeedSource('mastodon');
+    }
+  }, [auth.isAuthenticated, appState.activeFeedSources.mastodon, appState.userFeedPreferences.mastodon, toggleFeedSource]);
+
+  useEffect(() => {
+    if (blueskyAuth.isAuthenticated && 
+        !appState.activeFeedSources.bluesky && 
+        appState.userFeedPreferences.bluesky === null) {
+      console.log('Auto-enabling Bluesky feed source');
+      toggleFeedSource('bluesky');
+    }
+  }, [blueskyAuth.isAuthenticated, appState.activeFeedSources.bluesky, appState.userFeedPreferences.bluesky, toggleFeedSource]);
+
+  // Also fetch Bluesky posts when Bluesky auth changes (for manual refresh)
+  useEffect(() => {
+    if (blueskyAuth.isAuthenticated) {
+      console.log('Bluesky authenticated, fetching posts...');
+      fetchBlueskyPosts();
+    }
+  }, [blueskyAuth.isAuthenticated, fetchBlueskyPosts]);
+
   // Helper function to determine animation class for a post with directional context
   const getPostAnimationClass = (postId: string, currentIndex: number) => {
     const wasPresent = previousPosts.some(p => p.id === postId);
@@ -1035,72 +1172,6 @@ const FeedPage: React.FC = () => {
   return (
     <div className="space-y-6">
 
-      {/* Authentication Status */}
-      {!auth.isAuthenticated && !blueskyAuth.isAuthenticated && (
-        <div className="glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <EyeOff className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
-            <h3 className="text-lg font-semibold glass-text-primary">
-              Connect to Social Networks
-            </h3>
-          </div>
-          <p className="text-sm glass-text-secondary mb-4">
-            Connect to Mastodon or Bluesky to explore social feeds and discover content.
-          </p>
-          
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => {
-                // Navigate to settings for Mastodon
-                window.location.href = '/settings';
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              <Rss className="w-4 h-4" />
-              Connect Mastodon
-            </button>
-            
-            <button
-              onClick={() => window.location.href = '/settings?tab=integrations'}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              <div className="w-4 h-4 bg-white rounded-sm flex items-center justify-center">
-                <span className="text-blue-600 font-bold text-xs">BS</span>
-              </div>
-              Connect Bluesky
-            </button>
-          </div>
-        </div>
-      )}
-
-
-      {/* Bluesky Connection Status */}
-      {blueskyAuth.isAuthenticated && (
-        <div className="glass-subtle border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">BS</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium glass-text-primary">
-                  Connected to Bluesky as @{blueskyAuth.session?.handle}
-                </p>
-                <p className="text-xs glass-text-tertiary">
-                  {blueskyPosts.length} posts loaded
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={blueskyLogout}
-              className="px-3 py-1.5 text-xs glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-white/20 dark:hover:bg-black/20 transition-colors"
-            >
-              Disconnect
-            </button>
-          </div>
-        </div>
-      )}
-
 
       {/* Error Message */}
       {lastImportError && (
@@ -1115,30 +1186,92 @@ const FeedPage: React.FC = () => {
       {/* Posts List */}
       {(auth.isAuthenticated || blueskyAuth.isAuthenticated) && (
         <>
-          {isLoadingPosts ? (
-            <div className="flex items-center justify-center py-12">
-              <RefreshCw className="w-8 h-8 text-purple-600 animate-spin" />
-              <span className="ml-3 text-neutral-600 dark:text-neutral-400">Loading posts...</span>
-            </div>
-          ) : posts.length === 0 ? (
-            <div className="text-center py-12">
-              <Rss className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
-              <p className="text-neutral-600 dark:text-neutral-400">No posts found. Try adjusting your filters or search query.</p>
-            </div>
-          ) : (
-            <FeedLayout 
-              posts={posts} 
-              displayMode={displayMode} 
-              isScrolling={isScrolling}
-              formatContent={formatContent}
-              formatRelativeTime={formatRelativeTime}
-              getPostAnimationClass={getPostAnimationClass}
-              toggleLike={toggleLike}
-              toggleBookmark={toggleBookmark}
-            />
-          )}
+          {(() => {
+            // Combine posts from both platforms
+            let combinedPosts: any[] = [];
+            
+            if (appState.activeFeedSources.mastodon && auth.isAuthenticated) {
+              combinedPosts = [...combinedPosts, ...posts];
+            }
+            
+            if (appState.activeFeedSources.bluesky && blueskyAuth.isAuthenticated) {
+              // Convert Bluesky posts to Mastodon format for compatibility
+              const convertedBlueskyPosts = blueskyPosts.map(blueskyPost => ({
+                id: blueskyPost.uri,
+                created_at: blueskyPost.record.createdAt,
+                content: blueskyPost.record.text,
+                account: {
+                  id: blueskyPost.author.did,
+                  username: blueskyPost.author.handle,
+                  display_name: blueskyPost.author.displayName || blueskyPost.author.handle,
+                  avatar: blueskyPost.author.avatar || '',
+                  acct: blueskyPost.author.handle
+                },
+                replies_count: blueskyPost.replyCount,
+                reblogs_count: blueskyPost.repostCount,
+                favourites_count: blueskyPost.likeCount,
+                favourited: !!blueskyPost.viewer?.like,
+                reblogged: !!blueskyPost.viewer?.repost,
+                bookmarked: false, // Bluesky doesn't have bookmarks
+                uri: blueskyPost.uri,
+                url: `https://bsky.app/post/${blueskyPost.uri.split('/').pop()}`,
+                media_attachments: [], // TODO: Extract from Bluesky embeds
+                mentions: [], // TODO: Extract from Bluesky facets
+                tags: [], // TODO: Extract from Bluesky facets
+                emojis: [],
+                sensitive: false,
+                spoiler_text: '',
+                visibility: 'public' as const,
+                language: 'en',
+                in_reply_to_id: null,
+                in_reply_to_account_id: null
+              }));
+              combinedPosts = [...combinedPosts, ...convertedBlueskyPosts];
+            }
+            
+            const isLoading = isLoadingPosts || (blueskyAuth.isAuthenticated && blueskyIsLoading);
+            
+            if (isLoading) {
+              return (
+                <div className="flex items-center justify-center py-12">
+                  <RefreshCw className="w-8 h-8 text-purple-600 animate-spin" />
+                  <span className="ml-3 text-neutral-600 dark:text-neutral-400">Loading posts...</span>
+                </div>
+              );
+            }
+            
+            if (combinedPosts.length === 0) {
+              return (
+                <div className="text-center py-12">
+                  <Rss className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+                  <p className="text-neutral-600 dark:text-neutral-400">No posts found. Try adjusting your filters or search query.</p>
+                </div>
+              );
+            }
+            
+            return (
+              <FeedLayout 
+                posts={combinedPosts} 
+                displayMode={displayMode} 
+                isScrolling={isScrolling}
+                formatContent={formatContent}
+                formatRelativeTime={formatRelativeTime}
+                getPostAnimationClass={getPostAnimationClass}
+                toggleLike={toggleLike}
+                toggleBookmark={toggleBookmark}
+                onInspectPost={handleInspectPost}
+              />
+            );
+          })()}
         </>
       )}
+
+      {/* Post Inspector */}
+      <PostInspector 
+        post={inspectedPost}
+        isOpen={isInspectorOpen}
+        onClose={handleCloseInspector}
+      />
 
     </div>
   );

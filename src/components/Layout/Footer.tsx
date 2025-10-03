@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useMastodonStore } from '../../stores/mastodonStore';
 import { useBlueskyStore } from '../../stores/blueskyStore';
 import { useApp } from '../../contexts/AppContext';
@@ -32,7 +32,7 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
-  const { state: appState } = useApp();
+  const { state: appState, toggleFeedSource } = useApp();
   const {
     auth,
     feedType,
@@ -63,7 +63,6 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
   } = useMastodonStore();
 
   const { auth: blueskyAuth } = useBlueskyStore();
-  const [activeFeedSource, setActiveFeedSource] = useState<'mastodon' | 'bluesky'>('mastodon');
 
   if (!auth.isAuthenticated && !blueskyAuth.isAuthenticated) {
     return null;
@@ -145,31 +144,31 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
               <div className="flex flex-col">
                 <div className="flex items-center gap-1 glass-subtle rounded-lg p-1">
                   <button
-                    onClick={() => setActiveFeedSource('mastodon')}
+                    onClick={() => toggleFeedSource('mastodon')}
                     disabled={!auth.isAuthenticated}
                     className={`p-2 rounded-md transition-colors flex items-center gap-1.5 ${
-                      activeFeedSource === 'mastodon' && auth.isAuthenticated
+                      appState.activeFeedSources.mastodon && auth.isAuthenticated
                         ? 'bg-purple-600 text-white shadow-sm' 
                         : auth.isAuthenticated
                         ? 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                         : 'opacity-50 cursor-not-allowed'
                     }`}
-                    title={auth.isAuthenticated ? "Switch to Mastodon feed" : "Connect to Mastodon first"}
+                    title={auth.isAuthenticated ? "Toggle Mastodon feed" : "Connect to Mastodon first"}
                   >
                     <Globe className="w-4 h-4" />
                     <span className="text-xs font-medium hidden sm:inline">Mastodon</span>
                   </button>
                   <button
-                    onClick={() => setActiveFeedSource('bluesky')}
+                    onClick={() => toggleFeedSource('bluesky')}
                     disabled={!blueskyAuth.isAuthenticated}
                     className={`p-2 rounded-md transition-colors flex items-center gap-1.5 ${
-                      activeFeedSource === 'bluesky' && blueskyAuth.isAuthenticated
+                      appState.activeFeedSources.bluesky && blueskyAuth.isAuthenticated
                         ? 'bg-blue-600 text-white shadow-sm' 
                         : blueskyAuth.isAuthenticated
                         ? 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                         : 'opacity-50 cursor-not-allowed'
                     }`}
-                    title={blueskyAuth.isAuthenticated ? "Switch to Bluesky feed" : "Connect to Bluesky first"}
+                    title={blueskyAuth.isAuthenticated ? "Toggle Bluesky feed" : "Connect to Bluesky first"}
                   >
                     <div className="w-4 h-4 bg-current rounded-sm flex items-center justify-center">
                       <span className="text-xs font-bold text-current">BS</span>

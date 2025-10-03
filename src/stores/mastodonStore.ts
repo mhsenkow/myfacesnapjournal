@@ -36,6 +36,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { MastodonAuth, MastodonPost, MastodonUser, MastodonImportSettings } from '../types/mastodon';
 import { mastodonService } from '../services/mastodonService';
+import { useJournalStore } from './journalStore';
 
 interface MastodonStore {
   // Authentication state
@@ -291,19 +292,13 @@ export const useMastodonStore = create<MastodonStore>()(
         try {
           console.log(`Fetching ${postLimit} posts for ${feedType} timeline from ${instanceUrl}`);
           
-          const allPosts = postLimit > 40 
-            ? await mastodonService.getPublicTimelinePaginated(
-                instanceUrl,
-                auth.accessToken,
-                feedType,
-                postLimit
-              )
-            : await mastodonService.getPublicTimeline(
-                instanceUrl,
-                auth.accessToken,
-                feedType,
-                Math.min(40, postLimit)
-              );
+          // Fetch user's own posts instead of public timeline
+          const allPosts = await mastodonService.getUserPosts(
+            instanceUrl,
+            auth.accessToken,
+            auth.user!.id,
+            postLimit
+          );
 
           console.log(`Successfully fetched ${allPosts.length} posts (requested: ${postLimit})`);
           
@@ -335,6 +330,19 @@ export const useMastodonStore = create<MastodonStore>()(
           
           // Store merged posts and apply algorithm
           set({ allPosts: mergedPosts });
+          
+          // Mirror only MY posts to journal
+          console.log('Mirroring my Mastodon posts to journal...');
+          const myPosts = mergedPosts.filter(post => post.account.id === auth.user!.id);
+          console.log(`Found ${myPosts.length} of my posts out of ${mergedPosts.length} total posts`);
+          
+          for (const post of myPosts) {
+            try {
+              await useJournalStore.getState().createEntryFromSocialPost(post, 'mastodon');
+            } catch (error) {
+              console.error('Failed to create journal entry for my Mastodon post:', post.id, error);
+            }
+          }
           
           // Apply algorithm immediately to show available posts
           get().applyAlgorithm();
@@ -376,8 +384,7 @@ export const useMastodonStore = create<MastodonStore>()(
       // Feed control actions
       setFeedType: (type) => {
         set({ feedType: type });
-        // Automatically fetch new posts when feed type changes
-        get().fetchPublicTimeline();
+        // Don't auto-fetch since we're now fetching user's own posts, not public timeline
       },
 
       setSortBy: (sort) => {
@@ -400,31 +407,25 @@ export const useMastodonStore = create<MastodonStore>()(
 
       setFilterBy: (filter) => {
         set({ filterBy: filter });
-        // Re-fetch posts with new filter
-        get().fetchPublicTimeline();
+        // Don't auto-fetch since we're now fetching user's own posts, not public timeline
       },
 
       setSearchQuery: (query) => {
         set({ searchQuery: query });
-        // Debounce search - fetch after a short delay
-        setTimeout(() => {
-          if (get().searchQuery === query) {
-            get().fetchPublicTimeline();
-          }
-        }, 500);
+        // Don't auto-fetch since we're now fetching user's own posts, not public timeline
+        // Search will be handled by filtering existing posts
       },
 
       setInstanceUrl: (url) => {
         set({ instanceUrl: url });
-        // Fetch posts from new instance
-        get().fetchPublicTimeline();
+        // Note: Changing instance URL would require re-authentication
+        // Don't auto-fetch since this would fail without proper auth for new instance
       },
 
       setPostLimit: (limit) => {
         const validLimit = Math.max(1, Math.min(10000, limit)); // Clamp between 1 and 10,000
         set({ postLimit: validLimit });
-        // Fetch posts with new limit
-        get().fetchPublicTimeline();
+        // Don't auto-fetch - user can manually refresh if they want more posts
       },
 
       setDisplayLimit: (limit) => {

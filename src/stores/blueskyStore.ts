@@ -12,6 +12,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { BskyAgent } from '@bluesky-social/api';
 import { BlueskyPost, BlueskyAuth, BlueskySession, BlueskyFeedType, BlueskyFeedSettings } from '../types/bluesky';
+import { useJournalStore } from './journalStore';
 
 interface BlueskyState {
   // Authentication
@@ -39,6 +40,7 @@ interface BlueskyActions {
   login: (identifier: string, password: string) => Promise<void>;
   logout: () => void;
   refreshSession: () => Promise<void>;
+  restoreSession: () => Promise<boolean>;
   
   // Feed management
   fetchPosts: (limit?: number) => Promise<void>;
@@ -114,6 +116,9 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
               isLoading: false
             });
             
+            // Persist session to localStorage
+            localStorage.setItem('bluesky-session', JSON.stringify(session));
+            
             // Fetch initial posts
             await get().fetchPosts();
           } else {
@@ -130,6 +135,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
       },
 
       logout: () => {
+        localStorage.removeItem('bluesky-session');
         set({
           auth: {
             isAuthenticated: false,
@@ -161,9 +167,27 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
       },
 
       fetchPosts: async (limit = 50) => {
-        const { auth, agent, feedSettings } = get();
-        if (!auth.isAuthenticated || !agent) return;
+        const { auth, feedSettings } = get();
+        if (!auth.isAuthenticated || !auth.session) {
+          console.log('Bluesky fetchPosts: Not authenticated or no session', { 
+            isAuthenticated: auth.isAuthenticated, 
+            hasSession: !!auth.session,
+            authSession: auth.session
+          });
+          return;
+        }
+
+        // Create a fresh agent for this request
+        const agent = new BskyAgent({ service: 'https://bsky.social' });
+        try {
+          await agent.resumeSession(auth.session as any);
+          console.log('Bluesky agent created and session resumed successfully');
+        } catch (error) {
+          console.error('Failed to resume session for fetchPosts:', error);
+          return;
+        }
         
+        console.log('Bluesky fetchPosts: Starting fetch', { feedSettings, limit });
         set({ isLoading: true, error: null });
         
         try {
@@ -171,14 +195,18 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           
           switch (feedSettings.feedType) {
             case 'timeline':
+              console.log('Bluesky fetchPosts: Fetching timeline');
               response = await agent.getTimeline({
                 limit,
                 cursor: get().cursor || undefined
               });
               break;
             case 'following':
+              console.log('Bluesky fetchPosts: Fetching author feed for', auth.session!.handle);
+              console.log('Bluesky fetchPosts: Using DID for actor:', auth.session!.did);
               response = await agent.getAuthorFeed({
-                actor: auth.session!.handle,
+                actor: auth.session!.did, // Use DID instead of handle
+                filter: 'posts_no_replies',
                 limit,
                 cursor: get().cursor || undefined
               });
@@ -194,7 +222,20 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
               throw new Error(`Unknown feed type: ${feedSettings.feedType}`);
           }
           
+          console.log('Bluesky fetchPosts: API response', { 
+            success: response.success, 
+            feedLength: response.data?.feed?.length,
+            firstPost: response.data?.feed?.[0] ? {
+              uri: response.data.feed[0].post.uri,
+              author: {
+                did: response.data.feed[0].post.author.did,
+                handle: response.data.feed[0].post.author.handle
+              }
+            } : null
+          });
+          
           if (response.success) {
+            console.log('Bluesky fetchPosts: Processing posts', { feedLength: response.data.feed.length });
             const newPosts: BlueskyPost[] = response.data.feed.map(item => ({
               id: item.post.uri,
               uri: item.post.uri,
@@ -230,6 +271,33 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
               hasMore: !!response.data.cursor,
               isLoading: false
             });
+
+                // Mirror only MY posts to journal
+                console.log('🔍 Mirroring my Bluesky posts to journal...');
+                console.log('👤 My DID:', auth.session!.did);
+                console.log('👤 My Handle:', auth.session!.handle);
+                console.log('📝 Sample post author DID:', newPosts[0]?.author?.did);
+                console.log('📝 Sample post author handle:', newPosts[0]?.author?.handle);
+                
+                const myPosts = newPosts.filter(post => {
+                  const isMyPost = post.author.did === auth.session!.did;
+                  console.log(`📋 Post ${post.id}: author DID "${post.author.did}" vs my DID "${auth.session!.did}" = ${isMyPost}`);
+                  if (post.author.handle) {
+                    console.log(`📋 Post ${post.id}: author handle "${post.author.handle}" vs my handle "${auth.session!.handle}"`);
+                  }
+                  return isMyPost;
+                });
+                console.log(`✅ Found ${myPosts.length} of my posts out of ${newPosts.length} total posts`);
+            
+                for (const post of myPosts) {
+                  try {
+                    console.log(`🔄 Creating journal entry for Bluesky post:`, post.id, post.record.text?.substring(0, 50));
+                    await useJournalStore.getState().createEntryFromSocialPost(post, 'bluesky');
+                    console.log(`✅ Successfully created journal entry for Bluesky post:`, post.id);
+                  } catch (error) {
+                    console.error('❌ Failed to create journal entry for my Bluesky post:', post.id, error);
+                  }
+                }
           } else {
             throw new Error('Failed to fetch posts');
           }
@@ -276,6 +344,57 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
             limit
           }
         });
+      },
+
+      // Restore session from localStorage
+      restoreSession: async () => {
+        try {
+          const storedSession = localStorage.getItem('bluesky-session');
+          if (storedSession) {
+            const session = JSON.parse(storedSession);
+            const agent = new BskyAgent({ service: 'https://bsky.social' });
+            
+            // Restore the session in the agent using the resume method
+            try {
+              await agent.resumeSession(session);
+            } catch (resumeError) {
+              console.warn('Failed to resume Bluesky session, will need to re-login:', resumeError);
+              localStorage.removeItem('bluesky-session');
+              return false;
+            }
+            
+            set({
+              auth: {
+                isAuthenticated: true,
+                session,
+                server: 'https://bsky.social'
+              },
+              agent,
+              isLoading: false
+            });
+            
+            // Verify the agent was actually set in the store
+            const storeState = get();
+            console.log('Bluesky session restored from localStorage, agent set:', !!agent);
+            console.log('Store state after setting agent:', {
+              hasAgent: !!storeState.agent,
+              agentType: typeof storeState.agent,
+              agentConstructor: storeState.agent?.constructor?.name
+            });
+            
+            // Trigger a fetch after successful session restoration
+            setTimeout(() => {
+              console.log('Auto-fetching posts after session restoration...');
+              get().fetchPosts();
+            }, 100);
+            
+            return true;
+          }
+        } catch (error) {
+          console.error('Failed to restore Bluesky session:', error);
+          localStorage.removeItem('bluesky-session');
+        }
+        return false;
       },
 
       likePost: async (uri: string, cid: string) => {
