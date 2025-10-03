@@ -174,40 +174,18 @@ const Sidebar: React.FC = () => {
           })}
         </ul>
 
-        {/* Connection Status */}
-        {!state.sidebarCollapsed && (
-          <div className="mt-8 p-3 bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-800 dark:to-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-700">
-            <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-2">Connected Services</div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${mastodonAuth.isAuthenticated ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                <span className="text-xs text-neutral-600 dark:text-neutral-400">Mastodon</span>
-                {mastodonAuth.isAuthenticated && (
-                  <div className="ml-auto w-1 h-1 bg-purple-500 rounded-full animate-pulse"></div>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${blueskyAuth.isAuthenticated ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                <span className="text-xs text-neutral-600 dark:text-neutral-400">Bluesky</span>
-                {blueskyAuth.isAuthenticated && (
-                  <div className="ml-auto w-1 h-1 bg-blue-500 rounded-full animate-pulse"></div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </nav>
 
       {/* User Profile Section - Now at Bottom */}
       {!state.sidebarCollapsed && (
-        <div className="p-4 border-t border-neutral-200 dark:border-neutral-700 flex-shrink-0 bg-gradient-to-t from-neutral-50/50 to-transparent dark:from-neutral-900/50">
+        <div className="p-4 border-t border-neutral-200 dark:border-neutral-700 flex-shrink-0">
           {activeProfile ? (
             <button 
               onClick={() => {
                 navigate('/settings?tab=profile')
                 setCurrentView('settings' as any)
               }}
-              className="flex items-center gap-3 w-full p-3 hover:bg-white/50 dark:hover:bg-neutral-800/50 rounded-xl transition-all duration-200 hover:scale-[1.02] hover:shadow-lg group border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700"
+              className="flex items-center gap-3 w-full p-3 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50 rounded-xl transition-all duration-200 hover:scale-[1.02] group"
               title="Click to view your profile"
             >
               <div className="relative">
@@ -249,8 +227,8 @@ const Sidebar: React.FC = () => {
             </button>
           ) : (
             /* Default Profile */
-            <div className="flex items-center gap-3 p-3 bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-800 dark:to-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-700">
-              <div className="w-12 h-12 bg-gradient-to-br from-neutral-400 to-neutral-500 rounded-full flex items-center justify-center ring-2 ring-white dark:ring-neutral-800 shadow-md">
+            <div className="flex items-center gap-3 p-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-neutral-400 to-neutral-500 rounded-full flex items-center justify-center shadow-md">
                 <User className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1 min-w-0">
