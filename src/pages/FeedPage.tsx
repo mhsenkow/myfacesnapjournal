@@ -48,7 +48,9 @@ import {
   Bookmark
 } from 'lucide-react';
 import { useMastodonStore } from '../stores/mastodonStore';
+import { useBlueskyStore } from '../stores/blueskyStore';
 import { MastodonPost } from '../types/mastodon';
+import BlueskyLoginModal from '../components/Bluesky/BlueskyLoginModal';
 
 // Feed Layout Component
 interface FeedLayoutProps {
@@ -889,11 +891,18 @@ const FeedPage: React.FC = () => {
     toggleLike,
     toggleBookmark
   } = useMastodonStore();
+
+  const { 
+    auth: blueskyAuth,
+    posts: blueskyPosts,
+    logout: blueskyLogout
+  } = useBlueskyStore();
   
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
   const [previousPosts, setPreviousPosts] = useState<MastodonPost[]>([]);
-  const [animationKey, setAnimationKey] = useState(0);
+  const [, setAnimationKey] = useState(0);
+  const [isBlueskyModalOpen, setIsBlueskyModalOpen] = useState(false);
 
   // Note: Feed loading is now handled by background service
   // This ensures feeds load even when user is on other pages
@@ -1029,18 +1038,66 @@ const FeedPage: React.FC = () => {
     <div className="space-y-6">
 
       {/* Authentication Status */}
-      {!auth.isAuthenticated && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <EyeOff className="w-5 h-5 text-yellow-600" />
-            <div>
-              <p className="text-sm font-medium text-yellow-800">
-                Connect to Mastodon to explore feeds
-              </p>
-              <p className="text-xs text-yellow-600">
-                Go to Settings → Integrations to connect your Mastodon account
-              </p>
+      {!auth.isAuthenticated && !blueskyAuth.isAuthenticated && (
+        <div className="glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <EyeOff className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+            <h3 className="text-lg font-semibold glass-text-primary">
+              Connect to Social Networks
+            </h3>
+          </div>
+          <p className="text-sm glass-text-secondary mb-4">
+            Connect to Mastodon or Bluesky to explore social feeds and discover content.
+          </p>
+          
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => {
+                // Navigate to settings for Mastodon
+                window.location.href = '/settings';
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <Rss className="w-4 h-4" />
+              Connect Mastodon
+            </button>
+            
+            <button
+              onClick={() => setIsBlueskyModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <div className="w-4 h-4 bg-white rounded-sm flex items-center justify-center">
+                <span className="text-blue-600 font-bold text-xs">BS</span>
+              </div>
+              Connect Bluesky
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bluesky Connection Status */}
+      {blueskyAuth.isAuthenticated && (
+        <div className="glass-subtle border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">BS</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium glass-text-primary">
+                  Connected to Bluesky as @{blueskyAuth.session?.handle}
+                </p>
+                <p className="text-xs glass-text-tertiary">
+                  {blueskyPosts.length} posts loaded
+                </p>
+              </div>
             </div>
+            <button
+              onClick={blueskyLogout}
+              className="px-3 py-1.5 text-xs glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-white/20 dark:hover:bg-black/20 transition-colors"
+            >
+              Disconnect
+            </button>
           </div>
         </div>
       )}
@@ -1057,7 +1114,7 @@ const FeedPage: React.FC = () => {
       )}
 
       {/* Posts List */}
-      {auth.isAuthenticated && (
+      {(auth.isAuthenticated || blueskyAuth.isAuthenticated) && (
         <>
           {isLoadingPosts ? (
             <div className="flex items-center justify-center py-12">
@@ -1083,6 +1140,12 @@ const FeedPage: React.FC = () => {
           )}
         </>
       )}
+
+      {/* Bluesky Login Modal */}
+      <BlueskyLoginModal
+        isOpen={isBlueskyModalOpen}
+        onClose={() => setIsBlueskyModalOpen(false)}
+      />
     </div>
   );
 };

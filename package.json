@@ -16,6 +16,7 @@
     "lint:fix": "eslint src --ext ts,tsx --fix"
   },
   "dependencies": {
+    "@bluesky-social/api": "^0.15.27",
     "@hookform/resolvers": "^3.3.0",
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-dialog": "^2.4.0",
