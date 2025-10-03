@@ -307,6 +307,35 @@ class MastodonService {
   }
 
   /**
+   * Get replies for a specific post
+   */
+  async getPostReplies(
+    instanceUrl: string,
+    accessToken: string,
+    postId: string
+  ): Promise<MastodonPost[]> {
+    const params = new URLSearchParams({
+      limit: '50'
+    });
+
+    const response = await fetch(
+      `${instanceUrl}/api/v1/statuses/${postId}/context?${params.toString()}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch post replies');
+    }
+
+    const context = await response.json();
+    return context.descendants || [];
+  }
+
+  /**
    * Get public timeline (public or local)
    */
   async getPublicTimeline(

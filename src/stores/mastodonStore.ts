@@ -76,6 +76,7 @@ interface MastodonStore {
   updateImportSettings: (settings: Partial<MastodonImportSettings>) => void;
   importPosts: (limit?: number) => Promise<MastodonPost[]>;
   fetchPosts: (limit?: number) => Promise<void>;
+  fetchPostReplies: (postId: string) => Promise<MastodonPost[]>;
   fetchPublicTimeline: () => Promise<void>;
   clearImportedPosts: () => void;
   setLastImportError: (error: string | undefined) => void;
@@ -277,6 +278,27 @@ export const useMastodonStore = create<MastodonStore>()(
           set({ lastImportError: 'Failed to fetch posts' });
         } finally {
           set({ isLoadingPosts: false });
+        }
+      },
+
+      fetchPostReplies: async (postId: string) => {
+        const { auth } = get();
+        
+        if (!auth.isAuthenticated || !auth.accessToken) {
+          return [];
+        }
+
+        try {
+          const replies = await mastodonService.getPostReplies(
+            auth.instance,
+            auth.accessToken,
+            postId
+          );
+          
+          return replies;
+        } catch (error) {
+          console.error('Failed to fetch post replies:', error);
+          return [];
         }
       },
 

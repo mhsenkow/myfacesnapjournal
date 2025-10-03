@@ -62,6 +62,8 @@ interface BlueskyActions {
   // Utilities
   clearError: () => void;
   clearPosts: () => void;
+  importPosts: () => Promise<void>;
+  fetchMyPosts: () => Promise<BlueskyPost[] | undefined>;
 }
 
 export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
@@ -323,33 +325,6 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
               hasMore: !!response.data.cursor,
               isLoading: false
             });
-
-                // Mirror only MY posts to journal
-                console.log('🔍 Mirroring my Bluesky posts to journal...');
-                console.log('👤 My DID:', auth.session!.did);
-                console.log('👤 My Handle:', auth.session!.handle);
-                console.log('📝 Sample post author DID:', newPosts[0]?.author?.did);
-                console.log('📝 Sample post author handle:', newPosts[0]?.author?.handle);
-                
-                const myPosts = newPosts.filter(post => {
-                  const isMyPost = post.author.did === auth.session!.did;
-                  console.log(`📋 Post ${post.id}: author DID "${post.author.did}" vs my DID "${auth.session!.did}" = ${isMyPost}`);
-                  if (post.author.handle) {
-                    console.log(`📋 Post ${post.id}: author handle "${post.author.handle}" vs my handle "${auth.session!.handle}"`);
-                  }
-                  return isMyPost;
-                });
-                console.log(`✅ Found ${myPosts.length} of my posts out of ${newPosts.length} total posts`);
-            
-                for (const post of myPosts) {
-                  try {
-                    console.log(`🔄 Creating journal entry for Bluesky post:`, post.id, post.record.text?.substring(0, 50));
-                    await useJournalStore.getState().createEntryFromSocialPost(post, 'bluesky');
-                    console.log(`✅ Successfully created journal entry for Bluesky post:`, post.id);
-                  } catch (error) {
-                    console.error('❌ Failed to create journal entry for my Bluesky post:', post.id, error);
-                  }
-                }
           } else {
             throw new Error('Failed to fetch posts');
           }
@@ -566,6 +541,233 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           cursor: null,
           hasMore: true
         });
+      },
+
+      fetchMyPosts: async () => {
+        const { auth, agent } = get();
+        
+        if (!auth.isAuthenticated || !auth.session || !agent) {
+          console.error('❌ Cannot fetch my posts - not authenticated');
+          return;
+        }
+
+        console.log('📱 Fetching MY Bluesky posts for journal import...');
+        console.log('👤 My DID:', auth.session.did);
+        console.log('👤 My Handle:', auth.session.handle);
+        
+        try {
+          // Try accessing your repository directly using raw AT Protocol
+          console.log('🔍 Trying to access YOUR repository directly...');
+          console.log('👤 My DID:', auth.session.did);
+          console.log('👤 My Handle:', auth.session.handle);
+          
+          // Method 1: Try getProfile first to verify we can access your data
+          console.log('🔄 Step 1: Getting your profile...');
+          const profileResponse = await agent.getProfile({
+            actor: auth.session.handle
+          });
+          
+          console.log('📡 Profile response:', {
+            success: profileResponse.success,
+            handle: profileResponse.data?.handle,
+            did: profileResponse.data?.did,
+            postsCount: profileResponse.data?.postsCount,
+            followersCount: profileResponse.data?.followersCount,
+            followsCount: profileResponse.data?.followsCount
+          });
+          
+          if (!profileResponse.success) {
+            throw new Error('Cannot access your profile - authentication issue');
+          }
+          
+          // Method 2: Try getAuthorFeed with your handle
+          console.log('🔄 Step 2: Getting your posts with getAuthorFeed...');
+          const feedResponse = await agent.getAuthorFeed({
+            actor: auth.session.handle,
+            filter: 'posts_no_replies',
+            limit: 100
+          });
+          
+          console.log('📡 getAuthorFeed response:', {
+            success: feedResponse.success,
+            feedLength: feedResponse.data?.feed?.length,
+            firstPostAuthor: feedResponse.data?.feed?.[0]?.post?.author?.did,
+            firstPostAuthorHandle: feedResponse.data?.feed?.[0]?.post?.author?.handle,
+            myDID: auth.session.did,
+            myHandle: auth.session.handle,
+            isMyPost: feedResponse.data?.feed?.[0]?.post?.author?.did === auth.session.did
+          });
+          
+          // Method 3: If getAuthorFeed doesn't work, try with DID
+          if (!feedResponse.success || feedResponse.data.feed.length === 0) {
+            console.log('🔄 Step 3: Trying getAuthorFeed with DID...');
+            const feedResponse2 = await agent.getAuthorFeed({
+              actor: auth.session.did,
+              filter: 'posts_no_replies',
+              limit: 100
+            });
+            
+            console.log('📡 getAuthorFeed (DID) response:', {
+              success: feedResponse2.success,
+              feedLength: feedResponse2.data?.feed?.length,
+              firstPostAuthor: feedResponse2.data?.feed?.[0]?.post?.author?.did,
+              firstPostAuthorHandle: feedResponse2.data?.feed?.[0]?.post?.author?.handle,
+              isMyPost: feedResponse2.data?.feed?.[0]?.post?.author?.did === auth.session.did
+            });
+            
+            if (feedResponse2.success && feedResponse2.data.feed.length > 0) {
+              feedResponse.data.feed = feedResponse2.data.feed;
+            }
+          }
+          
+          // Method 4: Try listRecords with different approach
+          if (!feedResponse.success || feedResponse.data.feed.length === 0) {
+            console.log('🔄 Step 4: Trying listRecords with your repository...');
+            const listResponse = await agent.com.atproto.repo.listRecords({
+              repo: auth.session.did,
+              collection: 'app.bsky.feed.post',
+              limit: 100
+            });
+            
+            console.log('📡 listRecords response:', {
+              success: listResponse.success,
+              recordsLength: listResponse.data?.records?.length,
+              firstRecord: listResponse.data?.records?.[0] ? {
+                uri: listResponse.data.records[0].uri,
+                collection: listResponse.data.records[0].collection
+              } : null
+            });
+            
+            // Convert listRecords to feed format if successful
+            if (listResponse.success && listResponse.data.records.length > 0) {
+              feedResponse.success = true;
+              feedResponse.data = {
+                feed: listResponse.data.records.map(record => ({
+                  post: {
+                    uri: record.uri,
+                    cid: record.cid,
+                    author: {
+                      did: auth.session.did,
+                      handle: auth.session.handle,
+                      displayName: auth.session.handle
+                    },
+                    record: record.value,
+                    replyCount: 0,
+                    repostCount: 0,
+                    likeCount: 0,
+                    indexedAt: new Date().toISOString(),
+                    viewer: {},
+                    labels: []
+                  }
+                }))
+              };
+            }
+          }
+          
+          // Process the results
+          if (feedResponse.success && feedResponse.data.feed.length > 0) {
+            console.log('Bluesky fetchMyPosts: Processing posts', { feedLength: feedResponse.data.feed.length });
+            
+            // Filter to only YOUR posts
+            const myPosts = feedResponse.data.feed
+              .filter(item => item.post.author.did === auth.session.did)
+              .map(item => ({
+                id: item.post.uri,
+                uri: item.post.uri,
+                cid: item.post.cid,
+                author: {
+                  did: item.post.author.did,
+                  handle: item.post.author.handle,
+                  displayName: item.post.author.displayName,
+                  description: (item.post.author as any).description,
+                  avatar: item.post.author.avatar,
+                  verified: (item.post.author as any).verified,
+                  createdAt: (item.post.author as any).createdAt
+                },
+                record: {
+                  text: (item.post.record as any).text || '',
+                  createdAt: (item.post.record as any).createdAt || new Date().toISOString(),
+                  reply: (item.post.record as any).reply,
+                  facets: (item.post.record as any).facets,
+                  embed: (item.post.record as any).embed
+                },
+                replyCount: item.post.replyCount || 0,
+                repostCount: item.post.repostCount || 0,
+                likeCount: item.post.likeCount || 0,
+                indexedAt: item.post.indexedAt,
+                viewer: item.post.viewer,
+                labels: item.post.labels
+              }));
+            
+            console.log(`✅ Found ${myPosts.length} of MY posts after filtering`);
+            
+            // Store these posts separately for journal import
+            set({ 
+              allPosts: myPosts, // Replace with only MY posts
+              isLoading: false 
+            });
+            
+            return myPosts;
+          } else {
+            console.log('❌ No posts found with any method');
+            throw new Error('No posts found - you may not have any posts on Bluesky');
+          }
+        } catch (error) {
+          console.error('Bluesky fetchMyPosts error:', error);
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch my posts',
+            isLoading: false
+          });
+          throw error;
+        }
+      },
+
+      importPosts: async () => {
+        const { auth } = get();
+        
+        if (!auth.isAuthenticated || !auth.session) {
+          console.error('❌ Cannot import posts - not authenticated');
+          return;
+        }
+
+        console.log('📱 Starting Bluesky post import to journal...');
+        
+        try {
+          // First, fetch MY posts specifically
+          await get().fetchMyPosts();
+          
+          // Now get the updated allPosts with MY posts
+          const { allPosts } = get();
+          
+          // Filter for MY posts (should be all of them now since fetchMyPosts only gets MY posts)
+          const myPosts = allPosts.filter(post => {
+            const isMyPost = post.author.did === auth.session!.did;
+            console.log(`📋 Post ${post.id}: author DID "${post.author.did}" vs my DID "${auth.session!.did}" = ${isMyPost}`);
+            return isMyPost;
+          });
+          
+          console.log(`🔍 Found ${myPosts.length} of my posts out of ${allPosts.length} total posts`);
+          
+          let successCount = 0;
+          let errorCount = 0;
+          
+          for (const post of myPosts) {
+            try {
+              console.log(`🔄 Creating journal entry for Bluesky post:`, post.id, post.record.text?.substring(0, 50));
+              await useJournalStore.getState().createEntryFromSocialPost(post, 'bluesky');
+              successCount++;
+              console.log(`✅ Successfully imported Bluesky post ${post.id} to journal`);
+            } catch (error) {
+              errorCount++;
+              console.error('❌ Failed to import Bluesky post to journal:', post.id, error);
+            }
+          }
+          
+          console.log(`📊 Bluesky import complete: ${successCount} successful, ${errorCount} errors`);
+        } catch (error) {
+          console.error('❌ Failed to fetch my posts for import:', error);
+          throw error;
+        }
       }
     }),
     {

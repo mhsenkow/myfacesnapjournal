@@ -5,21 +5,26 @@
  */
 
 import React, { useState } from 'react';
-import { ExternalLink, LogOut, RefreshCw, Eye, CheckCircle, AlertCircle } from 'lucide-react';
+import { ExternalLink, LogOut, RefreshCw, Eye, CheckCircle, AlertCircle, Download, Loader2 } from 'lucide-react';
 import { useBlueskyStore } from '../../stores/blueskyStore';
+import { useNotificationStore } from '../../stores/notificationStore';
 import BlueskyLoginModal from './BlueskyLoginModal';
 
 const BlueskyIntegration: React.FC = () => {
   const { 
     auth, 
     posts, 
+    allPosts,
     isLoading, 
     error,
     refreshFeed,
+    importPosts,
     logout 
   } = useBlueskyStore();
   
+  const { notifyGeneral } = useNotificationStore();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   const handleConnect = () => {
     setIsLoginModalOpen(true);
@@ -36,6 +41,30 @@ const BlueskyIntegration: React.FC = () => {
       await refreshFeed();
     } catch (error) {
       console.error('Failed to refresh Bluesky feed:', error);
+    }
+  };
+
+  const handleImportToJournal = async () => {
+    if (!auth.isAuthenticated || !auth.session) {
+      notifyGeneral('error', 'Import Failed', 'Must be connected to Bluesky to import posts');
+      return;
+    }
+
+    if (allPosts.length === 0) {
+      notifyGeneral('warning', 'No Posts', 'No Bluesky posts found to import');
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      await importPosts();
+      const myPostCount = allPosts.filter(post => post.author.did === auth.session!.did).length;
+      notifyGeneral('success', 'Import Complete', `Successfully imported ${myPostCount} Bluesky posts to journal!`);
+    } catch (error) {
+      console.error('Import failed:', error);
+      notifyGeneral('error', 'Import Failed', 'Failed to import Bluesky posts to journal');
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -116,18 +145,51 @@ const BlueskyIntegration: React.FC = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="flex gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <button
               onClick={() => {
                 // Navigate to feed page
                 window.location.href = '/feed';
               }}
-              className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
             >
               <Eye className="w-4 h-4" />
               View Feed
             </button>
+            
+            <button
+              onClick={handleImportToJournal}
+              disabled={isImporting || allPosts.length === 0}
+              className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center gap-2"
+            >
+              {isImporting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  Import to Journal
+                </>
+              )}
+            </button>
           </div>
+
+          {/* Import Info */}
+          {allPosts.length > 0 && auth.isAuthenticated && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-blue-600" />
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <span className="font-medium">
+                    {allPosts.filter(post => post.author.did === auth.session!.did).length} 
+                  </span>
+                  of your Bluesky posts are available to import to your journal
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-4">

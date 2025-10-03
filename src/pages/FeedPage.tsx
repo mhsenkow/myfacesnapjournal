@@ -110,7 +110,11 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="space-y-6">
         {posts.map((post, index) => (
-          <div key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-xl p-6 hover:glass transition-all duration-500 hover:scale-[1.02] hover:shadow-xl relative ${getPostAnimationClass(post.id, index)}`}>
+                  <div 
+            key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} 
+            className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-xl p-6 hover:glass transition-all duration-500 hover:scale-[1.02] hover:shadow-xl relative cursor-pointer ${getPostAnimationClass(post.id, index)}`}
+            onClick={() => onInspectPost(post)}
+          >
             {/* Platform Badge */}
             {renderPlatformBadge(post)}
             
@@ -284,8 +288,12 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {posts.map((post, index) => (
-          <div key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} className={`glass border ${getPlatformBorderClasses(post)} rounded-2xl p-6 hover:glass-strong sequence-animate transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative ${getPostAnimationClass(post.id, index)}`}
-               style={{ animationDelay: `${index * 50}ms` }}>
+          <div 
+            key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} 
+            className={`glass border ${getPlatformBorderClasses(post)} rounded-2xl p-6 hover:glass-strong sequence-animate transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative cursor-pointer ${getPostAnimationClass(post.id, index)}`}
+            style={{ animationDelay: `${index * 50}ms` }}
+            onClick={() => onInspectPost(post)}
+          >
             {/* Platform Badge */}
             {renderPlatformBadge(post)}
             <div className="flex items-center gap-3 mb-4">
@@ -431,7 +439,11 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {posts.map((post, index) => (
-          <div key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} className={`glass border ${getPlatformBorderClasses(post)} rounded-xl overflow-hidden hover:glass-strong transition-all duration-300 hover:scale-105 group relative ${getPostAnimationClass(post.id, index)}`}>
+          <div 
+            key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} 
+            className={`glass border ${getPlatformBorderClasses(post)} rounded-xl overflow-hidden hover:glass-strong transition-all duration-300 hover:scale-105 group relative cursor-pointer ${getPostAnimationClass(post.id, index)}`}
+            onClick={() => onInspectPost(post)}
+          >
             {/* Platform Badge */}
             {renderPlatformBadge(post)}
             {/* Media Display - Square aspect ratio */}
@@ -644,6 +656,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 cursor-pointer group ${getPostAnimationClass(post.id, index)}
               `}
               title={`${post.account.display_name}: ${formatContent(post.content).substring(0, 100)}...`}
+              onClick={() => onInspectPost(post)}
             >
               <div className="flex items-center gap-2">
                 {/* Icon based on content type */}
@@ -755,7 +768,11 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {posts.map((post, index) => (
-          <div key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-lg p-3 hover:glass transition-all duration-200 hover:scale-[1.02] group relative ${getPostAnimationClass(post.id, index)}`}>
+          <div 
+            key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} 
+            className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-lg p-3 hover:glass transition-all duration-200 hover:scale-[1.02] group relative cursor-pointer ${getPostAnimationClass(post.id, index)}`}
+            onClick={() => onInspectPost(post)}
+          >
             {/* Platform Badge */}
             {renderPlatformBadge(post)}
             <div className="flex items-center gap-2 mb-2">
@@ -843,7 +860,11 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="max-w-2xl mx-auto space-y-8">
         {posts.map((post, index) => (
-          <div key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-2xl overflow-hidden hover:glass transition-all duration-500 hover:scale-[1.01] hover:shadow-2xl group relative ${getPostAnimationClass(post.id, index)}`}>
+          <div 
+            key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} 
+            className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-2xl overflow-hidden hover:glass transition-all duration-500 hover:scale-[1.01] hover:shadow-2xl group relative cursor-pointer ${getPostAnimationClass(post.id, index)}`}
+            onClick={() => onInspectPost(post)}
+          >
             {/* Platform Badge */}
             {renderPlatformBadge(post)}
             {/* Header */}
@@ -1276,7 +1297,7 @@ const FeedPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 transition-all duration-300 ${isInspectorOpen ? 'mr-80' : 'mr-0'}`}>
 
 
       {/* Error Message */}
@@ -1343,6 +1364,31 @@ const FeedPage: React.FC = () => {
               combinedPosts = [...combinedPosts, ...convertedBlueskyPosts];
             }
             
+            // Deduplicate posts by ID to prevent React key conflicts
+            const combinedPostsMap = new Map();
+            combinedPosts.forEach(post => {
+              // Use a combination of platform + id as the unique key
+              const uniqueKey = `${post.platform || 'unknown'}-${post.id}`;
+              if (!combinedPostsMap.has(uniqueKey)) {
+                combinedPostsMap.set(uniqueKey, post);
+              } else {
+                console.warn(`🟡 Duplicate post detected: ${uniqueKey}`, post);
+                // Keep the newer post (with more recent timestamp)
+                const existingPost = combinedPostsMap.get(uniqueKey);
+                if (new Date(post.created_at) > new Date(existingPost.created_at)) {
+                  combinedPostsMap.set(uniqueKey, post);
+                }
+              }
+            });
+            combinedPosts = Array.from(combinedPostsMap.values());
+            
+            console.log(`📊 Combined posts summary:`, {
+              total: combinedPosts.length,
+              mastodon: combinedPosts.filter(p => p.platform === 'mastodon').length,
+              bluesky: combinedPosts.filter(p => p.platform === 'bluesky').length,
+              unknown: combinedPosts.filter(p => !p.platform).length
+            });
+            
             const isLoading = isLoadingPosts || (blueskyAuth.isAuthenticated && blueskyIsLoading);
             
             if (isLoading) {
@@ -1374,9 +1420,19 @@ const FeedPage: React.FC = () => {
                 toggleLike={async (postId: string) => {
                   // Get the post to check if it's Bluesky or Mastodon
                   const post = combinedPosts.find(p => p.id === postId);
+                  console.log('🔍 toggleLike debug:', { 
+                    postId, 
+                    foundPost: !!post, 
+                    platform: post?.platform, 
+                    uri: post?.uri, 
+                    cid: post?.cid 
+                  });
+                  
                   if (post?.platform === 'bluesky') {
+                    console.log('🔵 Detected Bluesky post, calling toggleBlueskyLike');
                     await handleToggleLike(postId, 'bluesky', post.uri, post.cid);
                   } else {
+                    console.log('🟣 Detected Mastodon post (or no platform), calling toggleLike');
                     await handleToggleLike(postId); // Mastodon
                   }
                 }}

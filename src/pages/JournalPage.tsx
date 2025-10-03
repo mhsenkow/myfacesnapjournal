@@ -120,8 +120,36 @@ const JournalPage: React.FC = () => {
       selectEntry(null);
   };
 
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString();
+  const formatDate = (date: Date | string) => {
+    try {
+      let dateObj: Date;
+      
+      if (typeof date === 'string') {
+        dateObj = new Date(date);
+      } else if (date instanceof Date) {
+        dateObj = date;
+      } else {
+        console.warn('Unexpected date type:', typeof date, date);
+        return 'Invalid Date Type';
+      }
+      
+      // Check if the date is valid
+      if (isNaN(dateObj.getTime())) {
+        console.warn('Invalid date:', date);
+        return 'Invalid Date';
+      }
+      
+      return dateObj.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', date, error);
+      return 'Date Error';
+    }
   };
 
   const renderJournalEntry = (entry: JournalEntry) => {
@@ -139,6 +167,33 @@ const JournalPage: React.FC = () => {
       }
     };
 
+    // Check if this is a social media post
+    const isSocialMediaPost = entry.source && ['mastodon', 'bluesky'].includes(entry.source.toLowerCase());
+    const isMastodonPost = entry.source === 'mastodon';
+    const isBlueskyPost = entry.source === 'bluesky';
+
+    // Get the original post date from metadata if available
+    // For existing entries without metadata, we'll use createdAt
+    let originalDate = entry.createdAt;
+    
+    if (entry.metadata?.originalDate) {
+      originalDate = entry.metadata.originalDate;
+    } else if (isSocialMediaPost) {
+      // For social media posts without metadata, this means they were imported before we added metadata
+      console.warn(`⚠️ ${entry.source} post missing metadata.originalDate - may need re-import:`, entry.id);
+    }
+    
+    // Debug logging for dates
+    if (entry.source && ['mastodon', 'bluesky'].includes(entry.source.toLowerCase())) {
+      console.log(`📅 ${entry.source} post date debug:`, {
+        originalDate,
+        createdAt: entry.createdAt,
+        metadata: entry.metadata,
+        hasMetadata: !!entry.metadata,
+        hasOriginalDate: !!entry.metadata?.originalDate
+      });
+    }
+
     const commonContent = (
       <>
         {isSelectMode && (
@@ -151,18 +206,18 @@ const JournalPage: React.FC = () => {
           </div>
         )}
         
-        {/* Avatar/Icon */}
-        <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-          <User className="w-6 h-6 text-white" />
+        {/* Avatar/Icon - smaller for social media posts */}
+        <div className={`${isSocialMediaPost ? 'w-8 h-8' : 'w-12 h-12'} bg-gradient-to-br ${isMastodonPost ? 'from-purple-400 to-pink-400' : isBlueskyPost ? 'from-blue-400 to-cyan-400' : 'from-purple-400 to-pink-400'} rounded-full flex items-center justify-center flex-shrink-0 shadow-lg`}>
+          <User className={`${isSocialMediaPost ? 'w-4 h-4' : 'w-6 h-6'} text-white`} />
         </div>
         
         <div className="flex-1 min-w-0">
           {/* Header */}
           <div className="flex items-center gap-3 mb-3">
             <h3 className="font-bold text-primary text-lg">{entry.title}</h3>
-            <span className="text-muted-custom flex items-center gap-1">
+            <span className="text-gray-600 dark:text-gray-300 flex items-center gap-1">
               <Calendar className="w-3 h-3" />
-              {formatDate(entry.createdAt)}
+              {formatDate(originalDate)}
             </span>
           </div>
           
@@ -188,7 +243,7 @@ const JournalPage: React.FC = () => {
           
           {/* Footer with metadata */}
           <div className="flex items-center justify-between pt-4 border-t border-neutral-200 dark:border-neutral-700">
-            <div className="flex items-center gap-6 text-sm text-neutral-500 dark:text-neutral-400">
+            <div className="flex items-center gap-6 text-sm text-gray-600 dark:text-gray-300">
               {/* Mood */}
               {entry.mood && (
                 <div className="flex items-center gap-1">

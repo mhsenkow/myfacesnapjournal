@@ -52,20 +52,20 @@ const VaultPage: React.FC = () => {
       <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-light glass-text-primary tracking-wide flex items-center gap-4">
+            <h1 className="text-4xl font-light text-gray-900 dark:text-gray-100 tracking-wide flex items-center gap-4">
               <div className="p-3 bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl shadow-lg">
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <span className="font-extralight">Vault</span>
             </h1>
-            <p className="glass-text-tertiary mt-3 text-lg font-light">Secure storage and data management</p>
+            <p className="text-gray-700 dark:text-gray-300 mt-3 text-lg font-light">Secure storage and data management</p>
           </div>
           <div className="flex gap-3">
-            <button className="glass-subtle px-4 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light">
+            <button className="glass-subtle px-4 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light text-gray-800 dark:text-gray-200">
               <Download size={18} className="mr-2 text-blue-600" />
               Create Backup
             </button>
-            <button className="glass-subtle px-4 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light">
+            <button className="glass-subtle px-4 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light text-gray-800 dark:text-gray-200">
               <Upload size={18} className="mr-2 text-green-600" />
               Restore Backup
             </button>
@@ -81,7 +81,7 @@ const VaultPage: React.FC = () => {
               {isLocked ? <Lock size={20} className="text-green-600 dark:text-green-400" /> : <Unlock size={20} className="text-yellow-600 dark:text-yellow-400" />}
             </div>
             <div className="ml-4">
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Vault Status</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-light">Vault Status</p>
               <p className={`text-2xl font-light ${isLocked ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
                 {isLocked ? 'Locked' : 'Unlocked'}
               </p>
@@ -95,7 +95,7 @@ const VaultPage: React.FC = () => {
               <Key size={20} className="text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Encryption</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-light">Encryption</p>
               <p className="text-2xl font-light text-purple-600 dark:text-purple-400 tracking-wide">AES-256</p>
             </div>
           </div>
@@ -107,7 +107,7 @@ const VaultPage: React.FC = () => {
               <Database size={20} className="text-white" />
             </div>
             <div className="ml-4">
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 font-light">Storage Used</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-light">Storage Used</p>
               <p className="text-2xl font-light text-blue-600 dark:text-blue-400 tracking-wide">2.4 MB</p>
             </div>
           </div>
@@ -179,15 +179,20 @@ const VaultPage: React.FC = () => {
         </div>
 
         {/* Security & Settings */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-neutral-900">Security & Settings</h2>
+        <div className="space-y-6">
+          <h2 className="text-2xl font-light text-neutral-900 dark:text-neutral-100 tracking-wide">Security & Settings</h2>
           
-          <div className="bg-white border border-neutral-200 rounded-lg p-4">
-            <h3 className="font-medium text-neutral-900 mb-3">Encryption Settings</h3>
-            <div className="space-y-3">
+          <div className="glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 hover:glass transition-all duration-300">
+            <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
+              <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg">
+                <Lock className="w-4 h-4 text-white" />
+              </div>
+              Encryption Settings
+            </h3>
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-neutral-700">Auto-lock after inactivity</span>
-                <select className="px-3 py-1 border border-neutral-300 rounded text-sm">
+                <span className="text-sm text-neutral-600 dark:text-neutral-400 font-light">Auto-lock after inactivity</span>
+                <select className="px-3 py-2 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm font-light">
                   <option>5 minutes</option>
                   <option>15 minutes</option>
                   <option>1 hour</option>
@@ -196,44 +201,54 @@ const VaultPage: React.FC = () => {
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm text-neutral-700">Require password for export</span>
-                <input type="checkbox" className="rounded border-neutral-300 text-primary-600" defaultChecked />
+                <span className="text-sm text-neutral-600 dark:text-neutral-400 font-light">Require password for export</span>
+                <input type="checkbox" className="rounded border-neutral-300 dark:border-neutral-600 text-purple-600 focus:ring-purple-500" defaultChecked />
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm text-neutral-700">Backup encryption</span>
-                <input type="checkbox" className="rounded border-neutral-300 text-primary-600" defaultChecked />
+                <span className="text-sm text-neutral-600 dark:text-neutral-400 font-light">Backup encryption</span>
+                <input type="checkbox" className="rounded border-neutral-300 dark:border-neutral-600 text-purple-600 focus:ring-purple-500" defaultChecked />
               </div>
             </div>
           </div>
           
-          <div className="bg-white border border-neutral-200 rounded-lg p-4">
-            <h3 className="font-medium text-neutral-900 mb-3">Key Management</h3>
+          <div className="glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 hover:glass transition-all duration-300">
+            <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-teal-600 rounded-lg">
+                <Key className="w-4 h-4 text-white" />
+              </div>
+              Key Management
+            </h3>
             <div className="space-y-3">
-              <button className="w-full btn-outline text-left">
-                <Key size={16} className="mr-2" />
+              <button className="w-full glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 hover:glass transition-all duration-200 text-left font-light">
+                <Key size={16} className="mr-2 text-blue-600" />
                 Change Master Password
               </button>
-              <button className="w-full btn-outline text-left">
-                <Download size={16} className="mr-2" />
+              <button className="w-full glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 hover:glass transition-all duration-200 text-left font-light">
+                <Download size={16} className="mr-2 text-green-600" />
                 Export Recovery Key
               </button>
-              <button className="w-full btn-outline text-left">
-                <Upload size={16} className="mr-2" />
+              <button className="w-full glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 hover:glass transition-all duration-200 text-left font-light">
+                <Upload size={16} className="mr-2 text-purple-600" />
                 Import Recovery Key
               </button>
             </div>
           </div>
           
-          <div className="bg-white border border-neutral-200 rounded-lg p-4">
-            <h3 className="font-medium text-neutral-900 mb-3">Data Integrity</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-neutral-700">Last integrity check</span>
-                <span className="text-sm text-neutral-500">2 hours ago</span>
+          <div className="glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 hover:glass transition-all duration-300">
+            <h3 className="font-medium text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
+              <div className="p-2 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg">
+                <Shield className="w-4 h-4 text-white" />
               </div>
-              <button className="w-full btn-outline">
-                <Shield size={16} className="mr-2" />
+              Data Integrity
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-neutral-600 dark:text-neutral-400 font-light">Last integrity check</span>
+                <span className="text-sm text-neutral-500 dark:text-neutral-500 font-light">2 hours ago</span>
+              </div>
+              <button className="w-full glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 hover:glass transition-all duration-200 font-light">
+                <Shield size={16} className="mr-2 text-green-600" />
                 Run Integrity Check
               </button>
             </div>
@@ -243,9 +258,14 @@ const VaultPage: React.FC = () => {
 
       {/* Selected Backup Details */}
       {selectedBackup && (
-        <div className="bg-white border border-neutral-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-neutral-900 mb-4">Backup Details</h3>
-          <p className="text-neutral-600">
+        <div className="glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 hover:glass transition-all duration-300">
+          <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-teal-600 rounded-lg">
+              <Database className="w-4 h-4 text-white" />
+            </div>
+            Backup Details
+          </h3>
+          <p className="text-neutral-600 dark:text-neutral-400 font-light">
             Detailed information about the selected backup, including contents, metadata, and restoration options.
           </p>
           {/* TODO: Add detailed backup information */}

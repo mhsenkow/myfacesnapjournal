@@ -208,7 +208,12 @@ export const useJournalStore = create<JournalState & JournalActions>()(
           tags,
           mood: mood as 'happy' | 'sad' | 'neutral' | 'excited' | 'anxious' | 'grateful' | undefined,
           privacy: privacy as 'public' | 'private' | 'secret',
-          source: platform as EntrySource
+          source: platform as EntrySource,
+          metadata: {
+            originalDate: platform === 'mastodon' ? post.created_at : post.record?.createdAt || post.indexedAt,
+            originalPostId: post.id,
+            platform: platform
+          }
         });
 
         console.log(`✅ Created journal entry from my ${platform} post:`, post.id);
