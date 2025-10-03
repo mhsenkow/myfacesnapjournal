@@ -151,7 +151,7 @@ const Sidebar: React.FC = () => {
                   className={`w-full flex items-center px-3 py-3 rounded-xl transition-all duration-200 group relative ${
                     active
                       ? 'bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 text-purple-700 dark:text-purple-300 shadow-sm'
-                      : 'text-neutral-900 dark:text-neutral-100 hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-100 hover:scale-[1.02]'
+                      : 'text-neutral-900 dark:text-neutral-200 hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-100 hover:scale-[1.02]'
                   }`}
                   title={state.sidebarCollapsed ? item.description : undefined}
                 >
@@ -216,7 +216,7 @@ const Sidebar: React.FC = () => {
                 <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                   {activeProfile.displayName}
                 </p>
-                <div className="flex items-center gap-1 text-xs text-neutral-700 dark:text-neutral-300 truncate">
+                <div className="flex items-center gap-1 text-xs text-neutral-700 dark:text-neutral-400 truncate">
                   <div className={`w-2 h-2 ${activeProfile.type === 'mastodon' ? 'bg-purple-500' : 'bg-blue-500'} rounded-full flex-shrink-0`}></div>
                   <span className="truncate">{activeProfile.handle}</span>
                 </div>
@@ -233,7 +233,7 @@ const Sidebar: React.FC = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">Welcome!</p>
-                <p className="text-xs text-neutral-700 dark:text-neutral-300 truncate">
+                <p className="text-xs text-neutral-700 dark:text-neutral-400 truncate">
                   Connect to get started
                 </p>
               </div>
