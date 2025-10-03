@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useMastodonStore } from '../../stores/mastodonStore';
+import { useBlueskyStore } from '../../stores/blueskyStore';
 import { useApp } from '../../contexts/AppContext';
 import { 
   Globe, 
@@ -61,7 +62,10 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
     fetchPublicTimeline
   } = useMastodonStore();
 
-  if (!auth.isAuthenticated) {
+  const { auth: blueskyAuth } = useBlueskyStore();
+  const [activeFeedSource, setActiveFeedSource] = useState<'mastodon' | 'bluesky'>('mastodon');
+
+  if (!auth.isAuthenticated && !blueskyAuth.isAuthenticated) {
     return null;
   }
 
@@ -109,6 +113,13 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 <RefreshCw className="w-4 h-4 glass-text-primary" />
               </button>
               <button
+                onClick={() => window.location.href = '/settings?tab=integrations'}
+                className="p-2 rounded-md transition-all duration-200 hover:bg-white/20 dark:hover:bg-black/20 hover:scale-105"
+                title="Manage Integrations"
+              >
+                <Server className="w-4 h-4 glass-text-primary" />
+              </button>
+              <button
                 onClick={onToggle}
                 className="p-2 rounded-md transition-all duration-200 hover:bg-white/20 dark:hover:bg-black/20 hover:scale-105"
                 title="Close Feed Controls"
@@ -129,6 +140,46 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
 
           {/* Main Controls Row */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap pt-2">
+            {/* Feed Source Selector */}
+            {(auth.isAuthenticated || blueskyAuth.isAuthenticated) && (
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1 glass-subtle rounded-lg p-1">
+                  <button
+                    onClick={() => setActiveFeedSource('mastodon')}
+                    disabled={!auth.isAuthenticated}
+                    className={`p-2 rounded-md transition-colors flex items-center gap-1.5 ${
+                      activeFeedSource === 'mastodon' && auth.isAuthenticated
+                        ? 'bg-purple-600 text-white shadow-sm' 
+                        : auth.isAuthenticated
+                        ? 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
+                        : 'opacity-50 cursor-not-allowed'
+                    }`}
+                    title={auth.isAuthenticated ? "Switch to Mastodon feed" : "Connect to Mastodon first"}
+                  >
+                    <Globe className="w-4 h-4" />
+                    <span className="text-xs font-medium hidden sm:inline">Mastodon</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveFeedSource('bluesky')}
+                    disabled={!blueskyAuth.isAuthenticated}
+                    className={`p-2 rounded-md transition-colors flex items-center gap-1.5 ${
+                      activeFeedSource === 'bluesky' && blueskyAuth.isAuthenticated
+                        ? 'bg-blue-600 text-white shadow-sm' 
+                        : blueskyAuth.isAuthenticated
+                        ? 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
+                        : 'opacity-50 cursor-not-allowed'
+                    }`}
+                    title={blueskyAuth.isAuthenticated ? "Switch to Bluesky feed" : "Connect to Bluesky first"}
+                  >
+                    <div className="w-4 h-4 bg-current rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-current">BS</span>
+                    </div>
+                    <span className="text-xs font-medium hidden sm:inline">Bluesky</span>
+                  </button>
+                </div>
+                <span className="text-xs glass-text-muted mt-1">Feed Source</span>
+              </div>
+            )}
             {/* Feed Type */}
             <div className="flex glass-subtle rounded-lg p-1">
               <button

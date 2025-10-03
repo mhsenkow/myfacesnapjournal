@@ -50,7 +50,6 @@ import {
 import { useMastodonStore } from '../stores/mastodonStore';
 import { useBlueskyStore } from '../stores/blueskyStore';
 import { MastodonPost } from '../types/mastodon';
-import BlueskyLoginModal from '../components/Bluesky/BlueskyLoginModal';
 
 // Feed Layout Component
 interface FeedLayoutProps {
@@ -902,7 +901,6 @@ const FeedPage: React.FC = () => {
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
   const [previousPosts, setPreviousPosts] = useState<MastodonPost[]>([]);
   const [, setAnimationKey] = useState(0);
-  const [isBlueskyModalOpen, setIsBlueskyModalOpen] = useState(false);
 
   // Note: Feed loading is now handled by background service
   // This ensures feeds load even when user is on other pages
@@ -1063,7 +1061,7 @@ const FeedPage: React.FC = () => {
             </button>
             
             <button
-              onClick={() => setIsBlueskyModalOpen(true)}
+              onClick={() => window.location.href = '/settings?tab=integrations'}
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               <div className="w-4 h-4 bg-white rounded-sm flex items-center justify-center">
@@ -1075,26 +1073,6 @@ const FeedPage: React.FC = () => {
         </div>
       )}
 
-      {/* Additional Social Networks */}
-      {auth.isAuthenticated && !blueskyAuth.isAuthenticated && (
-        <div className="glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-xl p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium glass-text-primary">Add More Networks</h3>
-              <p className="text-xs glass-text-tertiary">Connect to Bluesky for more content</p>
-            </div>
-            <button
-              onClick={() => setIsBlueskyModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm"
-            >
-              <div className="w-4 h-4 bg-white rounded-sm flex items-center justify-center">
-                <span className="text-blue-600 font-bold text-xs">BS</span>
-              </div>
-              Connect Bluesky
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Bluesky Connection Status */}
       {blueskyAuth.isAuthenticated && (
@@ -1162,11 +1140,6 @@ const FeedPage: React.FC = () => {
         </>
       )}
 
-      {/* Bluesky Login Modal */}
-      <BlueskyLoginModal
-        isOpen={isBlueskyModalOpen}
-        onClose={() => setIsBlueskyModalOpen(false)}
-      />
     </div>
   );
 };
