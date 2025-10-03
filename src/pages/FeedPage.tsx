@@ -1052,7 +1052,8 @@ const FeedPage: React.FC = () => {
     posts: blueskyPosts,
     isLoading: blueskyIsLoading,
     fetchPosts: fetchBlueskyPosts,
-    restoreSession: restoreBlueskySession
+    restoreSession: restoreBlueskySession,
+    toggleLike: toggleBlueskyLike
   } = useBlueskyStore();
   
   const [isScrolling, setIsScrolling] = useState(false);
@@ -1071,6 +1072,21 @@ const FeedPage: React.FC = () => {
   const handleCloseInspector = () => {
     setIsInspectorOpen(false);
     setInspectedPost(null);
+  };
+
+  // Unified toggleLike function that handles both Mastodon and Bluesky posts
+  const handleToggleLike = async (postId: string, platform?: string, uri?: string, cid?: string) => {
+    console.log('🔄 handleToggleLike called:', { postId, platform, uri, cid });
+
+    if (platform === 'bluesky' && uri && cid) {
+      // Handle Bluesky post
+      console.log('🔵 Handling Bluesky post like:', { uri, cid });
+      await toggleBlueskyLike(uri, cid);
+    } else {
+      // Handle Mastodon post (default behavior)
+      console.log('🟣 Handling Mastodon post like:', { postId });
+      await toggleLike(postId);
+    }
   };
 
   // Note: Feed loading is now handled by background service
@@ -1303,7 +1319,10 @@ const FeedPage: React.FC = () => {
                 favourited: !!blueskyPost.viewer?.like,
                 reblogged: !!blueskyPost.viewer?.repost,
                 bookmarked: false, // Bluesky doesn't have bookmarks
+                // Add platform metadata for unified handling
+                platform: 'bluesky',
                 uri: blueskyPost.uri,
+                cid: blueskyPost.cid,
                 url: `https://bsky.app/post/${blueskyPost.uri.split('/').pop()}`,
                 media_attachments: [], // TODO: Extract from Bluesky embeds
                 mentions: [], // TODO: Extract from Bluesky facets
@@ -1347,7 +1366,15 @@ const FeedPage: React.FC = () => {
                 formatContent={formatContent}
                 formatRelativeTime={formatRelativeTime}
                 getPostAnimationClass={getPostAnimationClass}
-                toggleLike={toggleLike}
+                toggleLike={async (postId: string) => {
+                  // Get the post to check if it's Bluesky or Mastodon
+                  const post = combinedPosts.find(p => p.id === postId);
+                  if (post?.platform === 'bluesky') {
+                    await handleToggleLike(postId, 'bluesky', post.uri, post.cid);
+                  } else {
+                    await handleToggleLike(postId); // Mastodon
+                  }
+                }}
                 toggleBookmark={toggleBookmark}
                 onInspectPost={handleInspectPost}
               />

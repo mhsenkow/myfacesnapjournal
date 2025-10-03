@@ -56,6 +56,7 @@ interface BlueskyActions {
   
   // Post interactions
   likePost: (uri: string, cid: string) => Promise<void>;
+  toggleLike: (uri: string, cid: string) => Promise<void>;
   repostPost: (uri: string, cid: string) => Promise<void>;
   
   // Utilities
@@ -471,6 +472,60 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           set({ posts: updatedPosts });
         } catch (error) {
           console.error('Failed to like post:', error);
+        }
+      },
+
+      toggleLike: async (uri: string, cid: string) => {
+        const { agent, posts } = get();
+        if (!agent) return;
+        
+        // Find the post to check if it's already liked
+        const post = posts.find(p => p.uri === uri);
+        if (!post) return;
+        
+        const isLiked = !!post.viewer?.like;
+        
+        try {
+          console.log('🔄 Bluesky toggleLike:', { uri, cid, isLiked, action: isLiked ? 'unlike' : 'like' });
+          
+          let updatedPosts: BlueskyPost[];
+          
+          if (isLiked) {
+            // Unlike the post
+            await agent.deleteLike(post.viewer!.like!);
+            updatedPosts = posts.map(p => 
+              p.uri === uri 
+                ? {
+                    ...p,
+                    likeCount: Math.max(0, p.likeCount - 1),
+                    viewer: {
+                      ...p.viewer,
+                      like: undefined
+                    }
+                  }
+                : p
+            );
+          } else {
+            // Like the post
+            const response = await agent.like(uri, cid);
+            updatedPosts = posts.map(p => 
+              p.uri === uri 
+                ? {
+                    ...p,
+                    likeCount: p.likeCount + 1,
+                    viewer: {
+                      ...p.viewer,
+                      like: response.uri
+                    }
+                  }
+                : p
+            );
+          }
+          
+          set({ posts: updatedPosts });
+          console.log(`✅ Bluesky post ${isLiked ? 'unliked' : 'liked'} successfully`);
+        } catch (error) {
+          console.error('Failed to toggle like:', error);
         }
       },
 
