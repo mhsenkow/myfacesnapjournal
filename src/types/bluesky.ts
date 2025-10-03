@@ -105,6 +105,7 @@ export interface BlueskyAuth {
   isAuthenticated: boolean;
   session: BlueskySession | null;
   server: string;
+  user?: BlueskyAuthor; // Add user profile information
 }
 
 export type BlueskyFeedType = 'timeline' | 'following' | 'likes';

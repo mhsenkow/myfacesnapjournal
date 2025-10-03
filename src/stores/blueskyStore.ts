@@ -42,6 +42,9 @@ interface BlueskyActions {
   refreshSession: () => Promise<void>;
   restoreSession: () => Promise<boolean>;
   
+  // Profile management
+  fetchUserProfile: () => Promise<void>;
+  
   // Feed management
   fetchPosts: (limit?: number) => Promise<void>;
   loadMorePosts: () => Promise<void>;
@@ -67,7 +70,8 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
       auth: {
         isAuthenticated: false,
         session: null,
-        server: 'https://bsky.social'
+        server: 'https://bsky.social',
+        user: undefined
       },
       
       posts: [],
@@ -119,6 +123,9 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
             // Persist session to localStorage
             localStorage.setItem('bluesky-session', JSON.stringify(session));
             
+            // Fetch user profile
+            await get().fetchUserProfile();
+            
             // Fetch initial posts
             await get().fetchPosts();
           } else {
@@ -140,7 +147,8 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           auth: {
             isAuthenticated: false,
             session: null,
-            server: 'https://bsky.social'
+            server: 'https://bsky.social',
+            user: undefined
           },
           posts: [],
           allPosts: [],
@@ -163,6 +171,49 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           console.error('Failed to refresh Bluesky session:', error);
           // If refresh fails, logout user
           get().logout();
+        }
+      },
+
+      fetchUserProfile: async () => {
+        const { auth } = get();
+        if (!auth.isAuthenticated || !auth.session) {
+          console.log('Bluesky fetchUserProfile: Not authenticated');
+          return;
+        }
+
+        try {
+          // Create a fresh agent for this request
+          const agent = new BskyAgent({ service: 'https://bsky.social' });
+          await agent.resumeSession(auth.session as any);
+
+          // Fetch user profile
+          const response = await agent.getProfile({
+            actor: auth.session.did
+          });
+
+          if (response.success) {
+            const profile = response.data;
+            const userProfile = {
+              did: profile.did,
+              handle: profile.handle,
+              displayName: profile.displayName,
+              description: profile.description,
+              avatar: profile.avatar,
+              verified: false, // Bluesky doesn't have verified status like Twitter
+              createdAt: profile.createdAt
+            };
+
+            set({
+              auth: {
+                ...auth,
+                user: userProfile
+              }
+            });
+
+            console.log('Bluesky user profile fetched successfully:', userProfile);
+          }
+        } catch (error) {
+          console.error('Failed to fetch Bluesky user profile:', error);
         }
       },
 

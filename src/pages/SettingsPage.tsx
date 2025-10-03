@@ -16,11 +16,18 @@ import { useTheme } from '../contexts/ThemeContext'
 import { useNavigate } from 'react-router-dom'
 import MastodonImport from '../components/Mastodon/MastodonImport'
 import MastodonProfileInfo from '../components/Profile/MastodonProfileInfo'
+import BlueskyProfileInfo from '../components/Profile/BlueskyProfileInfo'
 import BlueskyIntegration from '../components/Bluesky/BlueskyIntegration'
+import { useMastodonStore } from '../stores/mastodonStore'
+import { useBlueskyStore } from '../stores/blueskyStore'
 
 const SettingsPage: React.FC = () => {
   const { settings, updateSettings } = useApp()
   const { theme, setTheme, exportTheme, importTheme } = useTheme()
+  
+  // Get connection status from stores
+  const { auth: mastodonAuth } = useMastodonStore()
+  const { auth: blueskyAuth } = useBlueskyStore()
   
   // Check URL params for initial tab (e.g., ?tab=profile)
   const urlParams = new URLSearchParams(window.location.search)
@@ -81,24 +88,63 @@ const SettingsPage: React.FC = () => {
           {activeTab === 'profile' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-neutral-900 mb-2">Connected Profile</h3>
+                <h3 className="text-lg font-medium text-neutral-900 mb-2">Connected Profiles</h3>
                 <p className="text-sm text-neutral-500 mb-6">
-                  View and manage your connected Mastodon profile information
+                  View and manage your connected social media profiles
                 </p>
               </div>
               
-              <div className="glass p-6 rounded-lg border border-neutral-200">
-                <MastodonProfileInfo showExtra={true} />
-              </div>
+              {/* Mastodon Profile */}
+              {mastodonAuth.isAuthenticated && mastodonAuth.user && (
+                <div className="space-y-4">
+                  <h4 className="text-md font-medium text-neutral-800 flex items-center gap-2">
+                    <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                    Mastodon Profile
+                  </h4>
+                  <div className="glass p-6 rounded-lg border border-neutral-200">
+                    <MastodonProfileInfo showExtra={true} />
+                  </div>
+                </div>
+              )}
               
-              <div className="glass p-4 rounded-lg border border-neutral-200 bg-blue-50">
-                <h4 className="text-sm font-medium text-blue-800 mb-2">Profile Integration</h4>
-                <p className="text-sm text-blue-700">
-                  Your Mastodon profile is now integrated throughout the app. It appears in the sidebar, 
-                  settings, and any social features. Your display name and avatar are used as your identity 
-                  across MyFace SnapJournal.
-                </p>
-              </div>
+              {/* Bluesky Profile */}
+              {blueskyAuth.isAuthenticated && blueskyAuth.user && (
+                <div className="space-y-4">
+                  <h4 className="text-md font-medium text-neutral-800 flex items-center gap-2">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    Bluesky Profile
+                  </h4>
+                  <div className="glass p-6 rounded-lg border border-neutral-200">
+                    <BlueskyProfileInfo showExtra={true} />
+                  </div>
+                </div>
+              )}
+              
+              {/* No profiles connected */}
+              {!mastodonAuth.isAuthenticated && !blueskyAuth.isAuthenticated && (
+                <div className="glass p-6 rounded-lg border border-neutral-200 text-center">
+                  <User className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">No Profiles Connected</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Connect to Mastodon or Bluesky to see your profile information here
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Use the Feed tab to connect to your social media accounts
+                  </p>
+                </div>
+              )}
+              
+              {/* Profile Integration Info */}
+              {(mastodonAuth.isAuthenticated || blueskyAuth.isAuthenticated) && (
+                <div className="glass p-4 rounded-lg border border-neutral-200 bg-blue-50">
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">Profile Integration</h4>
+                  <p className="text-sm text-blue-700">
+                    Your connected profiles are integrated throughout the app. They appear in the sidebar, 
+                    settings, and social features. Your display name and avatar are used as your identity 
+                    across MyFace SnapJournal.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

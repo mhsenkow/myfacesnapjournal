@@ -12,6 +12,7 @@ import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useApp } from '../../contexts/AppContext'
 import { useMastodonStore } from '../../stores/mastodonStore'
+import { useBlueskyStore } from '../../stores/blueskyStore'
 import { 
   BookOpen, 
   Brain, 
@@ -29,7 +30,33 @@ const Sidebar: React.FC = () => {
   const { state, toggleSidebar, setCurrentView } = useApp()
   const navigate = useNavigate()
   const location = useLocation()
-  const { auth } = useMastodonStore()
+  const { auth: mastodonAuth } = useMastodonStore()
+  const { auth: blueskyAuth } = useBlueskyStore()
+
+  // Determine which profile to show (prioritize Mastodon, then Bluesky)
+  const getActiveProfile = () => {
+    if (mastodonAuth.isAuthenticated && mastodonAuth.user) {
+      return {
+        type: 'mastodon',
+        user: mastodonAuth.user,
+        avatar: mastodonAuth.user.avatar_static || mastodonAuth.user.avatar,
+        displayName: mastodonAuth.user.display_name || mastodonAuth.user.username,
+        handle: `@${mastodonAuth.user.acct}`
+      }
+    }
+    if (blueskyAuth.isAuthenticated && blueskyAuth.user) {
+      return {
+        type: 'bluesky',
+        user: blueskyAuth.user,
+        avatar: blueskyAuth.user.avatar,
+        displayName: blueskyAuth.user.displayName || blueskyAuth.user.handle,
+        handle: `@${blueskyAuth.user.handle}`
+      }
+    }
+    return null
+  }
+
+  const activeProfile = getActiveProfile()
 
   // Navigation items
   const navItems = [
@@ -135,7 +162,7 @@ const Sidebar: React.FC = () => {
       {/* User Profile Section */}
       {!state.sidebarCollapsed && (
         <div className="p-4 border-t border-neutral-200">
-          {auth.isAuthenticated && auth.user ? (
+          {activeProfile ? (
             /* Mastodon Profile */
             <button 
               onClick={() => {
@@ -145,10 +172,10 @@ const Sidebar: React.FC = () => {
               className="flex items-center space-x-3 w-full hover:bg-neutral-100 rounded-md p-1 transition-colors"
               title="Click to view your profile"
             >
-              {auth.user.avatar_static || auth.user.avatar ? (
+              {activeProfile.avatar ? (
                 <img
-                  src={auth.user.avatar_static || auth.user.avatar}
-                  alt={auth.user.display_name}
+                  src={activeProfile.avatar}
+                  alt={activeProfile.displayName}
                   className="w-8 h-8 rounded-full object-cover cursor-pointer"
                   onError={(e) => {
                     // Fallback to initials if image fails to load
@@ -158,18 +185,18 @@ const Sidebar: React.FC = () => {
                   }}
                 />
               ) : null}
-              <div className={`w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center cursor-pointer ${auth.user.avatar_static || auth.user.avatar ? 'hidden' : ''}`}>
+              <div className={`w-8 h-8 ${activeProfile.type === 'mastodon' ? 'bg-purple-500' : 'bg-blue-500'} rounded-full flex items-center justify-center cursor-pointer ${activeProfile.avatar ? 'hidden' : ''}`}>
                 <span className="text-white text-sm font-medium">
-                  {auth.user.display_name ? auth.user.display_name.charAt(0).toUpperCase() : auth.user.username.charAt(0).toUpperCase()}
+                  {activeProfile.displayName.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium glass-text-primary truncate">
-                  {auth.user.display_name || auth.user.username}
+                  {activeProfile.displayName}
                 </p>
                 <p className="text-xs glass-text-muted truncate flex items-center gap-1">
                   <Globe className="w-3 h-3" />
-                  @{auth.user.acct}
+                  {activeProfile.handle}
                 </p>
               </div>
             </button>
@@ -182,7 +209,7 @@ const Sidebar: React.FC = () => {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium glass-text-primary truncate">MyFace User</p>
                 <p className="text-xs glass-text-muted truncate">
-                  Connect to Mastodon for profile
+                  Connect to Mastodon or Bluesky for profile
                 </p>
               </div>
             </div>
@@ -200,24 +227,22 @@ const Sidebar: React.FC = () => {
           className="absolute bottom-4 left-1/2 transform -translate-x-1/2 hover:scale-105 transition-transform"
           title="Click to view your profile"
         >
-          {auth.isAuthenticated && auth.user ? (
-            auth.user.avatar_static || auth.user.avatar ? (
-              <img
-                src={auth.user.avatar_static || auth.user.avatar}
-                alt={auth.user.display_name}
-                className="w-8 h-8 rounded-full object-cover cursor-pointer"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  target.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-            ) : null
+          {activeProfile?.avatar ? (
+            <img
+              src={activeProfile.avatar}
+              alt={activeProfile.displayName}
+              className="w-8 h-8 rounded-full object-cover cursor-pointer"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
           ) : null}
-          <div className={`w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center cursor-pointer ${auth.isAuthenticated && auth.user && (auth.user.avatar_static || auth.user.avatar) ? 'hidden' : ''}`}>
+          <div className={`w-8 h-8 ${activeProfile?.type === 'mastodon' ? 'bg-purple-500' : activeProfile?.type === 'bluesky' ? 'bg-blue-500' : 'bg-primary-500'} rounded-full flex items-center justify-center cursor-pointer ${activeProfile?.avatar ? 'hidden' : ''}`}>
             <span className="text-white text-sm font-medium">
-              {auth.isAuthenticated && auth.user 
-                ? (auth.user.display_name ? auth.user.display_name.charAt(0).toUpperCase() : auth.user.username.charAt(0).toUpperCase())
+              {activeProfile 
+                ? activeProfile.displayName.charAt(0).toUpperCase()
                 : 'U'
               }
             </span>
