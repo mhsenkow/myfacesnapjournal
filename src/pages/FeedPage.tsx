@@ -56,7 +56,7 @@ import PostInspector from '../components/UI/PostInspector';
 
 // Feed Layout Component
 interface FeedLayoutProps {
-  posts: MastodonPost[];
+  posts: any[];
   displayMode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined' | 'focused';
   isScrolling: boolean;
   formatContent: (content: string) => string;
@@ -110,7 +110,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="space-y-6">
         {posts.map((post, index) => (
-          <div key={`${post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon'}-${post.id}`} className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-xl p-6 hover:glass transition-all duration-500 hover:scale-[1.02] hover:shadow-xl relative ${getPostAnimationClass(post.id, index)}`}>
+          <div key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-xl p-6 hover:glass transition-all duration-500 hover:scale-[1.02] hover:shadow-xl relative ${getPostAnimationClass(post.id, index)}`}>
             {/* Platform Badge */}
             {renderPlatformBadge(post)}
             
@@ -156,7 +156,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 {/* Hashtags */}
                 {post.tags && post.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {post.tags.map((tag) => (
+                    {post.tags.map((tag: any) => (
                       <span key={tag.name} className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs rounded-full shadow-sm">
                         <Hash className="w-3 h-3" />
                         {tag.name}
@@ -284,7 +284,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {posts.map((post, index) => (
-          <div key={`${post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon'}-${post.id}`} className={`glass border ${getPlatformBorderClasses(post)} rounded-2xl p-6 hover:glass-strong sequence-animate transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative ${getPostAnimationClass(post.id, index)}`}
+          <div key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} className={`glass border ${getPlatformBorderClasses(post)} rounded-2xl p-6 hover:glass-strong sequence-animate transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative ${getPostAnimationClass(post.id, index)}`}
                style={{ animationDelay: `${index * 50}ms` }}>
             {/* Platform Badge */}
             {renderPlatformBadge(post)}
@@ -323,7 +323,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
             {/* Hashtags */}
             {post.tags && post.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-4">
-                {post.tags.slice(0, 3).map((tag) => (
+                {post.tags.slice(0, 3).map((tag: any) => (
                   <span key={tag.name} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
                     <Hash className="w-3 h-3" />
                     {tag.name}
@@ -431,7 +431,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {posts.map((post, index) => (
-          <div key={`${post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon'}-${post.id}`} className={`glass border ${getPlatformBorderClasses(post)} rounded-xl overflow-hidden hover:glass-strong transition-all duration-300 hover:scale-105 group relative ${getPostAnimationClass(post.id, index)}`}>
+          <div key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} className={`glass border ${getPlatformBorderClasses(post)} rounded-xl overflow-hidden hover:glass-strong transition-all duration-300 hover:scale-105 group relative ${getPostAnimationClass(post.id, index)}`}>
             {/* Platform Badge */}
             {renderPlatformBadge(post)}
             {/* Media Display - Square aspect ratio */}
@@ -634,7 +634,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
           
           return (
             <div 
-              key={`${post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon'}-${post.id}`} 
+              key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} 
               className={`
                 relative glass-subtle border border-neutral-200 dark:border-neutral-700 
                 ${getBorderRadius(contentLength)} ${getSize(totalEngagement)}
@@ -755,7 +755,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {posts.map((post, index) => (
-          <div key={`${post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon'}-${post.id}`} className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-lg p-3 hover:glass transition-all duration-200 hover:scale-[1.02] group relative ${getPostAnimationClass(post.id, index)}`}>
+          <div key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-lg p-3 hover:glass transition-all duration-200 hover:scale-[1.02] group relative ${getPostAnimationClass(post.id, index)}`}>
             {/* Platform Badge */}
             {renderPlatformBadge(post)}
             <div className="flex items-center gap-2 mb-2">
@@ -843,7 +843,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     return (
       <div className="max-w-2xl mx-auto space-y-8">
         {posts.map((post, index) => (
-          <div key={`${post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon'}-${post.id}`} className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-2xl overflow-hidden hover:glass transition-all duration-500 hover:scale-[1.01] hover:shadow-2xl group relative ${getPostAnimationClass(post.id, index)}`}>
+          <div key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} className={`glass-subtle border ${getPlatformBorderClasses(post)} rounded-2xl overflow-hidden hover:glass transition-all duration-500 hover:scale-[1.01] hover:shadow-2xl group relative ${getPostAnimationClass(post.id, index)}`}>
             {/* Platform Badge */}
             {renderPlatformBadge(post)}
             {/* Header */}
@@ -888,7 +888,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
               {/* Hashtags */}
               {post.tags && post.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {post.tags.map((tag) => (
+                  {post.tags.map((tag: any) => (
                     <span key={tag.name} className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm rounded-full shadow-sm font-medium">
                       <Hash className="w-3 h-3" />
                       {tag.name}
@@ -1297,7 +1297,12 @@ const FeedPage: React.FC = () => {
             let combinedPosts: any[] = [];
             
             if (appState.activeFeedSources.mastodon && auth.isAuthenticated) {
-              combinedPosts = [...combinedPosts, ...posts];
+              // Add platform metadata to Mastodon posts for consistent handling
+              const mastodonPostsWithPlatform = posts.map(post => ({
+                ...post,
+                platform: 'mastodon'
+              }));
+              combinedPosts = [...combinedPosts, ...mastodonPostsWithPlatform];
             }
             
             if (appState.activeFeedSources.bluesky && blueskyAuth.isAuthenticated) {
