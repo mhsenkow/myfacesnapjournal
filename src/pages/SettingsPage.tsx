@@ -16,6 +16,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { useNavigate } from 'react-router-dom'
 import MastodonImport from '../components/Mastodon/MastodonImport'
 import MastodonProfileInfo from '../components/Profile/MastodonProfileInfo'
+import BlueskyIntegration from '../components/Bluesky/BlueskyIntegration'
 
 const SettingsPage: React.FC = () => {
   const { settings, updateSettings } = useApp()
@@ -299,6 +300,11 @@ const SettingsPage: React.FC = () => {
                 {/* Mastodon Integration */}
                 <div className="bg-white border border-neutral-200 rounded-lg p-6">
                   <MastodonImport />
+                </div>
+
+                {/* Bluesky Integration */}
+                <div className="bg-white border border-neutral-200 rounded-lg p-6">
+                  <BlueskyIntegration />
                 </div>
                 
                 {/* Future integrations placeholder */}

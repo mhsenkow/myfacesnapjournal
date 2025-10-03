@@ -1075,6 +1075,27 @@ const FeedPage: React.FC = () => {
         </div>
       )}
 
+      {/* Additional Social Networks */}
+      {auth.isAuthenticated && !blueskyAuth.isAuthenticated && (
+        <div className="glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium glass-text-primary">Add More Networks</h3>
+              <p className="text-xs glass-text-tertiary">Connect to Bluesky for more content</p>
+            </div>
+            <button
+              onClick={() => setIsBlueskyModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm"
+            >
+              <div className="w-4 h-4 bg-white rounded-sm flex items-center justify-center">
+                <span className="text-blue-600 font-bold text-xs">BS</span>
+              </div>
+              Connect Bluesky
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Bluesky Connection Status */}
       {blueskyAuth.isAuthenticated && (
         <div className="glass-subtle border border-blue-200 dark:border-blue-800 rounded-xl p-4">
