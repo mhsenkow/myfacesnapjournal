@@ -53,7 +53,7 @@ import { MastodonPost } from '../types/mastodon';
 // Feed Layout Component
 interface FeedLayoutProps {
   posts: MastodonPost[];
-  displayMode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined';
+  displayMode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined' | 'focused';
   isScrolling: boolean;
   formatContent: (content: string) => string;
   formatRelativeTime: (dateString: string) => string;
@@ -692,6 +692,180 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 <MessageCircle className="w-3 h-3" />
                 {post.replies_count}
               </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Focused Layout - Single centered card with full image (Facebook/Twitter style)
+  if (displayMode === 'focused') {
+    return (
+      <div className="max-w-2xl mx-auto space-y-8">
+        {posts.map((post, index) => (
+          <div key={post.id} className={`glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-2xl overflow-hidden hover:glass transition-all duration-500 hover:scale-[1.01] hover:shadow-2xl group ${getPostAnimationClass(post.id, index)}`}>
+            {/* Header */}
+            <div className="flex items-center gap-4 p-6 pb-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                <User className="w-7 h-7 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-1">
+                  <h3 className="font-bold text-primary text-lg">{post.account.display_name}</h3>
+                  <span className="text-muted-custom text-sm">@{post.account.username}</span>
+                  <span className="text-muted-custom">·</span>
+                  <span className="text-muted-custom flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {formatRelativeTime(post.created_at)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 pb-4">
+              <p className="text-secondary text-lg leading-relaxed mb-4">
+                {formatContent(post.content)}
+              </p>
+
+              {/* Hashtags */}
+              {post.tags && post.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {post.tags.map((tag) => (
+                    <span key={tag.name} className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm rounded-full shadow-sm font-medium">
+                      <Hash className="w-3 h-3" />
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Media Display - Full width with aspect ratio */}
+            {post.media_attachments && post.media_attachments.length > 0 && (
+              <div className="relative">
+                <div className="aspect-video bg-gradient-to-br from-purple-400 via-pink-400 to-red-400 relative overflow-hidden">
+                  <img 
+                    src={post.media_attachments[0].preview_url || post.media_attachments[0].url}
+                    alt={post.media_attachments[0].description || 'Post media'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.classList.remove('hidden');
+                    }}
+                  />
+                  
+                  {/* Fallback placeholder */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-400 via-pink-400 to-red-400 hidden">
+                    <div className="text-white text-center">
+                      <Image className="w-16 h-16 mx-auto mb-3" />
+                      <div className="text-lg font-medium">{post.media_attachments.length} media</div>
+                    </div>
+                  </div>
+                  
+                  {/* Multiple media indicator */}
+                  {post.media_attachments.length > 1 && (
+                    <div className="absolute top-4 right-4 bg-black bg-opacity-70 text-white text-sm px-3 py-1.5 rounded-full font-medium">
+                      +{post.media_attachments.length - 1} more
+                    </div>
+                  )}
+                  
+                  {/* Media type indicator */}
+                  {post.media_attachments[0].type === 'video' && (
+                    <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white text-sm px-3 py-1.5 rounded-full flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                      </svg>
+                      Video
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Actions Bar */}
+            <div className="flex items-center justify-between px-6 py-4 border-t border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center gap-8">
+                {/* Reply */}
+                <button className="flex items-center gap-2 hover:text-blue-600 transition-colors group">
+                  <MessageCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  <span className="font-medium">{post.replies_count}</span>
+                </button>
+                
+                {/* Reblog */}
+                <button className="flex items-center gap-2 hover:text-green-600 transition-colors group">
+                  <Repeat2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  <span className="font-medium">{post.reblogs_count}</span>
+                </button>
+                
+                {/* Like */}
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleLike(post.id);
+                  }}
+                  className={`post-action-button flex items-center gap-2 transition-colors group ${
+                    post.favourited 
+                      ? 'text-red-600 heart-liked' 
+                      : 'text-neutral-500 dark:text-neutral-400 hover:text-red-600'
+                  }`}
+                >
+                  <Heart 
+                    className={`w-5 h-5 group-hover:scale-110 transition-transform ${
+                      post.favourited ? 'fill-current' : ''
+                    }`} 
+                  />
+                  <span className="font-medium">{post.favourites_count}</span>
+                </button>
+                
+                {/* Bookmark */}
+                <button 
+                  onClick={() => toggleBookmark(post.id)}
+                  className={`post-action-button flex items-center gap-2 transition-colors group ${
+                    post.bookmarked 
+                      ? 'text-yellow-600 bookmark-saved' 
+                      : 'text-neutral-500 dark:text-neutral-400 hover:text-yellow-600'
+                  }`}
+                >
+                  <Bookmark 
+                    className={`w-5 h-5 group-hover:scale-110 transition-transform ${
+                      post.bookmarked ? 'fill-current' : ''
+                    }`} 
+                  />
+                </button>
+              </div>
+              
+              {/* Content Indicators */}
+              <div className="flex items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
+                {post.media_attachments.length > 0 && (
+                  <div className="flex items-center gap-1 text-purple-500">
+                    <Image className="w-4 h-4" />
+                    <span>{post.media_attachments.length}</span>
+                  </div>
+                )}
+                {post.tags.length > 0 && (
+                  <div className="flex items-center gap-1 text-blue-500">
+                    <Hash className="w-4 h-4" />
+                    <span>{post.tags.length}</span>
+                  </div>
+                )}
+                {post.mentions.length > 0 && (
+                  <div className="flex items-center gap-1 text-cyan-500">
+                    <AtSign className="w-4 h-4" />
+                    <span>{post.mentions.length}</span>
+                  </div>
+                )}
+                {post.sensitive && (
+                  <div className="flex items-center gap-1 text-yellow-600">
+                    <EyeOff className="w-4 h-4" />
+                    <span>CW</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}

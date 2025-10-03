@@ -9,33 +9,22 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit3, Trash2, Lock, Eye, EyeOff, Heart, CheckSquare, Square, Tag } from 'lucide-react';
+import { Plus, Edit3, Trash2, Lock, Eye, EyeOff, Heart, CheckSquare, Square, Tag, Calendar, User } from 'lucide-react';
 import { useJournalStore, JournalEntry } from '../stores/journalStore';
 import EntryModal from '../components/UI/EntryModal';
+import JournalControls from '../components/Journal/JournalControls';
 
 const JournalPage: React.FC = () => {
   const {
     selectedEntry,
-    searchQuery,
-    selectedTags,
-    selectedMood,
-    selectedPrivacy,
-    selectedSource,
     createEntry,
     updateEntry,
     deleteEntry,
     deleteEntries,
     selectEntry,
-    setSearchQuery,
-    setSelectedTags,
-    setSelectedMood,
-    setSelectedPrivacy,
-    setSelectedSource,
     filteredEntries,
-    allTags,
-    allMoods,
-    clearFilters,
     loadEntries,
+    layoutMode,
   } = useJournalStore();
 
   const [editingEntry, setEditingEntry] = useState<Partial<JournalEntry>>({
@@ -50,6 +39,7 @@ const JournalPage: React.FC = () => {
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [isNewEntryModalOpen, setIsNewEntryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isControlsVisible, setIsControlsVisible] = useState(false);
 
   // Load entries from database on mount
   useEffect(() => {
@@ -134,6 +124,155 @@ const JournalPage: React.FC = () => {
     return new Date(date).toLocaleDateString();
   };
 
+  const renderJournalEntry = (entry: JournalEntry) => {
+    const baseClasses = `glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 hover:glass transition-all duration-500 hover:scale-[1.02] hover:shadow-xl group ${
+      selectedEntry?.id === entry.id ? 'ring-2 ring-purple-500 glass-strong' : ''
+    } ${
+      selectedEntries.has(entry.id) ? 'bg-purple-50/30 border-purple-200 dark:bg-purple-900/20' : ''
+    }`;
+
+    const handleClick = () => {
+      if (isSelectMode) {
+        handleSelectEntry(entry.id);
+      } else {
+        selectEntry(entry);
+      }
+    };
+
+    const commonContent = (
+      <>
+        {isSelectMode && (
+          <div className="mt-1">
+            {selectedEntries.has(entry.id) ? (
+              <CheckSquare className="w-5 h-5 text-purple-600" />
+            ) : (
+              <Square className="w-5 h-5 text-neutral-400 dark:text-neutral-500" />
+            )}
+          </div>
+        )}
+        
+        {/* Avatar/Icon */}
+        <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+          <User className="w-6 h-6 text-white" />
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-3">
+            <h3 className="font-bold text-primary text-lg">{entry.title}</h3>
+            <span className="text-muted-custom flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              {formatDate(entry.createdAt)}
+            </span>
+          </div>
+          
+          {/* Content */}
+          <p className="text-secondary mb-4 leading-relaxed line-clamp-3">
+            {entry.content}
+          </p>
+          
+          {/* Tags */}
+          {entry.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {entry.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm rounded-full shadow-sm font-medium"
+                >
+                  <Tag className="w-3 h-3" />
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+          
+          {/* Footer with metadata */}
+          <div className="flex items-center justify-between pt-4 border-t border-neutral-200 dark:border-neutral-700">
+            <div className="flex items-center gap-6 text-sm text-neutral-500 dark:text-neutral-400">
+              {/* Mood */}
+              {entry.mood && (
+                <div className="flex items-center gap-1">
+                  <Heart className="w-4 h-4" />
+                  <span className="capitalize">{entry.mood}</span>
+                </div>
+              )}
+              
+              {/* Privacy */}
+              <div className="flex items-center gap-1">
+                {entry.privacy === 'private' && <Lock className="w-4 h-4" />}
+                {entry.privacy === 'secret' && <EyeOff className="w-4 h-4" />}
+                {entry.privacy === 'public' && <Eye className="w-4 h-4" />}
+                <span className="capitalize">{entry.privacy}</span>
+              </div>
+              
+              {/* Source */}
+              {entry.source && (
+                <div className="flex items-center gap-1">
+                  <span className="capitalize">{entry.source}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Action buttons */}
+            {!isSelectMode && (
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleEdit(entry); }}
+                  className="p-2 hover:bg-white/20 dark:hover:bg-black/20 rounded-lg transition-colors"
+                  title="Edit entry"
+                >
+                  <Edit3 className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleDelete(entry); }}
+                  className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                  title="Delete entry"
+                >
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </>
+    );
+
+    switch (layoutMode) {
+      case 'grid':
+        return (
+          <div key={entry.id} className={`${baseClasses} max-w-sm mx-auto`} onClick={handleClick}>
+            <div className="flex flex-col gap-4">
+              {commonContent}
+            </div>
+          </div>
+        );
+      
+      case 'list':
+        return (
+          <div key={entry.id} className={`${baseClasses} flex items-start gap-4`} onClick={handleClick}>
+            {commonContent}
+          </div>
+        );
+      
+      case 'mortar':
+        return (
+          <div key={entry.id} className={`${baseClasses} break-inside-avoid`} onClick={handleClick}>
+            <div className="flex flex-col gap-4">
+              {commonContent}
+            </div>
+          </div>
+        );
+      
+      case 'card':
+      default:
+        return (
+          <div key={entry.id} className={`${baseClasses} flex items-start gap-4`} onClick={handleClick}>
+            {commonContent}
+          </div>
+        );
+    }
+  };
+
   const handleSelectEntry = (entryId: string) => {
     setSelectedEntries(prev => {
       const newSet = new Set(prev);
@@ -181,50 +320,50 @@ const JournalPage: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 mb-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-2xl p-6 mb-6 shadow-lg">
+        <div className="flex items-center justify-between">
+          <div>
             <h1 className="text-4xl font-light glass-text-primary tracking-wide">Journal</h1>
             <p className="glass-text-tertiary mt-2 text-lg font-light">Capture your thoughts, ideas, and experiences.</p>
-        </div>
-        <div className="flex gap-2">
-          {isSelectMode ? (
-            <>
-              <button 
-                onClick={handleMassDelete}
-                disabled={selectedEntries.size === 0}
-                className="btn btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete ({selectedEntries.size})
-              </button>
-              <button 
-                onClick={exitSelectMode}
-                className="btn btn-outline"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button 
-                onClick={() => setIsSelectMode(true)}
-                className="btn btn-outline"
-              >
-                <CheckSquare className="w-4 h-4 mr-2" />
-                Select
-              </button>
-              <button 
+          </div>
+          <div className="flex gap-3">
+            {isSelectMode ? (
+              <>
+                <button 
+                  onClick={handleMassDelete}
+                  disabled={selectedEntries.size === 0}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete ({selectedEntries.size})
+                </button>
+                <button 
+                  onClick={exitSelectMode}
+                  className="px-4 py-2 glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-white/20 dark:hover:bg-black/20 transition-colors"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  onClick={() => setIsSelectMode(true)}
+                  className="px-4 py-2 glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-white/20 dark:hover:bg-black/20 transition-colors flex items-center gap-2"
+                >
+                  <CheckSquare className="w-4 h-4" />
+                  Select
+                </button>
+                <button 
                   onClick={openNewEntryModal}
-                className="btn btn-primary"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New Entry
-              </button>
-            </>
-          )}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  New Entry
+                </button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
       </div>
 
 
@@ -252,7 +391,7 @@ const JournalPage: React.FC = () => {
 
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="w-full">
         {/* Recent Entries */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -271,90 +410,16 @@ const JournalPage: React.FC = () => {
               </button>
             )}
           </div>
-          <div className="space-y-3">
-            {filteredEntries().map((entry) => (
-              <div
-                key={entry.id}
-                className={`card-hover p-4 ${
-                  selectedEntry?.id === entry.id ? 'ring-2 ring-primary-500' : ''
-                } ${
-                  isSelectMode ? 'cursor-pointer' : 'cursor-pointer'
-                } ${
-                  selectedEntries.has(entry.id) ? 'bg-primary-50 border-primary-200' : ''
-                }`}
-                onClick={() => {
-                  if (isSelectMode) {
-                    handleSelectEntry(entry.id);
-                  } else {
-                    selectEntry(entry);
-                  }
-                }}
-              >
-                <div className="flex items-start justify-between">
-                  {isSelectMode && (
-                    <div className="mr-3 mt-1">
-                      {selectedEntries.has(entry.id) ? (
-                        <CheckSquare className="w-5 h-5 text-primary-600" />
-                      ) : (
-                        <Square className="w-5 h-5 text-neutral-400 dark:text-neutral-500" />
-                      )}
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <h3 className="font-medium glass-text-primary">{entry.title}</h3>
-                    <p className="text-sm glass-text-tertiary mt-1 line-clamp-2">{entry.content}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      {entry.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2 py-1 text-xs bg-primary-100 text-primary-800 rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between mt-3">
-                      <span className="text-xs glass-text-muted">{formatDate(entry.createdAt)}</span>
-                      <div className="flex items-center gap-2">
-                        {entry.mood && (
-                          <span className="flex items-center gap-1 text-xs glass-text-muted">
-                            <Heart className="w-3 h-3" />
-                            {entry.mood}
-                          </span>
-                        )}
-                        <div className="flex items-center gap-1">
-                          {entry.privacy === 'private' && <Lock className="w-3 h-3 glass-text-muted" />}
-                          {entry.privacy === 'secret' && <EyeOff className="w-3 h-3 glass-text-muted" />}
-                          {entry.privacy === 'public' && <Eye className="w-3 h-3 glass-text-muted" />}
-                          <span className="text-xs glass-text-muted capitalize">{entry.privacy}</span>
-                        </div>
-                        {entry.source && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs glass-text-muted capitalize">{entry.source}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  {!isSelectMode && (
-                    <div className="flex items-center gap-1">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleEdit(entry); }}
-                        className="p-1 hover:bg-neutral-100 dark:bg-neutral-600 rounded"
-                      >
-                        <Edit3 className="w-4 h-4 text-neutral-400 dark:text-neutral-500" />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDelete(entry); }}
-                        className="p-1 hover:bg-neutral-100 dark:bg-neutral-600 rounded"
-                      >
-                        <Trash2 className="w-4 h-4 text-neutral-400 dark:text-neutral-500" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+          <div className={`${
+            layoutMode === 'grid' 
+              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+              : layoutMode === 'mortar'
+              ? 'columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6'
+              : layoutMode === 'list'
+              ? 'space-y-4'
+              : 'grid grid-cols-1 lg:grid-cols-2 gap-6'
+          }`}>
+            {filteredEntries().map((entry) => renderJournalEntry(entry))}
           </div>
         </div>
 
@@ -491,6 +556,14 @@ const JournalPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Journal Controls */}
+      <JournalControls
+        isVisible={isControlsVisible}
+        onToggle={() => setIsControlsVisible(!isControlsVisible)}
+        onBulkDelete={selectedEntries.size > 0 ? handleMassDelete : undefined}
+        selectedCount={selectedEntries.size}
+      />
     </div>
   );
 };

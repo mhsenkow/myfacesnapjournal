@@ -21,7 +21,8 @@ import {
   X,
   Zap,
   MessageCircle,
-  SprayCan
+  SprayCan,
+  Focus
 } from 'lucide-react';
 
 interface FooterProps {
@@ -314,6 +315,17 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                   title="Dense Grid"
                 >
                   <List className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setDisplayMode('focused')}
+                  className={`p-2 rounded-md transition-colors ${
+                    displayMode === 'focused'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
+                  }`}
+                  title="Focused Feed (Facebook/Twitter Style)"
+                >
+                  <Focus className="w-4 h-4" />
                 </button>
               </div>
               <span className="text-xs glass-text-muted mt-1">Layout</span>

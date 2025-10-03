@@ -27,6 +27,9 @@ interface JournalState {
   selectedMood: string;
   selectedPrivacy: string;
   selectedSource: string;
+  layoutMode: 'card' | 'grid' | 'list' | 'mortar';
+  sortBy: 'date' | 'title' | 'mood' | 'privacy';
+  sortOrder: 'asc' | 'desc';
   isInitialized: boolean;
 }
 
@@ -45,6 +48,9 @@ interface JournalActions {
   setSelectedMood: (mood: string) => void;
   setSelectedPrivacy: (privacy: string) => void;
   setSelectedSource: (source: string) => void;
+  setLayoutMode: (mode: 'card' | 'grid' | 'list' | 'mortar') => void;
+  setSortBy: (sortBy: 'date' | 'title' | 'mood' | 'privacy') => void;
+  setSortOrder: (order: 'asc' | 'desc') => void;
   
   // Computed values
   filteredEntries: () => JournalEntry[];
@@ -69,6 +75,9 @@ export const useJournalStore = create<JournalState & JournalActions>()(
       selectedMood: '',
       selectedPrivacy: '',
       selectedSource: '',
+      layoutMode: 'card',
+      sortBy: 'date',
+      sortOrder: 'desc',
       isInitialized: false,
 
       // Actions
@@ -307,9 +316,21 @@ export const useJournalStore = create<JournalState & JournalActions>()(
         set({ selectedSource: source });
       },
 
+      setLayoutMode: (mode) => {
+        set({ layoutMode: mode });
+      },
+
+      setSortBy: (sortBy) => {
+        set({ sortBy });
+      },
+
+      setSortOrder: (order) => {
+        set({ sortOrder: order });
+      },
+
       // Computed values
       filteredEntries: () => {
-        const { entries, searchQuery, selectedTags, selectedMood, selectedPrivacy, selectedSource } = get();
+        const { entries, searchQuery, selectedTags, selectedMood, selectedPrivacy, selectedSource, sortBy, sortOrder } = get();
         
         return entries.filter((entry) => {
           // Search query
@@ -345,6 +366,27 @@ export const useJournalStore = create<JournalState & JournalActions>()(
           }
 
           return true;
+        }).sort((a, b) => {
+          let comparison = 0;
+          
+          switch (sortBy) {
+            case 'date':
+              comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+              break;
+            case 'title':
+              comparison = a.title.localeCompare(b.title);
+              break;
+            case 'mood':
+              comparison = (a.mood || '').localeCompare(b.mood || '');
+              break;
+            case 'privacy':
+              comparison = a.privacy.localeCompare(b.privacy);
+              break;
+            default:
+              comparison = 0;
+          }
+          
+          return sortOrder === 'asc' ? comparison : -comparison;
         });
       },
 

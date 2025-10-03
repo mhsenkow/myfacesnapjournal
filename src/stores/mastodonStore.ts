@@ -63,7 +63,7 @@ interface MastodonStore {
   postLimit: number;
   displayLimit: number;
   algorithm: 'latest' | 'trending' | 'viral' | 'diverse' | 'balanced' | 'fresh' | 'media_rich' | 'conversational' | 'random';
-  displayMode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined';
+  displayMode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined' | 'focused';
   isLiveFeed: boolean;
   liveFeedBatchSize: number;
   liveFeedInterval: number;
@@ -90,7 +90,7 @@ interface MastodonStore {
   setPostLimit: (limit: number) => void;
   setDisplayLimit: (limit: number) => void;
   setAlgorithm: (algorithm: 'latest' | 'trending' | 'viral' | 'diverse' | 'balanced' | 'fresh' | 'media_rich' | 'conversational' | 'random') => void;
-  setDisplayMode: (mode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined') => void;
+  setDisplayMode: (mode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined' | 'focused') => void;
   applyAlgorithm: () => void;
   initialize: () => void;
   setIsLiveFeed: (isLive: boolean) => void;
