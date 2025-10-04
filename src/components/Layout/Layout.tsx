@@ -30,7 +30,7 @@ export default function Layout({ children }: LayoutProps) {
   const [footerVisible, setFooterVisible] = useState(false)
   const location = useLocation()
   
-  // Hide mobile menu button on feed page
+  // Check if we're on feed page for styling
   const isFeedPage = location.pathname === '/feed'
 
   return (
@@ -47,15 +47,27 @@ export default function Layout({ children }: LayoutProps) {
       {/* Notification Panel - only render when open */}
       {isPanelOpen && <NotificationPanel />}
       
-      {/* Mobile Menu Button - only show when sidebar is collapsed on mobile and NOT in TikTok view */}
-      {state.sidebarCollapsed && !isFeedPage && (
+      {/* Mobile Menu Button - show when sidebar is collapsed on mobile */}
+      {state.sidebarCollapsed && (
         <button
           onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-50 lg:hidden p-3 rounded-xl glass transition-all duration-200 hover:scale-105 group"
+          className={`fixed top-4 left-4 z-50 lg:hidden p-3 rounded-xl transition-all duration-200 hover:scale-105 group ${
+            isFeedPage 
+              ? 'bg-black/20 backdrop-blur-sm border border-white/20' 
+              : 'glass'
+          }`}
           aria-label="Toggle menu"
         >
-          <div className="p-2 rounded-lg group-hover:bg-semantic-neutral-light transition-all duration-200">
-            <Menu className="w-5 h-5 text-semantic-neutral group-hover:text-semantic-primary transition-colors" />
+          <div className={`p-2 rounded-lg transition-all duration-200 ${
+            isFeedPage 
+              ? 'group-hover:bg-white/20' 
+              : 'group-hover:bg-semantic-neutral-light'
+          }`}>
+            <Menu className={`w-5 h-5 transition-colors ${
+              isFeedPage 
+                ? 'text-white group-hover:text-white/80' 
+                : 'text-semantic-neutral group-hover:text-semantic-primary'
+            }`} />
           </div>
         </button>
       )}
