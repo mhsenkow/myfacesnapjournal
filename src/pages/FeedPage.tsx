@@ -81,26 +81,79 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
 }) => {
   // Touch handling for TikTok view
   const tiktokContainerRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number; time: number; target: HTMLElement | null } | null>(null);
+  const lastTapRef = useRef<{ time: number; target: HTMLElement | null } | null>(null);
   
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // Prevent default to ensure smooth scrolling
     if (displayMode === 'tiktok') {
-      e.preventDefault();
+      const touch = e.touches[0];
+      const target = touch.target as HTMLElement;
+      
+      touchStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        time: Date.now(),
+        target
+      };
+      
+      // Check for double tap on text elements
+      const now = Date.now();
+      if (lastTapRef.current && 
+          now - lastTapRef.current.time < 300 && 
+          lastTapRef.current.target === target &&
+          target.classList.contains('post-content-text')) {
+        
+        // Double tap detected - copy text to clipboard
+        const textToCopy = target.textContent || '';
+        if (textToCopy) {
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            // Show a brief visual feedback
+            target.style.backgroundColor = 'rgba(0, 255, 0, 0.3)';
+            setTimeout(() => {
+              target.style.backgroundColor = '';
+            }, 200);
+          }).catch(() => {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+          });
+        }
+        e.preventDefault();
+        return;
+      }
+      
+      lastTapRef.current = {
+        time: now,
+        target
+      };
     }
   }, [displayMode]);
   
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    // Allow vertical scrolling in TikTok view
-    if (displayMode === 'tiktok') {
-      // Prevent horizontal scrolling
+    if (displayMode === 'tiktok' && touchStartRef.current) {
       const touch = e.touches[0];
-      const target = touch.target as HTMLElement;
-      const horizontalMovement = Math.abs(touch.clientX - target.offsetLeft);
-      const verticalMovement = Math.abs(touch.clientY - target.offsetTop);
+      const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
+      const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
       
-      if (horizontalMovement > verticalMovement) {
+      // If user is dragging (swiping), prevent text selection
+      if (deltaX > 10 || deltaY > 10) {
         e.preventDefault();
       }
+      
+      // Prevent horizontal scrolling
+      if (deltaX > deltaY) {
+        e.preventDefault();
+      }
+    }
+  }, [displayMode]);
+  
+  const handleTouchEnd = useCallback((_e: React.TouchEvent) => {
+    if (displayMode === 'tiktok') {
+      touchStartRef.current = null;
     }
   }, [displayMode]);
   // Helper function to render platform badge
@@ -1089,6 +1142,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
           }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {posts.map((post) => (
             <div 
@@ -1109,8 +1163,8 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
               <div className="flex-1 flex flex-col justify-between p-4 sm:p-6 lg:p-8 relative">
                 {/* Author Info - Top Left */}
                 <div className="absolute top-4 left-4 sm:top-6 sm:left-6 lg:top-8 lg:left-8 z-10">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl overflow-hidden">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl overflow-hidden">
                       {post.account.avatar ? (
                         <img
                           src={post.account.avatar}
@@ -1136,9 +1190,9 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 </div>
 
                 {/* Post Content - Center */}
-                <div className="flex-1 flex items-center justify-center px-8">
-                  <div className="text-center max-w-lg">
-                    <p className="text-white text-2xl leading-relaxed font-medium drop-shadow-lg mb-6">
+                <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+                  <div className="text-center max-w-lg w-full">
+                    <p className="post-content-text text-white text-lg sm:text-xl lg:text-2xl leading-relaxed font-medium drop-shadow-lg mb-4 sm:mb-6 cursor-pointer select-none px-2 py-2 rounded-lg">
                       {formatContent(post.content)}
                     </p>
                     
