@@ -1,6 +1,15 @@
 # MyFace SnapJournal
 
 > **AI-Powered Personal Journal with Social Integration & Beautiful UI**
+
+STILL HIGHLY....like half working but the bluesky portion is going. Mastodon too if you build locally. 
+
+https://myface-snapjournal.vercel.app/feed
+
+If you get bored, I'm exploring this app to make a better skin  for the more open-source / etc. apps. Goal is to be as addictively sticky as 'this' etc. but connect around the more  federated stuff. 
+
+https://github.com/mhsenkow/myfacesnapjournal 
+
 <img width="2560" height="1401" alt="image" src="https://github.com/user-attachments/assets/d33f929e-61cd-4256-ac84-577c9a254b2b" />
 ![Uploading image.png…]()
 
