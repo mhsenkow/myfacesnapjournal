@@ -10,6 +10,7 @@
  */
 
 import React, { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useApp } from '../../contexts/AppContext'
 import { useNotificationStore } from '../../stores/notificationStore'
 import Sidebar from './Sidebar'
@@ -27,6 +28,10 @@ export default function Layout({ children }: LayoutProps) {
   const { state, toggleSidebar } = useApp()
   const { isPanelOpen } = useNotificationStore()
   const [footerVisible, setFooterVisible] = useState(false)
+  const location = useLocation()
+  
+  // Hide mobile menu button on feed page
+  const isFeedPage = location.pathname === '/feed'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-50 to-pink-100 dark:from-slate-900 dark:via-purple-900 dark:to-blue-900 text-neutral-900">
@@ -42,8 +47,8 @@ export default function Layout({ children }: LayoutProps) {
       {/* Notification Panel - only render when open */}
       {isPanelOpen && <NotificationPanel />}
       
-      {/* Mobile Menu Button - only show when sidebar is collapsed on mobile */}
-      {state.sidebarCollapsed && (
+      {/* Mobile Menu Button - only show when sidebar is collapsed on mobile and NOT in TikTok view */}
+      {state.sidebarCollapsed && !isFeedPage && (
         <button
           onClick={toggleSidebar}
           className="fixed top-4 left-4 z-50 lg:hidden p-3 rounded-xl glass transition-all duration-200 hover:scale-105 group"
