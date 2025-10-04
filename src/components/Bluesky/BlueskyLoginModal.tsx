@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { X, Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { useBlueskyStore } from '../../stores/blueskyStore';
+import Portal from '../../utils/portal';
 
 interface BlueskyLoginModalProps {
   isOpen: boolean;
@@ -53,16 +54,16 @@ const BlueskyLoginModal: React.FC<BlueskyLoginModalProps> = ({ isOpen, onClose }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
-        onClick={handleClose}
-      />
-      
-      {/* Modal */}
-      <div className="relative w-full max-w-md mx-4 glass-panel glass-strong border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-2xl backdrop-blur-xl">
-        {/* Header */}
+    <Portal>
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        {/* Backdrop */}
+        <div 
+          className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+          onClick={handleClose}
+        />
+        
+        {/* Modal */}
+        <div className="relative w-full max-w-md mx-4 glass-panel glass-strong border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-2xl backdrop-blur-xl">
         <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
@@ -190,8 +191,9 @@ const BlueskyLoginModal: React.FC<BlueskyLoginModalProps> = ({ isOpen, onClose }
             </a>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </Portal>
   );
 };
 

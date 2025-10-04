@@ -9,6 +9,7 @@ import { Globe, X, AlertCircle, Loader2, ExternalLink, CheckCircle } from 'lucid
 import { invoke } from '@tauri-apps/api/core';
 import { mastodonService } from '../../services/mastodonService';
 import { MastodonInstance } from '../../types/mastodon';
+import Portal from '../../utils/portal';
 
 // Detect if we're running in Tauri (desktop) or browser environment
 const isTauri = () => {
@@ -230,8 +231,9 @@ const MastodonLoginModal: React.FC<MastodonLoginModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="glass rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <Portal>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="glass rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -430,8 +432,9 @@ const MastodonLoginModal: React.FC<MastodonLoginModalProps> = ({
             </p>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </Portal>
   );
 };
 
