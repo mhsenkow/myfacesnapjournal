@@ -77,8 +77,12 @@ export default function Layout({ children }: LayoutProps) {
         state.sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
       }`}>
         {/* Scrollable Page content */}
-        <main className="p-6 pt-16 lg:pt-6 overflow-y-auto h-screen">
-          <div className="max-w-7xl mx-auto h-full">
+        <main className={`p-6 pt-16 lg:pt-6 h-screen ${
+          isFeedPage ? 'overflow-hidden' : 'overflow-y-auto'
+        }`}>
+          <div className={`max-w-7xl mx-auto ${
+            isFeedPage ? 'h-full' : 'h-full'
+          }`}>
             {children}
           </div>
         </main>

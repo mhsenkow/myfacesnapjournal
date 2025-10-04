@@ -51,7 +51,7 @@ const SettingsPage: React.FC = () => {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className={`${activeTab === 'integrations' ? 'h-full flex flex-col' : 'space-y-6'}`}>
       {/* Page Header */}
       <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 mb-6">
         <div>
@@ -61,7 +61,9 @@ const SettingsPage: React.FC = () => {
       </div>
 
       {/* Settings Tabs */}
-      <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700">
+      <div className={`glass rounded-2xl border border-neutral-200 dark:border-neutral-700 ${
+        activeTab === 'integrations' ? 'flex-1 flex flex-col' : ''
+      }`}>
         {/* Tab Navigation */}
         <div className="border-b border-neutral-200 dark:border-neutral-700">
           <nav className="flex space-x-8 px-6">
@@ -86,7 +88,9 @@ const SettingsPage: React.FC = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div className={`p-6 ${
+          activeTab === 'integrations' ? 'flex-1 overflow-y-auto' : ''
+        }`}>
           {/* Profile Settings */}
           {activeTab === 'profile' && (
             <div className="space-y-6">
@@ -314,8 +318,7 @@ const SettingsPage: React.FC = () => {
                   </div>
                   <input
                     type="checkbox"
-                    checked={settings.enableCompanionPersona}
-                    onChange={(e) => updateSettings({ enableCompanionPersona: e.target.checked })}
+                    defaultChecked
                     className="rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
                   />
                 </div>
