@@ -17,6 +17,7 @@ import { useJournalStore } from './journalStore';
 interface BlueskyState {
   // Authentication
   auth: BlueskyAuth;
+  sessionExpired: boolean;
   
   // Posts and feeds
   posts: BlueskyPost[];
@@ -93,6 +94,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
         server: 'https://bsky.social',
         user: undefined
       },
+      sessionExpired: false,
       
       posts: [],
       allPosts: [],
@@ -178,6 +180,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
             server: 'https://bsky.social',
             user: undefined
           },
+          sessionExpired: true,
           posts: [],
           allPosts: [],
           cursor: null,
@@ -188,13 +191,52 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
       },
 
       refreshSession: async () => {
-        const { auth, agent } = get();
-        if (!auth.isAuthenticated || !agent || !auth.session) return;
+        const { auth } = get();
+        if (!auth.isAuthenticated || !auth.session) {
+          console.log('Bluesky refreshSession: Not authenticated or no session');
+          return;
+        }
         
         try {
-          // For now, we'll just re-login if session expires
-          // In a production app, you'd implement proper token refresh
-          console.log('Session refresh not implemented yet');
+          console.log('Bluesky refreshSession: Attempting to refresh session');
+          
+          // Create a fresh agent for the refresh
+          const agent = new BskyAgent({ service: 'https://bsky.social' });
+          
+          // Try to resume the session first
+          try {
+            await agent.resumeSession(auth.session as any);
+            console.log('Bluesky refreshSession: Session resumed successfully');
+            
+            // Test the session by making a simple request
+            try {
+              const testResponse = await agent.getProfile({ actor: auth.session.did });
+              if (testResponse.success) {
+                console.log('Bluesky refreshSession: Session is valid');
+                return;
+              }
+            } catch (testError) {
+              console.log('Bluesky refreshSession: Session test failed, session may be expired');
+            }
+          } catch (resumeError) {
+            console.log('Bluesky refreshSession: Session resume failed, session expired');
+          }
+          
+          // If resume fails, the session is expired - we need to re-login
+          console.log('Bluesky refreshSession: Session expired, user needs to re-login');
+          
+          // If session is expired, logout user and show notification
+          console.log('Bluesky refreshSession: Session expired, logging out');
+          get().logout();
+          
+          // Show user-friendly notification
+          if (typeof window !== 'undefined') {
+            // Import the toast system dynamically to avoid circular dependencies
+            import('../contexts/AppContext').then(({ useApp }) => {
+              // This will be handled by the component that calls refreshSession
+            });
+          }
+          
         } catch (error) {
           console.error('Failed to refresh Bluesky session:', error);
           // If refresh fails, logout user
@@ -263,7 +305,25 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           console.log('Bluesky agent created and session resumed successfully');
         } catch (error) {
           console.error('Failed to resume session for fetchPosts:', error);
-          return;
+          
+          // Try to refresh the session before giving up
+          try {
+            console.log('Attempting to refresh session before retrying fetchPosts');
+            await get().refreshSession();
+            
+            // Try again with refreshed session
+            const refreshedAuth = get().auth;
+            if (refreshedAuth.isAuthenticated && refreshedAuth.session) {
+              await agent.resumeSession(refreshedAuth.session as any);
+              console.log('Bluesky agent created and refreshed session resumed successfully');
+            } else {
+              console.error('Session refresh failed, cannot fetch posts');
+              return;
+            }
+          } catch (refreshError) {
+            console.error('Failed to refresh session for fetchPosts:', refreshError);
+            return;
+          }
         }
         
         console.log('Bluesky fetchPosts: Starting fetch', { feedSettings, limit });
@@ -678,6 +738,22 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
               console.log('Auto-fetching posts after session restoration...');
               get().fetchPosts();
             }, 100);
+            
+            // Set up periodic session refresh (every 30 minutes)
+            const refreshInterval = setInterval(async () => {
+              const { auth } = get();
+              if (auth.isAuthenticated) {
+                try {
+                  await get().refreshSession();
+                  console.log('Bluesky session refreshed automatically');
+                } catch (error) {
+                  console.error('Failed to refresh Bluesky session automatically:', error);
+                  clearInterval(refreshInterval);
+                }
+              } else {
+                clearInterval(refreshInterval);
+              }
+            }, 30 * 60 * 1000); // 30 minutes
             
             return true;
           }
