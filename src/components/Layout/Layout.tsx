@@ -46,7 +46,7 @@ export default function Layout({ children }: LayoutProps) {
       {state.sidebarCollapsed && (
         <button
           onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-40 lg:hidden p-3 rounded-xl glass transition-all duration-200 hover:scale-105 group"
+          className="fixed top-4 left-4 z-50 lg:hidden p-3 rounded-xl glass transition-all duration-200 hover:scale-105 group"
           aria-label="Toggle menu"
         >
           <div className="p-2 rounded-lg group-hover:bg-semantic-neutral-light transition-all duration-200">
@@ -61,7 +61,7 @@ export default function Layout({ children }: LayoutProps) {
       }`}>
         {/* Scrollable Page content */}
         <main className="p-6 pt-16 lg:pt-6 overflow-y-auto h-screen">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto h-full">
             {children}
           </div>
         </main>

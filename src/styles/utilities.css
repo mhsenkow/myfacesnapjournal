@@ -116,6 +116,8 @@
   .tiktok-friction {
     touch-action: pan-y !important;
     overscroll-behavior-y: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: y mandatory !important;
   }
   
   .touch-manipulation {
@@ -123,6 +125,13 @@
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important;
     user-select: none !important;
+  }
+  
+  /* Ensure full height for mobile TikTok view */
+  .tiktok-friction > div {
+    min-height: 100vh !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: always !important;
   }
 }
 

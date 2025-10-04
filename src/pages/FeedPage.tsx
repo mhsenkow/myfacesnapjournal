@@ -29,7 +29,7 @@
  * 5. **Dense**: Ultra-compact layout for power users
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Rss, 
   Heart,
@@ -73,12 +73,36 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
   displayMode, 
   isScrolling, 
   formatContent, 
-  formatRelativeTime,
-  getPostAnimationClass,
-  toggleLike,
-  toggleBookmark,
-  onInspectPost
+  formatRelativeTime, 
+  getPostAnimationClass, 
+  toggleLike, 
+  toggleBookmark, 
+  onInspectPost 
 }) => {
+  // Touch handling for TikTok view
+  const tiktokContainerRef = useRef<HTMLDivElement>(null);
+  
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Prevent default to ensure smooth scrolling
+    if (displayMode === 'tiktok') {
+      e.preventDefault();
+    }
+  }, [displayMode]);
+  
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    // Allow vertical scrolling in TikTok view
+    if (displayMode === 'tiktok') {
+      // Prevent horizontal scrolling
+      const touch = e.touches[0];
+      const target = touch.target as HTMLElement;
+      const horizontalMovement = Math.abs(touch.clientX - target.offsetLeft);
+      const verticalMovement = Math.abs(touch.clientY - target.offsetTop);
+      
+      if (horizontalMovement > verticalMovement) {
+        e.preventDefault();
+      }
+    }
+  }, [displayMode]);
   // Helper function to render platform badge
   const renderPlatformBadge = (post: any) => {
     const isBluesky = post.url?.includes('bsky.app');
@@ -1054,14 +1078,17 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
   // TikTok Layout - Vertical scrolling with full-screen posts
   if (displayMode === 'tiktok') {
     return (
-      <div className="h-screen overflow-hidden relative">
+      <div className="fixed inset-0 top-16 lg:top-0 lg:left-16 lg:right-0 z-10 bg-gradient-to-br from-blue-100 via-purple-50 to-pink-100 dark:from-slate-900 dark:via-purple-900 dark:to-blue-900">
         <div 
+          ref={tiktokContainerRef}
           className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide smooth-scroll tiktok-friction"
           style={{
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
             touchAction: 'pan-y'
           }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
         >
           {posts.map((post) => (
             <div 
