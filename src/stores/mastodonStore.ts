@@ -63,8 +63,8 @@ interface MastodonStore {
   instanceUrl: string;
   postLimit: number;
   displayLimit: number;
-  algorithm: 'latest' | 'trending' | 'viral' | 'diverse' | 'balanced' | 'fresh' | 'media_rich' | 'conversational' | 'random';
-  displayMode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined' | 'focused';
+  algorithm: 'latest' | 'trending' | 'viral' | 'diverse' | 'balanced' | 'fresh' | 'media_rich' | 'conversational' | 'following' | 'random';
+  displayMode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined' | 'focused' | 'tiktok';
   isLiveFeed: boolean;
   liveFeedBatchSize: number;
   liveFeedInterval: number;
@@ -78,6 +78,7 @@ interface MastodonStore {
   fetchPosts: (limit?: number) => Promise<void>;
   fetchPostReplies: (postId: string) => Promise<MastodonPost[]>;
   fetchPublicTimeline: () => Promise<void>;
+  fetchHomeTimeline: () => Promise<void>;
   clearImportedPosts: () => void;
   setLastImportError: (error: string | undefined) => void;
   setImporting: (isImporting: boolean) => void;
@@ -91,7 +92,7 @@ interface MastodonStore {
   setInstanceUrl: (url: string) => void;
   setPostLimit: (limit: number) => void;
   setDisplayLimit: (limit: number) => void;
-  setAlgorithm: (algorithm: 'latest' | 'trending' | 'viral' | 'diverse' | 'balanced' | 'fresh' | 'media_rich' | 'conversational' | 'random') => void;
+  setAlgorithm: (algorithm: 'latest' | 'trending' | 'viral' | 'diverse' | 'balanced' | 'fresh' | 'media_rich' | 'conversational' | 'following' | 'random') => void;
   setDisplayMode: (mode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined' | 'focused') => void;
   applyAlgorithm: () => void;
   initialize: () => void;
@@ -387,6 +388,45 @@ export const useMastodonStore = create<MastodonStore>()(
         }
       },
 
+      fetchHomeTimeline: async () => {
+        const { auth, postLimit } = get();
+        
+        if (!auth.isAuthenticated || !auth.accessToken) {
+          return;
+        }
+
+        set({ isLoadingPosts: true, lastImportError: undefined });
+
+        try {
+          console.log(`Fetching ${postLimit} posts from home timeline (following feed)`);
+          
+          // Fetch home timeline posts (posts from people you follow)
+          const allPosts = await mastodonService.getTimeline(
+            auth.instance,
+            auth.accessToken,
+            postLimit
+          );
+
+          console.log(`Successfully fetched ${allPosts.length} posts from home timeline`);
+          
+          // Store posts and apply algorithm
+          set({ allPosts });
+          
+          // Apply algorithm immediately to show available posts
+          get().applyAlgorithm();
+          
+          console.log(`Home timeline ready! Have ${allPosts.length} posts from people you follow`);
+        } catch (error) {
+          console.error('Failed to fetch home timeline:', error);
+          const errorMessage = error instanceof Error && error.message.includes('429') 
+            ? 'Rate limited by Mastodon instance. Try again in a few minutes.'
+            : 'Failed to fetch home timeline';
+          set({ lastImportError: errorMessage });
+        } finally {
+          set({ isLoadingPosts: false });
+        }
+      },
+
       clearImportedPosts: () => {
         set({ posts: [] });
       },
@@ -459,8 +499,22 @@ export const useMastodonStore = create<MastodonStore>()(
 
       setAlgorithm: (algorithm) => {
         set({ algorithm });
-        // Apply new algorithm
-        get().applyAlgorithm();
+        
+        // If switching to "following" algorithm, fetch home timeline
+        if (algorithm === 'following') {
+          console.log('Mastodon: Switching to following algorithm, fetching home timeline');
+          // Clear existing posts and fetch home timeline
+          set({ 
+            posts: [],
+            allPosts: [],
+            isLoadingPosts: true
+          });
+          // Fetch home timeline posts
+          get().fetchHomeTimeline();
+        } else {
+          // Apply new algorithm
+          get().applyAlgorithm();
+        }
       },
 
       applyAlgorithm: () => {
@@ -658,13 +712,76 @@ export const useMastodonStore = create<MastodonStore>()(
                 const hasPoll = post.poll !== undefined;
                 const hasReplies = post.replies_count > 0;
                 const isReply = post.in_reply_to_id !== null;
+                const hasMentions = content.includes('@');
+                const hasQuestionWords = /\b(what|how|why|when|where|who|which|would|could|should|do you|have you|are you|is there|can you)\b/.test(content);
+                const hasDiscussionPrompts = /\b(thoughts|opinions|discuss|debate|agree|disagree|what do you think|your take|perspective)\b/.test(content);
                 
-                return hasQuestion || hasPoll || hasReplies || isReply;
+                return hasQuestion || hasPoll || hasReplies || isReply || hasMentions || hasQuestionWords || hasDiscussionPrompts;
               })
               .sort((a, b) => {
-                const aScore = getEngagementScore(a) * getTimeDecayScore(a);
-                const bScore = getEngagementScore(b) * getTimeDecayScore(b);
+                const aContent = a.content.toLowerCase();
+                const bContent = b.content.toLowerCase();
+                
+                // Boost score for posts with more conversational elements
+                const aConversationalScore = 
+                  (aContent.includes('?') ? 2 : 0) +
+                  (a.replies_count > 0 ? 1.5 : 0) +
+                  (aContent.includes('@') ? 1 : 0) +
+                  (a.poll !== undefined ? 2 : 0) +
+                  (/\b(what|how|why|when|where|who|which|would|could|should|do you|have you|are you|is there|can you)\b/.test(aContent) ? 1.5 : 0) +
+                  (/\b(thoughts|opinions|discuss|debate|agree|disagree|what do you think|your take|perspective)\b/.test(aContent) ? 2 : 0);
+                
+                const bConversationalScore = 
+                  (bContent.includes('?') ? 2 : 0) +
+                  (b.replies_count > 0 ? 1.5 : 0) +
+                  (bContent.includes('@') ? 1 : 0) +
+                  (b.poll !== undefined ? 2 : 0) +
+                  (/\b(what|how|why|when|where|who|which|would|could|should|do you|have you|are you|is there|can you)\b/.test(bContent) ? 1.5 : 0) +
+                  (/\b(thoughts|opinions|discuss|debate|agree|disagree|what do you think|your take|perspective)\b/.test(bContent) ? 2 : 0);
+                
+                const aScore = (getEngagementScore(a) + aConversationalScore) * getTimeDecayScore(a);
+                const bScore = (getEngagementScore(b) + bConversationalScore) * getTimeDecayScore(b);
                 return bScore - aScore;
+              })
+              .slice(0, displayLimit);
+            break;
+            
+          case 'following':
+            // Posts from people you follow (timeline posts)
+            selectedPosts = [...filteredPosts]
+              .filter(post => {
+                // For Mastodon, we need to check if this is from someone we follow
+                // Since we're using public timeline, we'll filter by known followed accounts
+                // In a real implementation, you'd fetch the home timeline instead
+                // For now, we'll prioritize posts that are likely from followed accounts
+                // by checking for engagement patterns and account characteristics
+                const account = post.account;
+                if (!account) return false;
+                
+                // Prioritize accounts with good engagement ratios
+                const engagementRatio = account.followers_count > 0 ? 
+                  (account.statuses_count / account.followers_count) : 0;
+                
+                // Filter for accounts that seem like they're from people you'd follow
+                // (not bots, not too popular, have reasonable engagement)
+                return account.followers_count > 10 && 
+                       account.followers_count < 10000 && 
+                       engagementRatio > 0.1 &&
+                       account.following !== false;
+              })
+              .sort((a, b) => {
+                // Sort by recency first, then by engagement
+                const timeA = new Date(a.created_at).getTime();
+                const timeB = new Date(b.created_at).getTime();
+                const timeDiff = timeB - timeA;
+                
+                if (Math.abs(timeDiff) < 3600000) { // Within 1 hour, sort by engagement
+                  const aScore = getEngagementScore(a) * getTimeDecayScore(a);
+                  const bScore = getEngagementScore(b) * getTimeDecayScore(b);
+                  return bScore - aScore;
+                } else {
+                  return timeDiff; // Sort by recency
+                }
               })
               .slice(0, displayLimit);
             break;

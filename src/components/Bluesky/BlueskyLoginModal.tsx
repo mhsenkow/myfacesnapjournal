@@ -111,7 +111,7 @@ const BlueskyLoginModal: React.FC<BlueskyLoginModalProps> = ({ isOpen, onClose }
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="username.bsky.social"
-                className="w-full px-4 py-3 glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-xl glass-text-primary placeholder-glass-text-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 disabled={isLoading}
               />
               <p className="text-xs glass-text-muted mt-1">
@@ -131,7 +131,7 @@ const BlueskyLoginModal: React.FC<BlueskyLoginModalProps> = ({ isOpen, onClose }
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your app password"
-                  className="w-full px-4 py-3 pr-12 glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-xl glass-text-primary placeholder-glass-text-muted focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 pr-12 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   disabled={isLoading}
                 />
                 <button

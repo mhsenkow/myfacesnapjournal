@@ -28,7 +28,9 @@ import {
   Rss,
   Plus,
   Settings,
-  Wrench
+  Wrench,
+  Users,
+  Smartphone
 } from 'lucide-react';
 
 interface FooterProps {
@@ -68,7 +70,85 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
     fetchPublicTimeline
   } = useMastodonStore();
 
-  const { auth: blueskyAuth } = useBlueskyStore();
+  const { 
+    auth: blueskyAuth,
+    algorithm: blueskyAlgorithm,
+    setAlgorithm: setBlueskyAlgorithm,
+    displayMode: blueskyDisplayMode,
+    setDisplayMode: setBlueskyDisplayMode,
+    displayLimit: blueskyDisplayLimit,
+    setDisplayLimit: setBlueskyDisplayLimit,
+    isLiveFeed: blueskyIsLiveFeed,
+    setIsLiveFeed: setBlueskyIsLiveFeed,
+    liveFeedBatchSize: blueskyLiveFeedBatchSize,
+    setLiveFeedBatchSize: setBlueskyLiveFeedBatchSize,
+    liveFeedInterval: blueskyLiveFeedInterval,
+    setLiveFeedInterval: setBlueskyLiveFeedInterval,
+    applyAlgorithm: applyBlueskyAlgorithm
+  } = useBlueskyStore();
+
+  // Helper functions to handle algorithm changes for both platforms
+  const handleAlgorithmChange = (newAlgorithm: typeof algorithm) => {
+    if (auth.isAuthenticated) {
+      setAlgorithm(newAlgorithm);
+    }
+    if (blueskyAuth.isAuthenticated) {
+      setBlueskyAlgorithm(newAlgorithm);
+    }
+  };
+
+  const handleDisplayModeChange = (newMode: typeof displayMode) => {
+    if (auth.isAuthenticated) {
+      setDisplayMode(newMode);
+    }
+    if (blueskyAuth.isAuthenticated) {
+      setBlueskyDisplayMode(newMode);
+    }
+  };
+
+  const handleDisplayLimitChange = (newLimit: number) => {
+    if (auth.isAuthenticated) {
+      setDisplayLimit(newLimit);
+    }
+    if (blueskyAuth.isAuthenticated) {
+      setBlueskyDisplayLimit(newLimit);
+    }
+  };
+
+  const handleLiveFeedToggle = () => {
+    if (auth.isAuthenticated) {
+      setIsLiveFeed(!isLiveFeed);
+    }
+    if (blueskyAuth.isAuthenticated) {
+      setBlueskyIsLiveFeed(!blueskyIsLiveFeed);
+    }
+  };
+
+  const handleLiveFeedBatchSizeChange = (newSize: number) => {
+    if (auth.isAuthenticated) {
+      setLiveFeedBatchSize(newSize);
+    }
+    if (blueskyAuth.isAuthenticated) {
+      setBlueskyLiveFeedBatchSize(newSize);
+    }
+  };
+
+  const handleLiveFeedIntervalChange = (newInterval: number) => {
+    if (auth.isAuthenticated) {
+      setLiveFeedInterval(newInterval);
+    }
+    if (blueskyAuth.isAuthenticated) {
+      setBlueskyLiveFeedInterval(newInterval);
+    }
+  };
+
+  // Get current values based on which platform is active
+  const currentAlgorithm = auth.isAuthenticated ? algorithm : blueskyAlgorithm;
+  const currentDisplayMode = auth.isAuthenticated ? displayMode : blueskyDisplayMode;
+  const currentDisplayLimit = auth.isAuthenticated ? displayLimit : blueskyDisplayLimit;
+  const currentIsLiveFeed = auth.isAuthenticated ? isLiveFeed : blueskyIsLiveFeed;
+  const currentLiveFeedBatchSize = auth.isAuthenticated ? liveFeedBatchSize : blueskyLiveFeedBatchSize;
+  const currentLiveFeedInterval = auth.isAuthenticated ? liveFeedInterval : blueskyLiveFeedInterval;
 
   if (!auth.isAuthenticated && !blueskyAuth.isAuthenticated) {
     return null;
@@ -462,6 +542,17 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                 >
                   <Focus className="w-4 h-4" />
                 </button>
+                <button
+                  onClick={() => setDisplayMode('tiktok')}
+                  className={`p-2 rounded-md transition-colors ${
+                    displayMode === 'tiktok'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
+                  }`}
+                  title="TikTok Style (Vertical Feed)"
+                >
+                  <Smartphone className="w-4 h-4" />
+                </button>
               </div>
               <span className="text-xs glass-text-muted mt-1">Layout</span>
             </div>
@@ -470,9 +561,9 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
             <div className="flex flex-col">
               <div className="flex items-center gap-1 glass-subtle rounded-lg p-1">
                 <button
-                  onClick={() => setAlgorithm('latest')}
+                  onClick={() => handleAlgorithmChange('latest')}
                   className={`p-2 rounded-md transition-colors ${
-                    algorithm === 'latest'
+                    currentAlgorithm === 'latest'
                       ? 'bg-purple-600 text-white shadow-sm'
                       : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
@@ -481,9 +572,9 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                   <Clock className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setAlgorithm('trending')}
+                  onClick={() => handleAlgorithmChange('trending')}
                   className={`p-2 rounded-md transition-colors ${
-                    algorithm === 'trending'
+                    currentAlgorithm === 'trending'
                       ? 'bg-purple-600 text-white shadow-sm'
                       : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
@@ -492,9 +583,9 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                   <TrendingUp className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setAlgorithm('diverse')}
+                  onClick={() => handleAlgorithmChange('diverse')}
                   className={`p-2 rounded-md transition-colors ${
-                    algorithm === 'diverse'
+                    currentAlgorithm === 'diverse'
                       ? 'bg-purple-600 text-white shadow-sm'
                       : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
@@ -503,9 +594,9 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                   <Shuffle className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setAlgorithm('balanced')}
+                  onClick={() => handleAlgorithmChange('balanced')}
                   className={`p-2 rounded-md transition-colors ${
-                    algorithm === 'balanced'
+                    currentAlgorithm === 'balanced'
                       ? 'bg-purple-600 text-white shadow-sm'
                       : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
@@ -514,9 +605,9 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                   <Target className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setAlgorithm('viral')}
+                  onClick={() => handleAlgorithmChange('viral')}
                   className={`p-2 rounded-md transition-colors ${
-                    algorithm === 'viral'
+                    currentAlgorithm === 'viral'
                       ? 'bg-purple-600 text-white shadow-sm'
                       : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
@@ -525,9 +616,9 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                   <Zap className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setAlgorithm('fresh')}
+                  onClick={() => handleAlgorithmChange('fresh')}
                   className={`p-2 rounded-md transition-colors ${
-                    algorithm === 'fresh'
+                    currentAlgorithm === 'fresh'
                       ? 'bg-purple-600 text-white shadow-sm'
                       : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
@@ -536,9 +627,9 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                   <Sparkles className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setAlgorithm('media_rich')}
+                  onClick={() => handleAlgorithmChange('media_rich')}
                   className={`p-2 rounded-md transition-colors ${
-                    algorithm === 'media_rich'
+                    currentAlgorithm === 'media_rich'
                       ? 'bg-purple-600 text-white shadow-sm'
                       : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
@@ -547,9 +638,9 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                   <Image className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setAlgorithm('conversational')}
+                  onClick={() => handleAlgorithmChange('conversational')}
                   className={`p-2 rounded-md transition-colors ${
-                    algorithm === 'conversational'
+                    currentAlgorithm === 'conversational'
                       ? 'bg-purple-600 text-white shadow-sm'
                       : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}
@@ -558,9 +649,20 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                   <MessageCircle className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setAlgorithm('random')}
+                  onClick={() => handleAlgorithmChange('following')}
                   className={`p-2 rounded-md transition-colors ${
-                    algorithm === 'random'
+                    currentAlgorithm === 'following'
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
+                  }`}
+                  title="Posts from People You Follow"
+                >
+                  <Users className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleAlgorithmChange('random')}
+                  className={`p-2 rounded-md transition-colors ${
+                    currentAlgorithm === 'random'
                       ? 'bg-purple-600 text-white shadow-sm'
                       : 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
                   }`}

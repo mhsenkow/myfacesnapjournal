@@ -23,7 +23,6 @@ import {
   ChevronLeft, 
   ChevronRight,
   Rss,
-  Globe,
   User
 } from 'lucide-react'
 
@@ -115,24 +114,34 @@ const Sidebar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path
 
   return (
-    <aside className={`fixed left-0 top-0 z-50 h-screen glass border-r border-neutral-200 dark:border-neutral-700 transition-all duration-normal ease-in-out flex flex-col ${
-      state.sidebarCollapsed ? 'w-16' : 'w-64'
-    }`}>
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {!state.sidebarCollapsed && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm lg:hidden transition-opacity duration-300"
+          onClick={() => toggleSidebar()}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <aside className={`fixed left-0 top-0 z-50 h-screen glass-sidebar transition-all duration-300 ease-in-out flex flex-col ${
+        state.sidebarCollapsed ? 'w-16' : 'w-64'
+      } ${state.sidebarCollapsed ? 'lg:translate-x-0 -translate-x-full' : 'translate-x-0'}`}>
       {/* Header */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-neutral-200 dark:border-neutral-700 flex-shrink-0">
+      <div className="flex items-center justify-between h-16 px-md border-b border-semantic-neutral-light flex-shrink-0">
         {!state.sidebarCollapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+          <div className="flex items-center gap-sm">
+            <div className="w-8 h-8 bg-gradient-brand rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">MF</span>
             </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            <h1 className="text-xl font-bold bg-gradient-brand-text">
               MyFace
             </h1>
           </div>
         )}
         <button
           onClick={toggleSidebar}
-          className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all duration-200 hover:scale-105"
+          className="p-sm rounded-lg hover:bg-semantic-neutral-light transition-all duration-200 hover:scale-105"
           title={state.sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {state.sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
@@ -140,8 +149,8 @@ const Sidebar: React.FC = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 overflow-y-auto">
-        <ul className="space-y-1">
+      <nav className="flex-1 p-md overflow-y-auto">
+        <ul className="space-y-xs">
           {navItems.map((item) => {
             const Icon = item.icon
             const active = isActive(item.path)
@@ -149,25 +158,25 @@ const Sidebar: React.FC = () => {
               <li key={item.id}>
                 <button
                   onClick={() => handleNavClick(item)}
-                  className={`w-full flex items-center px-3 py-3 rounded-xl transition-all duration-200 group relative ${
+                  className={`w-full flex items-center px-md py-md rounded-xl transition-all duration-200 group relative ${
                     active
-                      ? 'bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 text-neutral-700 dark:text-purple-300 shadow-sm'
-                      : 'text-neutral-200 dark:text-neutral-800 hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50 hover:text-neutral-700 dark:hover:text-neutral-800 hover:scale-[1.02]'
+                      ? 'bg-semantic-primary-light text-semantic-primary shadow-sm'
+                      : 'text-semantic-neutral hover:bg-semantic-neutral-light hover:text-semantic-neutral-dark hover:scale-[1.02]'
                   }`}
                   title={state.sidebarCollapsed ? item.description : undefined}
                 >
-                  <div className={`p-1 rounded-lg transition-all duration-200 ${
+                  <div className={`p-xs rounded-lg transition-all duration-200 ${
                     active 
-                      ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white shadow-md' 
-                      : 'group-hover:bg-neutral-200/50 dark:group-hover:bg-neutral-700/50'
+                      ? 'bg-semantic-primary text-white shadow-md' 
+                      : 'group-hover:bg-semantic-neutral-light'
                   }`}>
                     <Icon size={16} className="flex-shrink-0" />
                   </div>
                   {!state.sidebarCollapsed && (
-                    <span className="ml-3 text-sm font-medium">{item.label}</span>
+                    <span className="ml-md text-sm font-medium">{item.label}</span>
                   )}
                   {active && !state.sidebarCollapsed && (
-                    <div className="ml-auto w-2 h-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"></div>
+                    <div className="ml-auto w-2 h-2 bg-semantic-primary rounded-full"></div>
                   )}
                 </button>
               </li>
@@ -179,9 +188,9 @@ const Sidebar: React.FC = () => {
 
       {/* Feedback Section - Above Profile */}
       {!state.sidebarCollapsed && (
-        <div className="p-4 border-t border-neutral-200 dark:border-neutral-700 flex-shrink-0">
-          <div className="mb-4">
-            <h3 className="text-sm font-medium glass-text-secondary mb-3">Feedback</h3>
+        <div className="p-md border-t border-semantic-neutral-light flex-shrink-0">
+          <div className="mb-md">
+            <h3 className="text-sm font-medium text-semantic-neutral mb-md">Feedback</h3>
             <FeedbackButtonSimple variant="inline" />
           </div>
         </div>
@@ -189,14 +198,14 @@ const Sidebar: React.FC = () => {
 
       {/* User Profile Section - Now at Bottom */}
       {!state.sidebarCollapsed && (
-        <div className="p-4 border-t border-neutral-200 dark:border-neutral-700 flex-shrink-0">
+        <div className="p-md border-t border-semantic-neutral-light flex-shrink-0">
           {activeProfile ? (
             <button 
               onClick={() => {
                 navigate('/settings?tab=profile')
                 setCurrentView('settings' as any)
               }}
-              className="flex items-center gap-3 w-full p-3 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50 rounded-xl transition-all duration-200 hover:scale-[1.02] group"
+              className="flex items-center gap-md w-full p-md hover:bg-semantic-neutral-light rounded-xl transition-all duration-200 hover:scale-[1.02] group"
               title="Click to view your profile"
             >
               <div className="relative">
@@ -213,38 +222,38 @@ const Sidebar: React.FC = () => {
                     }}
                   />
                 ) : null}
-                <div className={`w-12 h-12 ${activeProfile.type === 'mastodon' ? 'bg-gradient-to-br from-purple-500 to-purple-600' : 'bg-gradient-to-br from-blue-500 to-blue-600'} rounded-full flex items-center justify-center ring-2 ring-white dark:ring-neutral-800 shadow-md ${activeProfile.avatar ? 'hidden' : ''}`}>
+                <div className={`w-12 h-12 ${activeProfile.type === 'mastodon' ? 'bg-semantic-secondary' : 'bg-semantic-primary'} rounded-full flex items-center justify-center ring-2 ring-white dark:ring-neutral-800 shadow-md ${activeProfile.avatar ? 'hidden' : ''}`}>
                   <span className="text-white text-lg font-bold">
                     {activeProfile.displayName.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 {/* Online indicator */}
-                <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 ${activeProfile.type === 'mastodon' ? 'bg-purple-500' : 'bg-blue-500'} rounded-full border-2 border-white dark:border-neutral-800 flex items-center justify-center`}>
+                <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 ${activeProfile.type === 'mastodon' ? 'bg-semantic-secondary' : 'bg-semantic-primary'} rounded-full border-2 border-white dark:border-neutral-800 flex items-center justify-center`}>
                   <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-neutral-200 dark:text-neutral-900 truncate group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                <p className="text-sm font-semibold text-semantic-neutral truncate group-hover:text-semantic-primary transition-colors">
                   {activeProfile.displayName}
                 </p>
-                <div className="flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-600 truncate">
-                  <div className={`w-2 h-2 ${activeProfile.type === 'mastodon' ? 'bg-purple-500' : 'bg-blue-500'} rounded-full flex-shrink-0`}></div>
+                <div className="flex items-center gap-xs text-xs text-semantic-neutral truncate">
+                  <div className={`w-2 h-2 ${activeProfile.type === 'mastodon' ? 'bg-semantic-secondary' : 'bg-semantic-primary'} rounded-full flex-shrink-0`}></div>
                   <span className="truncate">{activeProfile.handle}</span>
                 </div>
               </div>
               <div className="flex-shrink-0">
-                <Settings className="w-4 h-4 text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors" />
+                <Settings className="w-4 h-4 text-semantic-neutral group-hover:text-semantic-primary transition-colors" />
               </div>
             </button>
           ) : (
             /* Default Profile */
-            <div className="flex items-center gap-3 p-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-neutral-400 to-neutral-500 rounded-full flex items-center justify-center shadow-md">
+            <div className="flex items-center gap-md p-md">
+              <div className="w-12 h-12 bg-semantic-neutral rounded-full flex items-center justify-center shadow-md">
                 <User className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-neutral-200 dark:text-neutral-800 truncate">Welcome!</p>
-                <p className="text-xs text-neutral-800 dark:text-neutral-300 truncate">
+                <p className="text-sm font-medium text-semantic-neutral truncate">Welcome!</p>
+                <p className="text-xs text-semantic-neutral truncate">
                   Connect to get started
                 </p>
               </div>
@@ -255,7 +264,7 @@ const Sidebar: React.FC = () => {
 
       {/* Collapsed User Profile */}
       {state.sidebarCollapsed && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+        <div className="absolute bottom-md left-1/2 transform -translate-x-1/2">
           <button 
             onClick={() => {
               navigate('/settings?tab=profile')
@@ -294,13 +303,14 @@ const Sidebar: React.FC = () => {
               )}
             </div>
             {/* Tooltip on hover */}
-            <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-neutral-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+            <div className="absolute left-full ml-sm top-1/2 transform -translate-y-1/2 bg-neutral-900 text-white text-xs px-sm py-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
               {activeProfile ? activeProfile.displayName : 'Profile'}
             </div>
           </button>
         </div>
       )}
     </aside>
+    </>
   )
 }
 

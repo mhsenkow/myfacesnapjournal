@@ -27,6 +27,14 @@ interface BlueskyState {
   // Feed settings
   feedSettings: BlueskyFeedSettings;
   
+  // Algorithm and display settings
+  algorithm: 'latest' | 'trending' | 'viral' | 'diverse' | 'balanced' | 'fresh' | 'media_rich' | 'conversational' | 'following' | 'random';
+  displayMode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined' | 'focused' | 'tiktok';
+  displayLimit: number;
+  isLiveFeed: boolean;
+  liveFeedBatchSize: number;
+  liveFeedInterval: number;
+  
   // Pagination
   cursor: string | null;
   hasMore: boolean;
@@ -53,6 +61,15 @@ interface BlueskyActions {
   // Settings
   setFeedType: (feedType: BlueskyFeedType) => void;
   setLimit: (limit: number) => void;
+  
+  // Algorithm and display settings
+  setAlgorithm: (algorithm: 'latest' | 'trending' | 'viral' | 'diverse' | 'balanced' | 'fresh' | 'media_rich' | 'conversational' | 'following' | 'random') => void;
+  setDisplayMode: (mode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined' | 'focused') => void;
+  setDisplayLimit: (limit: number) => void;
+  setIsLiveFeed: (isLive: boolean) => void;
+  setLiveFeedBatchSize: (size: number) => void;
+  setLiveFeedInterval: (interval: number) => void;
+  applyAlgorithm: () => void;
   
   // Post interactions
   likePost: (uri: string, cid: string) => Promise<void>;
@@ -86,6 +103,14 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
         feedType: 'timeline',
         limit: 50
       },
+      
+      // Algorithm and display settings
+      algorithm: 'latest',
+      displayMode: 'cards',
+      displayLimit: 50,
+      isLiveFeed: false,
+      liveFeedBatchSize: 20,
+      liveFeedInterval: 30000,
       
       cursor: null,
       hasMore: true,
@@ -318,9 +343,16 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
               labels: item.post.labels
             }));
             
+            // Deduplicate posts by URI to prevent duplicates
+            const existingPosts = get().posts;
+            const existingUris = new Set(existingPosts.map(post => post.uri));
+            const uniqueNewPosts = newPosts.filter(post => !existingUris.has(post.uri));
+            
+            console.log(`Bluesky fetchPosts: ${newPosts.length} new posts, ${uniqueNewPosts.length} unique after deduplication`);
+            
             set({
-              posts: newPosts,
-              allPosts: [...get().allPosts, ...newPosts],
+              posts: [...existingPosts, ...uniqueNewPosts],
+              allPosts: [...get().allPosts, ...uniqueNewPosts],
               cursor: response.data.cursor,
               hasMore: !!response.data.cursor,
               isLoading: false
@@ -371,6 +403,238 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
             limit
           }
         });
+      },
+
+      // Algorithm and display settings
+      setAlgorithm: (algorithm) => {
+        set({ algorithm });
+        
+        // If switching to "following" algorithm, fetch timeline feed
+        if (algorithm === 'following') {
+          console.log('Bluesky: Switching to following algorithm, fetching timeline feed');
+          set({ 
+            feedSettings: { ...get().feedSettings, feedType: 'timeline' },
+            cursor: null,
+            allPosts: [],
+            hasMore: true
+          });
+          // Fetch new posts from timeline
+          get().fetchPosts();
+        } else {
+          // Apply algorithm to existing posts
+          get().applyAlgorithm();
+        }
+      },
+
+      setDisplayMode: (displayMode) => {
+        set({ displayMode });
+      },
+
+      setDisplayLimit: (displayLimit) => {
+        set({ displayLimit });
+        get().applyAlgorithm();
+      },
+
+      setIsLiveFeed: (isLiveFeed) => {
+        set({ isLiveFeed });
+      },
+
+      setLiveFeedBatchSize: (liveFeedBatchSize) => {
+        const validSize = Math.max(10, Math.min(50, liveFeedBatchSize));
+        set({ liveFeedBatchSize: validSize });
+      },
+
+      setLiveFeedInterval: (liveFeedInterval) => {
+        const validInterval = Math.max(10000, Math.min(300000, liveFeedInterval));
+        set({ liveFeedInterval: validInterval });
+      },
+
+      applyAlgorithm: () => {
+        const { allPosts, displayLimit, algorithm } = get();
+        
+        if (allPosts.length === 0) {
+          set({ posts: [] });
+          return;
+        }
+
+        let selectedPosts: BlueskyPost[] = [];
+
+        // Helper function to calculate engagement score
+        const getEngagementScore = (post: BlueskyPost): number => {
+          const likes = post.likeCount || 0;
+          const reposts = post.repostCount || 0;
+          const replies = post.replyCount || 0;
+          return likes + (reposts * 2) + (replies * 1.5);
+        };
+
+        // Helper function to calculate time decay score
+        const getTimeDecayScore = (post: BlueskyPost): number => {
+          const now = new Date().getTime();
+          const postTime = new Date(post.indexedAt).getTime();
+          const hoursAgo = (now - postTime) / (1000 * 60 * 60);
+          return Math.max(0.1, 1 - (hoursAgo / 24)); // Decay over 24 hours
+        };
+
+        switch (algorithm) {
+          case 'latest':
+            selectedPosts = [...allPosts]
+              .sort((a, b) => new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime())
+              .slice(0, displayLimit);
+            break;
+
+          case 'trending':
+            selectedPosts = [...allPosts]
+              .sort((a, b) => {
+                const aScore = getEngagementScore(a) * getTimeDecayScore(a);
+                const bScore = getEngagementScore(b) * getTimeDecayScore(b);
+                return bScore - aScore;
+              })
+              .slice(0, displayLimit);
+            break;
+
+          case 'viral':
+            selectedPosts = [...allPosts]
+              .filter(post => {
+                const engagement = getEngagementScore(post);
+                const timeDecay = getTimeDecayScore(post);
+                return (engagement * timeDecay) > 10; // High engagement threshold
+              })
+              .sort((a, b) => {
+                const aScore = getEngagementScore(a) * getTimeDecayScore(a);
+                const bScore = getEngagementScore(b) * getTimeDecayScore(b);
+                return bScore - aScore;
+              })
+              .slice(0, displayLimit);
+            break;
+
+          case 'diverse':
+            // Mix of different types of posts
+            const diverseShuffled = [...allPosts].sort(() => Math.random() - 0.5);
+            selectedPosts = diverseShuffled.slice(0, displayLimit);
+            break;
+
+          case 'balanced':
+            // Balance between recency and engagement
+            selectedPosts = [...allPosts]
+              .sort((a, b) => {
+                const aScore = (getEngagementScore(a) * 0.7) + (getTimeDecayScore(a) * 0.3);
+                const bScore = (getEngagementScore(b) * 0.7) + (getTimeDecayScore(b) * 0.3);
+                return bScore - aScore;
+              })
+              .slice(0, displayLimit);
+            break;
+
+          case 'fresh':
+            // Recent posts with some engagement
+            selectedPosts = [...allPosts]
+              .filter(post => {
+                const hoursAgo = (new Date().getTime() - new Date(post.indexedAt).getTime()) / (1000 * 60 * 60);
+                return hoursAgo < 6; // Within last 6 hours
+              })
+              .sort((a, b) => {
+                const aScore = getEngagementScore(a) * getTimeDecayScore(a);
+                const bScore = getEngagementScore(b) * getTimeDecayScore(b);
+                return bScore - aScore;
+              })
+              .slice(0, displayLimit);
+            break;
+
+          case 'media_rich':
+            // Posts with media content
+            selectedPosts = [...allPosts]
+              .filter(post => {
+                const record = post.record as any;
+                return record?.embed?.images || record?.embed?.external || record?.embed?.record;
+              })
+              .sort((a, b) => {
+                const aScore = getEngagementScore(a) * getTimeDecayScore(a);
+                const bScore = getEngagementScore(b) * getTimeDecayScore(b);
+                return bScore - aScore;
+              })
+              .slice(0, displayLimit);
+            break;
+
+          case 'conversational':
+            // Posts that encourage discussion (replies, questions, polls)
+            selectedPosts = [...allPosts]
+              .filter(post => {
+                const content = (post.record as any)?.text?.toLowerCase() || '';
+                const hasQuestion = content.includes('?');
+                const hasReplies = post.replyCount > 0;
+                const isReply = (post.record as any)?.reply !== undefined;
+                const hasMentions = content.includes('@');
+                const hasQuestionWords = /\b(what|how|why|when|where|who|which|would|could|should|do you|have you|are you|is there|can you)\b/.test(content);
+                const hasDiscussionPrompts = /\b(thoughts|opinions|discuss|debate|agree|disagree|what do you think|your take|perspective)\b/.test(content);
+                
+                return hasQuestion || hasReplies || isReply || hasMentions || hasQuestionWords || hasDiscussionPrompts;
+              })
+              .sort((a, b) => {
+                const aContent = (a.record as any)?.text?.toLowerCase() || '';
+                const bContent = (b.record as any)?.text?.toLowerCase() || '';
+                
+                // Boost score for posts with more conversational elements
+                const aConversationalScore = 
+                  (aContent.includes('?') ? 2 : 0) +
+                  (a.replyCount > 0 ? 1.5 : 0) +
+                  (aContent.includes('@') ? 1 : 0) +
+                  (/\b(what|how|why|when|where|who|which|would|could|should|do you|have you|are you|is there|can you)\b/.test(aContent) ? 1.5 : 0) +
+                  (/\b(thoughts|opinions|discuss|debate|agree|disagree|what do you think|your take|perspective)\b/.test(aContent) ? 2 : 0);
+                
+                const bConversationalScore = 
+                  (bContent.includes('?') ? 2 : 0) +
+                  (b.replyCount > 0 ? 1.5 : 0) +
+                  (bContent.includes('@') ? 1 : 0) +
+                  (/\b(what|how|why|when|where|who|which|would|could|should|do you|have you|are you|is there|can you)\b/.test(bContent) ? 1.5 : 0) +
+                  (/\b(thoughts|opinions|discuss|debate|agree|disagree|what do you think|your take|perspective)\b/.test(bContent) ? 2 : 0);
+                
+                const aScore = (getEngagementScore(a) + aConversationalScore) * getTimeDecayScore(a);
+                const bScore = (getEngagementScore(b) + bConversationalScore) * getTimeDecayScore(b);
+                return bScore - aScore;
+              })
+              .slice(0, displayLimit);
+            break;
+
+          case 'following':
+            // Posts from people you follow (timeline posts)
+            // Since we're using the timeline feed, most posts should be from people you follow
+            // We'll filter out your own posts and prioritize posts with reasonable engagement
+            selectedPosts = [...allPosts]
+              .filter(post => {
+                const author = post.author;
+                if (!author) return false;
+                
+                // Exclude our own posts
+                if (author.did === get().auth.session?.did) return false;
+                
+                // Include all other posts from the timeline (which should be from people you follow)
+                // We can add some basic quality filters here if needed
+                return true;
+              })
+              .sort((a, b) => {
+                // Sort by recency first, then by engagement for recent posts
+                const timeA = new Date(a.indexedAt).getTime();
+                const timeB = new Date(b.indexedAt).getTime();
+                const timeDiff = timeB - timeA;
+                
+                if (Math.abs(timeDiff) < 3600000) { // Within 1 hour, sort by engagement
+                  const aScore = getEngagementScore(a) * getTimeDecayScore(a);
+                  const bScore = getEngagementScore(b) * getTimeDecayScore(b);
+                  return bScore - aScore;
+                } else {
+                  return timeDiff; // Sort by recency
+                }
+              })
+              .slice(0, displayLimit);
+            break;
+
+          case 'random':
+            // True random selection
+            const randomShuffled = [...allPosts].sort(() => Math.random() - 0.5);
+            selectedPosts = randomShuffled.slice(0, displayLimit);
+            break;
+        }
+
+        set({ posts: selectedPosts });
       },
 
       // Restore session from localStorage
@@ -774,7 +1038,13 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
       name: 'bluesky-store',
       partialize: (state) => ({
         auth: state.auth,
-        feedSettings: state.feedSettings
+        feedSettings: state.feedSettings,
+        algorithm: state.algorithm,
+        displayMode: state.displayMode,
+        displayLimit: state.displayLimit,
+        isLiveFeed: state.isLiveFeed,
+        liveFeedBatchSize: state.liveFeedBatchSize,
+        liveFeedInterval: state.liveFeedInterval
       })
     }
   )

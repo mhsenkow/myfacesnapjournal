@@ -33,9 +33,13 @@
  * - Performance-optimized styling
  */
 
-/* Import Tailwind CSS */
+/* Import theme variables first */
 @import './theme.css';
 
+/* Import our local utility system */
+@import './utilities.css';
+
+/* Import Tailwind CSS */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

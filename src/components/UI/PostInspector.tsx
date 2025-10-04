@@ -66,7 +66,7 @@ const PostInspector: React.FC<PostInspectorProps> = ({ post, isOpen, onClose }) 
             depth: 1 // Only get direct replies, not nested ones
           });
 
-          if (threadResponse.success && threadResponse.data.thread.replies) {
+          if (threadResponse.success && threadResponse.data.thread && 'replies' in threadResponse.data.thread && threadResponse.data.thread.replies) {
             console.log('📨 Bluesky thread response:', threadResponse.data.thread.replies);
             
             // Flatten the replies array and convert to our format
@@ -208,11 +208,14 @@ const PostInspector: React.FC<PostInspectorProps> = ({ post, isOpen, onClose }) 
 
   // Determine platform and author info
   const isBluesky = post.url?.includes('bsky.app') || post.platform === 'bluesky';
-  const author = isBluesky ? post.author : post.account;
+  
+  // For converted posts, always use account object (both Mastodon and converted Bluesky)
+  // For original Bluesky posts, use author object
+  const author = post.account || post.author;
   
   // More robust author data extraction
   const authorName = author?.displayName || author?.display_name || author?.handle || author?.username || 'Unknown Author';
-  const authorHandle = author?.handle || author?.username || 'unknown';
+  const authorHandle = author?.handle || author?.username || author?.acct || 'unknown';
   const authorAvatar = author?.avatar;
 
   // Debug logging
@@ -263,7 +266,7 @@ const PostInspector: React.FC<PostInspectorProps> = ({ post, isOpen, onClose }) 
               />
               <div 
                 className={`w-10 h-10 rounded-full border-2 border-black/10 dark:border-white/10 bg-gradient-to-r ${isBluesky ? 'from-blue-500 to-cyan-500' : 'from-purple-500 to-pink-500'} flex items-center justify-center text-white text-sm font-bold`}
-                style={{ display: 'none' }}
+                style={{ display: authorAvatar ? 'none' : 'flex' }}
               >
                 {isBluesky ? 'B' : 'M'}
               </div>

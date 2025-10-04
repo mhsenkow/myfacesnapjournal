@@ -58,7 +58,7 @@ import PostInspector from '../components/UI/PostInspector';
 // Feed Layout Component
 interface FeedLayoutProps {
   posts: any[];
-  displayMode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined' | 'focused';
+  displayMode: 'cards' | 'instagram' | 'dataviz' | 'dense' | 'refined' | 'focused' | 'tiktok';
   isScrolling: boolean;
   formatContent: (content: string) => string;
   formatRelativeTime: (dateString: string) => string;
@@ -1051,6 +1051,206 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
     );
   }
 
+  // TikTok Layout - Vertical scrolling with full-screen posts
+  if (displayMode === 'tiktok') {
+    return (
+      <div className="h-screen overflow-hidden relative">
+        <div 
+          className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide smooth-scroll tiktok-friction"
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
+            touchAction: 'pan-y'
+          }}
+        >
+          {posts.map((post) => (
+            <div 
+              key={`${post.platform || (post.url?.includes('bsky.app') ? 'bluesky' : 'mastodon')}-${post.id}`} 
+              className="h-screen snap-start snap-always flex flex-col relative cursor-pointer transition-all duration-300 hover:scale-[1.01] touch-manipulation"
+              onClick={() => onInspectPost(post)}
+              style={{
+                touchAction: 'manipulation',
+                WebkitTouchCallout: 'none',
+                WebkitUserSelect: 'none',
+                userSelect: 'none'
+              }}
+            >
+              {/* Platform Badge */}
+              {renderPlatformBadge(post)}
+              
+              {/* Main Content Area */}
+              <div className="flex-1 flex flex-col justify-between p-4 sm:p-6 lg:p-8 relative">
+                {/* Author Info - Top Left */}
+                <div className="absolute top-4 left-4 sm:top-6 sm:left-6 lg:top-8 lg:left-8 z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl overflow-hidden">
+                      {post.account.avatar ? (
+                        <img
+                          src={post.account.avatar}
+                          alt={post.account.display_name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center ${post.account.avatar ? 'hidden' : ''}`}>
+                        <User className="w-7 h-7 text-white" />
+                      </div>
+                    </div>
+                    <div className="glass-tiktok-dark rounded-2xl px-5 py-3 backdrop-blur-sm">
+                      <div className="font-bold text-white text-xl">{post.account.display_name}</div>
+                      <div className="text-white/80 text-base">@{post.account.username}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Post Content - Center */}
+                <div className="flex-1 flex items-center justify-center px-8">
+                  <div className="text-center max-w-lg">
+                    <p className="text-white text-2xl leading-relaxed font-medium drop-shadow-lg mb-6">
+                      {formatContent(post.content)}
+                    </p>
+                    
+                    {/* Hashtags */}
+                    {post.tags && post.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-3 mt-6 justify-center">
+                        {post.tags.slice(0, 3).map((tag: any) => (
+                          <span key={tag.name} className="inline-flex items-center gap-2 px-4 py-2 bg-white/25 backdrop-blur-sm text-white text-base rounded-full font-medium">
+                            <Hash className="w-4 h-4" />
+                            {tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Media Background */}
+                {post.media_attachments && post.media_attachments.length > 0 && (
+                  <div className="absolute inset-0 -z-10">
+                    <img 
+                      src={post.media_attachments[0].preview_url || post.media_attachments[0].url}
+                      alt={post.media_attachments[0].description || 'Post media'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const fallback = target.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.classList.remove('hidden');
+                      }}
+                    />
+                    {/* Fallback gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-pink-600 to-red-600 hidden"></div>
+                    {/* Dark overlay for text readability */}
+                    <div className="absolute inset-0 bg-black/30"></div>
+                  </div>
+                )}
+
+                {/* Actions - Right Side */}
+                <div className="absolute right-4 bottom-4 sm:right-6 sm:bottom-6 lg:right-8 lg:bottom-8 z-10 flex flex-col gap-4 sm:gap-6">
+                  {/* Like Button */}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleLike(post.id);
+                    }}
+                    className={`post-action-button flex flex-col items-center gap-2 transition-all duration-200 group ${
+                      post.favourited 
+                        ? 'text-red-400 heart-liked' 
+                        : 'text-white hover:text-red-400'
+                    }`}
+                    title={post.favourited ? 'Unlike' : 'Like'}
+                  >
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/25 backdrop-blur-sm flex items-center justify-center group-hover:bg-black/35 transition-all duration-200 group-hover:scale-110">
+                      <Heart 
+                        className={`w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform ${
+                          post.favourited ? 'fill-current' : ''
+                        }`}
+                      />
+                    </div>
+                    <span className="text-base font-bold text-white drop-shadow-lg">
+                      {post.favourites_count}
+                    </span>
+                  </button>
+
+                  {/* Comment Button */}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onInspectPost(post);
+                    }}
+                    className="post-action-button flex flex-col items-center gap-2 transition-all duration-200 group text-white hover:text-blue-400"
+                    title="View Comments"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-black/25 backdrop-blur-sm flex items-center justify-center group-hover:bg-black/35 transition-all duration-200 group-hover:scale-110">
+                      <MessageCircle className="w-7 h-7 group-hover:scale-110 transition-transform" />
+                    </div>
+                    <span className="text-base font-bold text-white drop-shadow-lg">
+                      {post.replies_count}
+                    </span>
+                  </button>
+
+                  {/* Repost Button */}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Add repost functionality here
+                    }}
+                    className="post-action-button flex flex-col items-center gap-2 transition-all duration-200 group text-white hover:text-green-400"
+                    title="Repost"
+                  >
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/25 backdrop-blur-sm flex items-center justify-center group-hover:bg-black/35 transition-all duration-200 group-hover:scale-110">
+                      <Repeat2 className="w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform" />
+                    </div>
+                    <span className="text-base font-bold text-white drop-shadow-lg">
+                      {post.reblogs_count}
+                    </span>
+                  </button>
+
+                  {/* Bookmark Button */}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleBookmark(post.id);
+                    }}
+                    className={`post-action-button flex flex-col items-center gap-2 transition-all duration-200 group ${
+                      post.bookmarked 
+                        ? 'text-yellow-400 bookmark-saved' 
+                        : 'text-white hover:text-yellow-400'
+                    }`}
+                    title={post.bookmarked ? 'Remove bookmark' : 'Bookmark'}
+                  >
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/25 backdrop-blur-sm flex items-center justify-center group-hover:bg-black/35 transition-all duration-200 group-hover:scale-110">
+                      <Bookmark 
+                        className={`w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform ${
+                          post.bookmarked ? 'fill-current' : ''
+                        }`}
+                      />
+                    </div>
+                  </button>
+                </div>
+
+                {/* Timestamp - Bottom Left */}
+                <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 lg:bottom-8 lg:left-8 z-10">
+                  <div className="glass-tiktok-dark rounded-2xl px-5 py-3 backdrop-blur-sm">
+                    <div className="flex items-center gap-3 text-white/80 text-base">
+                      <Clock className="w-5 h-5" />
+                      {formatRelativeTime(post.created_at)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return null;
 };
 
@@ -1353,39 +1553,44 @@ const FeedPage: React.FC = () => {
             
             if (appState.activeFeedSources.bluesky && blueskyAuth.isAuthenticated) {
               // Convert Bluesky posts to Mastodon format for compatibility
-              const convertedBlueskyPosts = blueskyPosts.map(blueskyPost => ({
-                id: blueskyPost.uri,
-                created_at: blueskyPost.record.createdAt,
-                content: blueskyPost.record.text,
-                account: {
-                  id: blueskyPost.author.did,
-                  username: blueskyPost.author.handle,
-                  display_name: blueskyPost.author.displayName || blueskyPost.author.handle,
-                  avatar: blueskyPost.author.avatar || '',
-                  acct: blueskyPost.author.handle
-                },
-                replies_count: blueskyPost.replyCount,
-                reblogs_count: blueskyPost.repostCount,
-                favourites_count: blueskyPost.likeCount,
-                favourited: !!blueskyPost.viewer?.like,
-                reblogged: !!blueskyPost.viewer?.repost,
-                bookmarked: false, // Bluesky doesn't have bookmarks
-                // Add platform metadata for unified handling
-                platform: 'bluesky',
-                uri: blueskyPost.uri,
-                cid: blueskyPost.cid,
-                url: `https://bsky.app/post/${blueskyPost.uri.split('/').pop()}`,
-                media_attachments: [], // TODO: Extract from Bluesky embeds
-                mentions: [], // TODO: Extract from Bluesky facets
-                tags: [], // TODO: Extract from Bluesky facets
-                emojis: [],
-                sensitive: false,
-                spoiler_text: '',
-                visibility: 'public' as const,
-                language: 'en',
-                in_reply_to_id: null,
-                in_reply_to_account_id: null
-              }));
+              const convertedBlueskyPosts = blueskyPosts.map(blueskyPost => {
+                // Extract the unique post ID from the URI (last part after final slash)
+                const postId = blueskyPost.uri.split('/').pop() || blueskyPost.uri;
+                
+                return {
+                  id: postId, // Use shorter, more reliable ID for deduplication
+                  created_at: blueskyPost.record.createdAt,
+                  content: blueskyPost.record.text,
+                  account: {
+                    id: blueskyPost.author.did,
+                    username: blueskyPost.author.handle,
+                    display_name: blueskyPost.author.displayName || blueskyPost.author.handle,
+                    avatar: blueskyPost.author.avatar || '',
+                    acct: blueskyPost.author.handle
+                  },
+                  replies_count: blueskyPost.replyCount,
+                  reblogs_count: blueskyPost.repostCount,
+                  favourites_count: blueskyPost.likeCount,
+                  favourited: !!blueskyPost.viewer?.like,
+                  reblogged: !!blueskyPost.viewer?.repost,
+                  bookmarked: false, // Bluesky doesn't have bookmarks
+                  // Add platform metadata for unified handling
+                  platform: 'bluesky',
+                  uri: blueskyPost.uri,
+                  cid: blueskyPost.cid,
+                  url: `https://bsky.app/post/${postId}`,
+                  media_attachments: [], // TODO: Extract from Bluesky embeds
+                  mentions: [], // TODO: Extract from Bluesky facets
+                  tags: [], // TODO: Extract from Bluesky facets
+                  emojis: [],
+                  sensitive: false,
+                  spoiler_text: '',
+                  visibility: 'public' as const,
+                  language: 'en',
+                  in_reply_to_id: null,
+                  in_reply_to_account_id: null
+                };
+              });
               combinedPosts = [...combinedPosts, ...convertedBlueskyPosts];
             }
 
@@ -1467,21 +1672,40 @@ const FeedPage: React.FC = () => {
             
             // Deduplicate posts by ID to prevent React key conflicts
             const combinedPostsMap = new Map();
+            let duplicateCount = 0;
+            
             combinedPosts.forEach(post => {
               // Use a combination of platform + id as the unique key
               const uniqueKey = `${post.platform || 'unknown'}-${post.id}`;
+              
               if (!combinedPostsMap.has(uniqueKey)) {
                 combinedPostsMap.set(uniqueKey, post);
               } else {
-                console.warn(`🟡 Duplicate post detected: ${uniqueKey}`, post);
+                duplicateCount++;
+                console.warn(`🟡 Duplicate post detected: ${uniqueKey}`, {
+                  existing: combinedPostsMap.get(uniqueKey),
+                  duplicate: post
+                });
+                
                 // Keep the newer post (with more recent timestamp)
                 const existingPost = combinedPostsMap.get(uniqueKey);
-                if (new Date(post.created_at) > new Date(existingPost.created_at)) {
+                const existingTime = new Date(existingPost.created_at).getTime();
+                const newTime = new Date(post.created_at).getTime();
+                
+                if (newTime > existingTime) {
+                  console.log(`🔄 Replacing older post with newer one: ${uniqueKey}`);
                   combinedPostsMap.set(uniqueKey, post);
+                } else {
+                  console.log(`⏭️ Keeping existing post (newer): ${uniqueKey}`);
                 }
               }
             });
+            
             combinedPosts = Array.from(combinedPostsMap.values());
+            
+            if (duplicateCount > 0) {
+              console.log(`🔍 Deduplication complete: ${duplicateCount} duplicates removed`);
+            }
             
             console.log(`📊 Combined posts summary:`, {
               total: combinedPosts.length,
