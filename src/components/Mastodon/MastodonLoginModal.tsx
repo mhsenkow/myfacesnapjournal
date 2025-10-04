@@ -22,8 +22,8 @@ const getRedirectUri = () => {
     // Desktop app - use localhost:8080/callback
     return 'http://localhost:8080/callback';
   } else {
-    // Browser - use current origin + callback
-    return `${window.location.origin}/callback`;
+    // Browser - use current origin + oauth-callback.html
+    return `${window.location.origin}/oauth-callback.html`;
   }
 };
 
