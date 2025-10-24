@@ -54,13 +54,38 @@ class WebAIService {
    */
   async checkAvailability(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/tags`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      return response.ok;
+      // Skip check if we're on localhost (development) or if baseUrl is localhost
+      if (this.baseUrl.includes('localhost') && typeof window !== 'undefined') {
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (!isLocalhost) {
+          console.info('Skipping Ollama check - localhost URL not accessible from deployed app');
+          return false;
+        }
+      }
+      
+      // Use a more robust fetch with timeout and better error handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      try {
+        const response = await fetch(`${this.baseUrl}/api/tags`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        return response.ok;
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        // Check if it's a CORS error specifically
+        if (fetchError instanceof TypeError && fetchError.message.includes('Failed to fetch')) {
+          console.info('Ollama not accessible (likely CORS or network issue)');
+          return false;
+        }
+        throw fetchError;
+      }
     } catch (error) {
       console.warn('Ollama not available:', error);
       return false;

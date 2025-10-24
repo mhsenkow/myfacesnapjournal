@@ -5,8 +5,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Check, X, AlertCircle } from 'lucide-react';
+import { Settings, Check, X, AlertCircle, Globe, Wifi, Copy, ExternalLink } from 'lucide-react';
 import { webAIService } from '../../services/webAIService';
+import { tunnelService, TunnelConfig } from '../../services/tunnelService';
 
 interface OllamaSettingsProps {
   isOpen: boolean;
@@ -20,6 +21,11 @@ const OllamaSettings: React.FC<OllamaSettingsProps> = ({ isOpen, onClose }) => {
   const [isChecking, setIsChecking] = useState(false);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  
+  // Tunnel-related state
+  const [tunnelConfig, setTunnelConfig] = useState<TunnelConfig>(tunnelService.getStatus());
+  const [showTunnelSetup, setShowTunnelSetup] = useState(false);
+  const [tunnelUrl, setTunnelUrl] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -71,6 +77,39 @@ const OllamaSettings: React.FC<OllamaSettingsProps> = ({ isOpen, onClose }) => {
     localStorage.setItem('ollama-model', ollamaModel);
     webAIService.updateConfig(ollamaUrl, ollamaModel);
     onClose();
+  };
+
+  // Tunnel functions
+  const handleStartTunnel = async (method: 'ngrok' | 'cloudflare' | 'manual') => {
+    try {
+      const config = await tunnelService.startTunnel({ method });
+      setTunnelConfig(config);
+      if (config.publicUrl) {
+        setTunnelUrl(config.publicUrl);
+        setOllamaUrl(config.publicUrl);
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to start tunnel');
+    }
+  };
+
+  const handleStopTunnel = async () => {
+    await tunnelService.stopTunnel();
+    setTunnelConfig(tunnelService.getStatus());
+    setTunnelUrl('');
+    setOllamaUrl('http://localhost:11434');
+  };
+
+  const copyTunnelUrl = () => {
+    if (tunnelUrl) {
+      navigator.clipboard.writeText(tunnelUrl);
+    }
+  };
+
+  const openTunnelUrl = () => {
+    if (tunnelUrl) {
+      window.open(tunnelUrl, '_blank');
+    }
   };
 
   if (!isOpen) return null;
@@ -126,6 +165,107 @@ const OllamaSettings: React.FC<OllamaSettingsProps> = ({ isOpen, onClose }) => {
                 <option value="llama3.2">llama3.2 (default)</option>
               )}
             </select>
+          </div>
+
+          {/* Tunnel Setup Section */}
+          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium glass-text-secondary flex items-center gap-2">
+                <Globe size={16} />
+                Internet Access
+              </h3>
+              <button
+                onClick={() => setShowTunnelSetup(!showTunnelSetup)}
+                className="text-xs glass-text-muted hover:glass-text-primary"
+              >
+                {showTunnelSetup ? 'Hide' : 'Setup'}
+              </button>
+            </div>
+            
+            {showTunnelSetup && (
+              <div className="space-y-3">
+                <p className="text-xs glass-text-muted">
+                  Expose your local Ollama server to the internet so the deployed app can access it.
+                </p>
+                
+                {/* Tunnel Status */}
+                {tunnelConfig.status === 'connected' && tunnelUrl && (
+                  <div className="glass-subtle p-3 rounded-lg border border-green-200 dark:border-green-800">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Check size={16} className="text-green-500" />
+                        <span className="text-sm glass-text-primary">Tunnel Active</span>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={copyTunnelUrl}
+                          className="p-1 glass-subtle rounded hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                          title="Copy URL"
+                        >
+                          <Copy size={12} />
+                        </button>
+                        <button
+                          onClick={openTunnelUrl}
+                          className="p-1 glass-subtle rounded hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                          title="Open URL"
+                        >
+                          <ExternalLink size={12} />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-xs glass-text-muted mt-1 break-all">{tunnelUrl}</p>
+                  </div>
+                )}
+                
+                {/* Tunnel Options */}
+                <div className="grid grid-cols-1 gap-2">
+                  <button
+                    onClick={() => handleStartTunnel('ngrok')}
+                    disabled={tunnelConfig.status === 'connecting'}
+                    className="flex items-center gap-2 p-2 glass-subtle rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-left"
+                  >
+                    <Wifi size={16} />
+                    <div>
+                      <div className="text-sm font-medium glass-text-primary">ngrok</div>
+                      <div className="text-xs glass-text-muted">Run: ngrok http 11434</div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleStartTunnel('cloudflare')}
+                    disabled={tunnelConfig.status === 'connecting'}
+                    className="flex items-center gap-2 p-2 glass-subtle rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-left"
+                  >
+                    <Globe size={16} />
+                    <div>
+                      <div className="text-sm font-medium glass-text-primary">Cloudflare Tunnel</div>
+                      <div className="text-xs glass-text-muted">Run: cloudflared tunnel --url http://localhost:11434</div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleStartTunnel('manual')}
+                    disabled={tunnelConfig.status === 'connecting'}
+                    className="flex items-center gap-2 p-2 glass-subtle rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-left"
+                  >
+                    <Settings size={16} />
+                    <div>
+                      <div className="text-sm font-medium glass-text-primary">Manual Setup</div>
+                      <div className="text-xs glass-text-muted">Enter your tunnel URL manually</div>
+                    </div>
+                  </button>
+                </div>
+                
+                {tunnelConfig.status === 'connected' && (
+                  <button
+                    onClick={handleStopTunnel}
+                    className="w-full p-2 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition-colors text-sm"
+                  >
+                    Stop Tunnel
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Connection Status */}

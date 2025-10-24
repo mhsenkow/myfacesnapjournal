@@ -284,18 +284,49 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
         console.warn('AI analysis failed:', aiError);
       }
 
-      // Fallback insights if AI fails
+      // Fallback insights if AI fails - make them algorithm-specific
       if (aiInsights.length === 0) {
         const platformDominance = topPlatforms.length > 0 ? topPlatforms[0] : null;
         const engagementLevel = avgEngagementRate > 5 ? 'high' : avgEngagementRate > 2 ? 'moderate' : 'low';
         const contentDiversity = contentTypesArray.length > 2 ? 'diverse' : 'focused';
         
-        aiInsights = [
-          `Feed contains ${totalPosts} posts with ${engagementLevel} engagement (${avgEngagementRate.toFixed(1)} avg) - suggests ${engagementLevel === 'high' ? 'active community interaction' : engagementLevel === 'moderate' ? 'selective engagement patterns' : 'passive consumption or niche audience'}`,
-          platformDominance ? `${platformDominance.platform} dominates with ${platformDominance.percentage.toFixed(0)}% of posts - indicates ${platformDominance.platform === 'Bluesky' ? 'early adopter community or tech-savvy audience' : 'established social media ecosystem'}` : 'Balanced platform usage suggests diverse community preferences',
-          trendingTopics.length > 0 ? `Top hashtags (#${trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) show ${trendingTopics.length > 2 ? 'diverse interests' : 'focused community themes'} - suggests ${trendingTopics.length > 2 ? 'broad community engagement' : 'specialized or niche discussions'}` : 'Limited hashtag usage suggests informal or personal communication style',
-          contentTypesArray.length > 0 ? `Content mix favors ${contentTypesArray[0].type} (${contentTypesArray[0].percentage.toFixed(0)}%) - indicates ${contentTypesArray[0].type === 'Links' ? 'information-sharing community' : contentTypesArray[0].type === 'Long-form' ? 'thoughtful discussion culture' : 'quick communication preferences'}` : 'Balanced content types suggest diverse communication styles'
-        ];
+        switch (activeAlgorithm) {
+          case 'pattern':
+            aiInsights = [
+              `Feed contains ${totalPosts} posts with ${engagementLevel} engagement (${avgEngagementRate.toFixed(1)} avg) - suggests ${engagementLevel === 'high' ? 'active community interaction' : engagementLevel === 'moderate' ? 'selective engagement patterns' : 'passive consumption or niche audience'}`,
+              platformDominance ? `${platformDominance.platform} dominates with ${platformDominance.percentage.toFixed(0)}% of posts - indicates ${platformDominance.platform === 'Bluesky' ? 'early adopter community or tech-savvy audience' : 'established social media ecosystem'}` : 'Balanced platform usage suggests diverse community preferences',
+              trendingTopics.length > 0 ? `Top hashtags (#${trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) show ${trendingTopics.length > 2 ? 'diverse interests' : 'focused community themes'} - suggests ${trendingTopics.length > 2 ? 'broad community engagement' : 'specialized or niche discussions'}` : 'Limited hashtag usage suggests informal or personal communication style',
+              contentTypesArray.length > 0 ? `Content mix favors ${contentTypesArray[0].type} (${contentTypesArray[0].percentage.toFixed(0)}%) - indicates ${contentTypesArray[0].type === 'Links' ? 'information-sharing community' : contentTypesArray[0].type === 'Long-form' ? 'thoughtful discussion culture' : 'quick communication preferences'}` : 'Balanced content types suggest diverse communication styles'
+            ];
+            break;
+            
+          case 'sentiment':
+            aiInsights = [
+              `Community sentiment appears ${engagementLevel === 'high' ? 'positive and engaged' : engagementLevel === 'moderate' ? 'balanced with selective enthusiasm' : 'reserved or contemplative'}`,
+              platformDominance ? `${platformDominance.platform} community shows ${platformDominance.platform === 'Bluesky' ? 'optimistic early-adopter energy' : 'established social media comfort'}` : 'Mixed platform sentiment suggests diverse emotional responses',
+              trendingTopics.length > 0 ? `Hashtag sentiment (#${trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) indicates ${trendingTopics.length > 2 ? 'broad emotional engagement' : 'focused community mood'}` : 'Limited hashtag usage suggests personal, less performative communication',
+              contentTypesArray.length > 0 ? `Content tone favors ${contentTypesArray[0].type} (${contentTypesArray[0].percentage.toFixed(0)}%) - suggests ${contentTypesArray[0].type === 'Links' ? 'curious, information-seeking mood' : contentTypesArray[0].type === 'Long-form' ? 'thoughtful, reflective community' : 'quick, spontaneous communication style'}` : 'Balanced content suggests varied emotional expression'
+            ];
+            break;
+            
+          case 'engagement':
+            aiInsights = [
+              `Engagement patterns show ${engagementLevel === 'high' ? 'highly interactive community with strong response rates' : engagementLevel === 'moderate' ? 'selective engagement with quality over quantity' : 'passive consumption or niche audience behavior'}`,
+              platformDominance ? `${platformDominance.platform} drives ${platformDominance.percentage.toFixed(0)}% of posts - indicates ${platformDominance.platform === 'Bluesky' ? 'emerging community with growing engagement' : 'established platform with consistent interaction patterns'}` : 'Balanced platform usage suggests diverse engagement preferences',
+              trendingTopics.length > 0 ? `Top hashtags (#${trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) generate ${trendingTopics.length > 2 ? 'broad community response' : 'focused engagement'}` : 'Limited hashtag usage suggests direct, personal engagement style',
+              contentTypesArray.length > 0 ? `Most engaging content type: ${contentTypesArray[0].type} (${contentTypesArray[0].percentage.toFixed(0)}%) - suggests ${contentTypesArray[0].type === 'Links' ? 'link-sharing drives community interaction' : contentTypesArray[0].type === 'Long-form' ? 'thoughtful content generates deeper engagement' : 'quick posts encourage frequent interaction'}` : 'Diverse content types suggest varied engagement drivers'
+            ];
+            break;
+            
+          case 'trending':
+            aiInsights = [
+              `Topic evolution shows ${trendingTopics.length > 0 ? `${trendingTopics.length} active themes` : 'limited trending topics'} - suggests ${trendingTopics.length > 2 ? 'dynamic, evolving community interests' : 'stable, focused community discussions'}`,
+              platformDominance ? `${platformDominance.platform} trending patterns (${platformDominance.percentage.toFixed(0)}% of posts) indicate ${platformDominance.platform === 'Bluesky' ? 'emerging trends in early-adopter community' : 'established trending patterns'}` : 'Cross-platform trending suggests diverse topic evolution',
+              trendingTopics.length > 0 ? `Current trending topics (#${trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) show ${trendingTopics.length > 2 ? 'broad community interests' : 'focused trending themes'}` : 'Limited trending topics suggest personal, non-trending communication style',
+              contentTypesArray.length > 0 ? `Trending content types favor ${contentTypesArray[0].type} (${contentTypesArray[0].percentage.toFixed(0)}%) - indicates ${contentTypesArray[0].type === 'Links' ? 'information-sharing trends' : contentTypesArray[0].type === 'Long-form' ? 'thoughtful discussion trends' : 'quick communication trends'}` : 'Balanced content trends suggest diverse topic evolution'
+            ];
+            break;
+        }
       }
 
       // Generate engagement trend (last 7 days)
