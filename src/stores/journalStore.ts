@@ -85,8 +85,6 @@ export const useJournalStore = create<JournalState & JournalActions>()(
 
       // Actions
       createEntry: async (entryData) => {
-        console.log('Creating entry:', entryData);
-        
         if (isTauri) {
           try {
             const newEntry = await invoke<JournalEntry>('create_journal_entry', {
@@ -95,9 +93,11 @@ export const useJournalStore = create<JournalState & JournalActions>()(
               tags: entryData.tags,
               mood: entryData.mood,
               privacy: entryData.privacy,
+              source: entryData.source,
+              sourceId: entryData.sourceId,
+              sourceUrl: entryData.sourceUrl,
+              metadata: entryData.metadata,
             });
-            
-            console.log('New entry created:', newEntry);
             
             set((state) => ({
               entries: [newEntry, ...state.entries],
@@ -115,8 +115,6 @@ export const useJournalStore = create<JournalState & JournalActions>()(
             createdAt: new Date(),
             updatedAt: new Date(),
           };
-          
-          console.log('New entry created:', newEntry);
           
           set((state) => {
             const newState = {
@@ -143,7 +141,6 @@ export const useJournalStore = create<JournalState & JournalActions>()(
         );
         
         if (existingEntry) {
-          console.log(`Post ${post.id} from ${platform} already exists in journal, skipping`);
           return;
         }
 
@@ -169,7 +166,6 @@ export const useJournalStore = create<JournalState & JournalActions>()(
         }
         
         if (!isMyPost) {
-          console.log(`Skipping ${platform} post ${post.id} - not authored by authenticated user`);
           return;
         }
 
@@ -215,8 +211,6 @@ export const useJournalStore = create<JournalState & JournalActions>()(
             platform: platform
           }
         });
-
-        console.log(`✅ Created journal entry from my ${platform} post:`, post.id);
       },
 
       updateEntry: async (id, updates) => {
@@ -229,6 +223,10 @@ export const useJournalStore = create<JournalState & JournalActions>()(
               tags: updates.tags || [],
               mood: updates.mood || null,
               privacy: updates.privacy || 'private',
+              source: updates.source || null,
+              sourceId: updates.sourceId || null,
+              sourceUrl: updates.sourceUrl || null,
+              metadata: updates.metadata || null,
             });
             
             set((state) => {

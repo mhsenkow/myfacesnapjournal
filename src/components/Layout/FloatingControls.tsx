@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useNotificationStore } from '../../stores/notificationStore';
-import { Bell, Sun, Moon, Zap } from 'lucide-react';
+import { useAnalyticsStore } from '../../stores/analyticsStore';
+import { Bell, Sun, Moon, Zap, BarChart3 } from 'lucide-react';
 
 const FloatingControls: React.FC = () => {
   const { theme, toggleMode } = useTheme();
   const { unreadCount, togglePanel, isPanelOpen } = useNotificationStore();
+  const { togglePanel: toggleAnalyticsPanel, isPanelOpen: isAnalyticsPanelOpen } = useAnalyticsStore();
 
   // Get appropriate icon and title for current theme mode
   const getThemeIcon = () => {
@@ -33,7 +35,7 @@ const FloatingControls: React.FC = () => {
   return (
     <div className={`
       fixed top-6 z-[100] flex flex-col gap-2 sm:gap-3 transition-transform duration-300 ease-out
-      ${isPanelOpen ? 'right-[22rem]' : 'right-6'}
+      ${isPanelOpen || isAnalyticsPanelOpen ? 'right-96' : 'right-6'}
     `}>
       {/* Theme Toggle */}
       <button
@@ -49,6 +51,11 @@ const FloatingControls: React.FC = () => {
         onClick={() => {
           console.log('🚨 BUTTON CLICKED - Current state:', isPanelOpen ? 'OPEN' : 'CLOSED');
           console.log('🚨 About to call togglePanel()');
+          
+          // Close analytics panel if it's open
+          if (isAnalyticsPanelOpen) {
+            useAnalyticsStore.getState().closePanel();
+          }
           
           // Add a demo notification if none exist
           const { notifyGeneral, notifications } = useNotificationStore.getState();
@@ -75,6 +82,26 @@ const FloatingControls: React.FC = () => {
         {/* Pulse animation for unread notifications */}
         {unreadCount > 0 && (
           <div className="absolute inset-0 w-10 h-10 bg-red-500 rounded-full opacity-10 animate-pulse" />
+        )}
+      </button>
+
+      {/* Analytics Panel Toggle */}
+      <button
+        onClick={() => {
+          // Close notification panel if it's open
+          if (isPanelOpen) {
+            useNotificationStore.getState().togglePanel();
+          }
+          toggleAnalyticsPanel();
+        }}
+        className="p-2 sm:p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 relative"
+        title="Smart Analytics"
+      >
+        <BarChart3 className={`w-5 h-5 glass-text-primary transition-colors ${isAnalyticsPanelOpen ? 'text-purple-600' : ''}`} />
+        
+        {/* Active indicator */}
+        {isAnalyticsPanelOpen && (
+          <div className="absolute inset-0 w-10 h-10 bg-purple-500 rounded-full opacity-10 animate-pulse" />
         )}
       </button>
 

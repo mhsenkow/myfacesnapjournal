@@ -37,6 +37,7 @@ import { persist } from 'zustand/middleware';
 import { MastodonAuth, MastodonPost, MastodonUser, MastodonImportSettings } from '../types/mastodon';
 import { mastodonService } from '../services/mastodonService';
 import { useJournalStore } from './journalStore';
+import { logger } from '../utils/logger';
 
 interface MastodonStore {
   // Authentication state
@@ -191,7 +192,7 @@ export const useMastodonStore = create<MastodonStore>()(
         const { auth } = get();
         if (auth.isAuthenticated && auth.accessToken && auth.instance) {
           // Could add token validation here
-          console.log('Mastodon authentication is valid');
+          logger.debug('Mastodon authentication is valid');
         }
       },
 
@@ -313,7 +314,7 @@ export const useMastodonStore = create<MastodonStore>()(
         set({ isLoadingPosts: true, lastImportError: undefined });
 
         try {
-          console.log(`Fetching ${postLimit} posts for ${feedType} timeline from ${instanceUrl}`);
+          logger.debug(`Fetching ${postLimit} posts for ${feedType} timeline from ${instanceUrl}`);
           
           // Fetch user's own posts instead of public timeline
           const allPosts = await mastodonService.getUserPosts(
@@ -323,7 +324,7 @@ export const useMastodonStore = create<MastodonStore>()(
             postLimit
           );
 
-          console.log(`Successfully fetched ${allPosts.length} posts (requested: ${postLimit})`);
+          logger.debug(`Successfully fetched ${allPosts.length} posts (requested: ${postLimit})`);
           
           // Preserve existing like/bookmark states when fetching new posts
           const { allPosts: existingPosts } = get();
@@ -355,9 +356,9 @@ export const useMastodonStore = create<MastodonStore>()(
           set({ allPosts: mergedPosts });
           
           // Mirror only MY posts to journal
-          console.log('Mirroring my Mastodon posts to journal...');
+          logger.debug('Mirroring my Mastodon posts to journal...');
           const myPosts = mergedPosts.filter(post => post.account.id === auth.user!.id);
-          console.log(`Found ${myPosts.length} of my posts out of ${mergedPosts.length} total posts`);
+          logger.debug(`Found ${myPosts.length} of my posts out of ${mergedPosts.length} total posts`);
           
           for (const post of myPosts) {
             try {
@@ -373,9 +374,9 @@ export const useMastodonStore = create<MastodonStore>()(
           // Show a brief message if we got fewer than requested
           const { displayLimit } = get();
           if (allPosts.length >= displayLimit) {
-            console.log(`Ready to display! Have ${allPosts.length} posts cached, showing ${Math.min(displayLimit, allPosts.length)}`);
+            logger.debug(`Ready to display! Have ${allPosts.length} posts cached, showing ${Math.min(displayLimit, allPosts.length)}`);
           } else {
-            console.log(`Partial load: Only ${allPosts.length} posts available (requested: ${postLimit})`);
+            logger.debug(`Partial load: Only ${allPosts.length} posts available (requested: ${postLimit})`);
           }
         } catch (error) {
           console.error('Failed to fetch public timeline:', error);
@@ -398,7 +399,7 @@ export const useMastodonStore = create<MastodonStore>()(
         set({ isLoadingPosts: true, lastImportError: undefined });
 
         try {
-          console.log(`Fetching ${postLimit} posts from home timeline (following feed)`);
+          logger.debug(`Fetching ${postLimit} posts from home timeline (following feed)`);
           
           // Fetch home timeline posts (posts from people you follow)
           const allPosts = await mastodonService.getTimeline(
@@ -407,7 +408,7 @@ export const useMastodonStore = create<MastodonStore>()(
             postLimit
           );
 
-          console.log(`Successfully fetched ${allPosts.length} posts from home timeline`);
+          logger.debug(`Successfully fetched ${allPosts.length} posts from home timeline`);
           
           // Store posts and apply algorithm
           set({ allPosts });
@@ -415,7 +416,7 @@ export const useMastodonStore = create<MastodonStore>()(
           // Apply algorithm immediately to show available posts
           get().applyAlgorithm();
           
-          console.log(`Home timeline ready! Have ${allPosts.length} posts from people you follow`);
+          logger.debug(`Home timeline ready! Have ${allPosts.length} posts from people you follow`);
         } catch (error) {
           console.error('Failed to fetch home timeline:', error);
           const errorMessage = error instanceof Error && error.message.includes('429') 
@@ -502,7 +503,7 @@ export const useMastodonStore = create<MastodonStore>()(
         
         // If switching to "following" algorithm, fetch home timeline
         if (algorithm === 'following') {
-          console.log('Mastodon: Switching to following algorithm, fetching home timeline');
+          logger.debug('Mastodon: Switching to following algorithm, fetching home timeline');
           // Clear existing posts and fetch home timeline
           set({ 
             posts: [],
@@ -881,19 +882,19 @@ export const useMastodonStore = create<MastodonStore>()(
       // Background service integration
       toggleBackgroundLoading: (enable: boolean) => {
         // This will be called by the background service
-        console.log(`🔄 Background loading ${enable ? 'enabled' : 'disabled'}`);
+        logger.debug(`🔄 Background loading ${enable ? 'enabled' : 'disabled'}`);
       },
 
       updateBackgroundRefreshInterval: (interval: number) => {
         // This will be called by the background service
-        console.log(`⏰ Background refresh interval updated to ${interval}ms`);
+        logger.debug(`⏰ Background refresh interval updated to ${interval}ms`);
       },
 
       toggleLike: async (postId: string) => {
-        console.log('🔄 toggleLike called for post:', postId);
+        logger.debug('🔄 toggleLike called for post:', postId);
         const { auth, posts, allPosts } = get();
         
-        console.log('🔍 Auth state:', {
+        logger.debug('🔍 Auth state:', {
           isAuthenticated: auth.isAuthenticated,
           hasAccessToken: !!auth.accessToken,
           instance: auth.instance
@@ -915,7 +916,7 @@ export const useMastodonStore = create<MastodonStore>()(
         const isLiked = post.favourited || false;
 
         try {
-          console.log('📡 Making API call to Mastodon:', {
+          logger.debug('📡 Making API call to Mastodon:', {
             instance: auth.instance,
             postId,
             isLiked,
@@ -930,7 +931,7 @@ export const useMastodonStore = create<MastodonStore>()(
             isLiked
           );
           
-          console.log('📥 API response:', updatedPost);
+          logger.debug('📥 API response:', updatedPost);
 
           // Update the post in both arrays
           const updatePostInArray = (postsArray: MastodonPost[]) => {
@@ -944,7 +945,7 @@ export const useMastodonStore = create<MastodonStore>()(
           const updatedPosts = updatePostInArray(posts);
           const updatedAllPosts = updatePostInArray(allPosts);
           
-          console.log('🔄 Updating state:', {
+          logger.debug('🔄 Updating state:', {
             originalFavourited: post.favourited,
             originalCount: post.favourites_count,
             newFavourited: updatedPost.favourited,
@@ -957,13 +958,13 @@ export const useMastodonStore = create<MastodonStore>()(
             allPosts: updatedAllPosts
           });
 
-          console.log(`✅ Post ${isLiked ? 'unliked' : 'liked'} successfully`);
+          logger.debug(`✅ Post ${isLiked ? 'unliked' : 'liked'} successfully`);
         } catch (error) {
           console.error('Failed to toggle like:', error);
           
           // Check if it's a scope error
           if (error instanceof Error && error.message.includes('outside the authorized scopes')) {
-            console.log('🔐 Scope error detected - user needs to re-authenticate');
+            logger.debug('🔐 Scope error detected - user needs to re-authenticate');
             
             // Show a more helpful error message with action
             const shouldReauth = confirm(
@@ -973,7 +974,7 @@ export const useMastodonStore = create<MastodonStore>()(
             );
             
             if (shouldReauth) {
-              console.log('🔄 User chose to re-authenticate');
+              logger.debug('🔄 User chose to re-authenticate');
               get().logout();
             }
           }
@@ -1020,13 +1021,13 @@ export const useMastodonStore = create<MastodonStore>()(
             allPosts: updatePostInArray(allPosts)
           });
 
-          console.log(`✅ Post ${isBookmarked ? 'unbookmarked' : 'bookmarked'} successfully`);
+          logger.debug(`✅ Post ${isBookmarked ? 'unbookmarked' : 'bookmarked'} successfully`);
         } catch (error) {
           console.error('Failed to toggle bookmark:', error);
           
           // Check if it's a scope error
           if (error instanceof Error && error.message.includes('outside the authorized scopes')) {
-            console.log('🔐 Scope error detected - user needs to re-authenticate');
+            logger.debug('🔐 Scope error detected - user needs to re-authenticate');
             
             // Show a more helpful error message with action
             const shouldReauth = confirm(
@@ -1036,7 +1037,7 @@ export const useMastodonStore = create<MastodonStore>()(
             );
             
             if (shouldReauth) {
-              console.log('🔄 User chose to re-authenticate');
+              logger.debug('🔄 User chose to re-authenticate');
               get().logout();
             }
           }

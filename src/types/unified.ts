@@ -6,6 +6,7 @@
 
 import { MastodonPost } from './mastodon';
 import { BlueskyPost } from './bluesky';
+import { extractBlueskyMedia, extractBlueskyHashtags, extractBlueskyMentions } from '../utils/blueskyHelpers';
 
 export type PostPlatform = 'mastodon' | 'bluesky';
 
@@ -116,8 +117,18 @@ export function convertBlueskyPost(post: BlueskyPost): UnifiedPost {
     isReposted: !!post.viewer?.repost,
     isBookmarked: false, // Bluesky doesn't have bookmarks
     blueskyData: post,
-    media: [], // TODO: Extract media from Bluesky embed data
-    tags: [], // TODO: Extract tags from Bluesky facets
-    mentions: [], // TODO: Extract mentions from Bluesky facets
+    media: extractBlueskyMedia(post).map(media => ({
+      id: media.id,
+      type: media.type as 'image' | 'video' | 'audio',
+      url: media.url,
+      previewUrl: media.preview_url,
+      description: media.description,
+    })),
+    tags: extractBlueskyHashtags(post).map(tag => ({
+      name: tag,
+    })),
+    mentions: extractBlueskyMentions(post).map(mention => ({
+      username: mention.username,
+    })),
   };
 }

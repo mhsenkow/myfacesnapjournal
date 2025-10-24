@@ -13,6 +13,7 @@ import { persist } from 'zustand/middleware';
 import { BskyAgent } from '@bluesky-social/api';
 import { BlueskyPost, BlueskyAuth, BlueskySession, BlueskyFeedType, BlueskyFeedSettings } from '../types/bluesky';
 import { useJournalStore } from './journalStore';
+import { logger } from '../utils/logger';
 
 interface BlueskyState {
   // Authentication
@@ -193,12 +194,12 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
       refreshSession: async () => {
         const { auth } = get();
         if (!auth.isAuthenticated || !auth.session) {
-          console.log('Bluesky refreshSession: Not authenticated or no session');
+          logger.debug('Bluesky refreshSession: Not authenticated or no session');
           return;
         }
         
         try {
-          console.log('Bluesky refreshSession: Attempting to refresh session');
+          logger.debug('Bluesky refreshSession: Attempting to refresh session');
           
           // Create a fresh agent for the refresh
           const agent = new BskyAgent({ service: 'https://bsky.social' });
@@ -206,27 +207,27 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           // Try to resume the session first
           try {
             await agent.resumeSession(auth.session as any);
-            console.log('Bluesky refreshSession: Session resumed successfully');
+            logger.debug('Bluesky refreshSession: Session resumed successfully');
             
             // Test the session by making a simple request
             try {
               const testResponse = await agent.getProfile({ actor: auth.session.did });
               if (testResponse.success) {
-                console.log('Bluesky refreshSession: Session is valid');
+                logger.debug('Bluesky refreshSession: Session is valid');
                 return;
               }
             } catch (testError) {
-              console.log('Bluesky refreshSession: Session test failed, session may be expired');
+              logger.debug('Bluesky refreshSession: Session test failed, session may be expired');
             }
           } catch (resumeError) {
-            console.log('Bluesky refreshSession: Session resume failed, session expired');
+            logger.debug('Bluesky refreshSession: Session resume failed, session expired');
           }
           
           // If resume fails, the session is expired - we need to re-login
-          console.log('Bluesky refreshSession: Session expired, user needs to re-login');
+          logger.debug('Bluesky refreshSession: Session expired, user needs to re-login');
           
           // If session is expired, logout user and show notification
-          console.log('Bluesky refreshSession: Session expired, logging out');
+          logger.debug('Bluesky refreshSession: Session expired, logging out');
           get().logout();
           
           // Show user-friendly notification
@@ -247,7 +248,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
       fetchUserProfile: async () => {
         const { auth } = get();
         if (!auth.isAuthenticated || !auth.session) {
-          console.log('Bluesky fetchUserProfile: Not authenticated');
+          logger.debug('Bluesky fetchUserProfile: Not authenticated');
           return;
         }
 
@@ -280,7 +281,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
               }
             });
 
-            console.log('Bluesky user profile fetched successfully:', userProfile);
+            logger.debug('Bluesky user profile fetched successfully:', userProfile);
           }
         } catch (error) {
           console.error('Failed to fetch Bluesky user profile:', error);
@@ -290,7 +291,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
       fetchPosts: async (limit = 50) => {
         const { auth, feedSettings } = get();
         if (!auth.isAuthenticated || !auth.session) {
-          console.log('Bluesky fetchPosts: Not authenticated or no session', { 
+          logger.debug('Bluesky fetchPosts: Not authenticated or no session', { 
             isAuthenticated: auth.isAuthenticated, 
             hasSession: !!auth.session,
             authSession: auth.session
@@ -302,20 +303,20 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
         const agent = new BskyAgent({ service: 'https://bsky.social' });
         try {
           await agent.resumeSession(auth.session as any);
-          console.log('Bluesky agent created and session resumed successfully');
+          logger.debug('Bluesky agent created and session resumed successfully');
         } catch (error) {
           console.error('Failed to resume session for fetchPosts:', error);
           
           // Try to refresh the session before giving up
           try {
-            console.log('Attempting to refresh session before retrying fetchPosts');
+            logger.debug('Attempting to refresh session before retrying fetchPosts');
             await get().refreshSession();
             
             // Try again with refreshed session
             const refreshedAuth = get().auth;
             if (refreshedAuth.isAuthenticated && refreshedAuth.session) {
               await agent.resumeSession(refreshedAuth.session as any);
-              console.log('Bluesky agent created and refreshed session resumed successfully');
+              logger.debug('Bluesky agent created and refreshed session resumed successfully');
             } else {
               console.error('Session refresh failed, cannot fetch posts');
               return;
@@ -326,7 +327,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           }
         }
         
-        console.log('Bluesky fetchPosts: Starting fetch', { feedSettings, limit });
+        logger.debug('Bluesky fetchPosts: Starting fetch', { feedSettings, limit });
         set({ isLoading: true, error: null });
         
         try {
@@ -334,15 +335,15 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           
           switch (feedSettings.feedType) {
             case 'timeline':
-              console.log('Bluesky fetchPosts: Fetching timeline');
+              logger.debug('Bluesky fetchPosts: Fetching timeline');
               response = await agent.getTimeline({
                 limit,
                 cursor: get().cursor || undefined
               });
               break;
             case 'following':
-              console.log('Bluesky fetchPosts: Fetching author feed for', auth.session!.handle);
-              console.log('Bluesky fetchPosts: Using DID for actor:', auth.session!.did);
+              logger.debug('Bluesky fetchPosts: Fetching author feed for', auth.session!.handle);
+              logger.debug('Bluesky fetchPosts: Using DID for actor:', auth.session!.did);
               response = await agent.getAuthorFeed({
                 actor: auth.session!.did, // Use DID instead of handle
                 filter: 'posts_no_replies',
@@ -361,7 +362,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
               throw new Error(`Unknown feed type: ${feedSettings.feedType}`);
           }
           
-          console.log('Bluesky fetchPosts: API response', { 
+          logger.debug('Bluesky fetchPosts: API response', { 
             success: response.success, 
             feedLength: response.data?.feed?.length,
             firstPost: response.data?.feed?.[0] ? {
@@ -374,7 +375,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           });
           
           if (response.success) {
-            console.log('Bluesky fetchPosts: Processing posts', { feedLength: response.data.feed.length });
+            logger.debug('Bluesky fetchPosts: Processing posts', { feedLength: response.data.feed.length });
             const newPosts: BlueskyPost[] = response.data.feed.map(item => ({
               id: item.post.uri,
               uri: item.post.uri,
@@ -408,7 +409,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
             const existingUris = new Set(existingPosts.map(post => post.uri));
             const uniqueNewPosts = newPosts.filter(post => !existingUris.has(post.uri));
             
-            console.log(`Bluesky fetchPosts: ${newPosts.length} new posts, ${uniqueNewPosts.length} unique after deduplication`);
+            logger.debug(`Bluesky fetchPosts: ${newPosts.length} new posts, ${uniqueNewPosts.length} unique after deduplication`);
             
             set({
               posts: [...existingPosts, ...uniqueNewPosts],
@@ -471,7 +472,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
         
         // If switching to "following" algorithm, fetch timeline feed
         if (algorithm === 'following') {
-          console.log('Bluesky: Switching to following algorithm, fetching timeline feed');
+          logger.debug('Bluesky: Switching to following algorithm, fetching timeline feed');
           set({ 
             feedSettings: { ...get().feedSettings, feedType: 'timeline' },
             cursor: null,
@@ -726,8 +727,8 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
             
             // Verify the agent was actually set in the store
             const storeState = get();
-            console.log('Bluesky session restored from localStorage, agent set:', !!agent);
-            console.log('Store state after setting agent:', {
+            logger.debug('Bluesky session restored from localStorage, agent set:', !!agent);
+            logger.debug('Store state after setting agent:', {
               hasAgent: !!storeState.agent,
               agentType: typeof storeState.agent,
               agentConstructor: storeState.agent?.constructor?.name
@@ -735,7 +736,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
             
             // Trigger a fetch after successful session restoration
             setTimeout(() => {
-              console.log('Auto-fetching posts after session restoration...');
+              logger.debug('Auto-fetching posts after session restoration...');
               get().fetchPosts();
             }, 100);
             
@@ -745,7 +746,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
               if (auth.isAuthenticated) {
                 try {
                   await get().refreshSession();
-                  console.log('Bluesky session refreshed automatically');
+                  logger.debug('Bluesky session refreshed automatically');
                 } catch (error) {
                   console.error('Failed to refresh Bluesky session automatically:', error);
                   clearInterval(refreshInterval);
@@ -801,7 +802,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
         const isLiked = !!post.viewer?.like;
         
         try {
-          console.log('🔄 Bluesky toggleLike:', { uri, cid, isLiked, action: isLiked ? 'unlike' : 'like' });
+          logger.debug('🔄 Bluesky toggleLike:', { uri, cid, isLiked, action: isLiked ? 'unlike' : 'like' });
           
           let updatedPosts: BlueskyPost[];
           
@@ -838,7 +839,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           }
           
           set({ posts: updatedPosts });
-          console.log(`✅ Bluesky post ${isLiked ? 'unliked' : 'liked'} successfully`);
+          logger.debug(`✅ Bluesky post ${isLiked ? 'unliked' : 'liked'} successfully`);
         } catch (error) {
           console.error('Failed to toggle like:', error);
         }
@@ -891,23 +892,23 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           return;
         }
 
-        console.log('📱 Fetching MY Bluesky posts for journal import...');
-        console.log('👤 My DID:', auth.session.did);
-        console.log('👤 My Handle:', auth.session.handle);
+        logger.debug('📱 Fetching MY Bluesky posts for journal import...');
+        logger.debug('👤 My DID:', auth.session.did);
+        logger.debug('👤 My Handle:', auth.session.handle);
         
         try {
           // Try accessing your repository directly using raw AT Protocol
-          console.log('🔍 Trying to access YOUR repository directly...');
-          console.log('👤 My DID:', auth.session.did);
-          console.log('👤 My Handle:', auth.session.handle);
+          logger.debug('🔍 Trying to access YOUR repository directly...');
+          logger.debug('👤 My DID:', auth.session.did);
+          logger.debug('👤 My Handle:', auth.session.handle);
           
           // Method 1: Try getProfile first to verify we can access your data
-          console.log('🔄 Step 1: Getting your profile...');
+          logger.debug('🔄 Step 1: Getting your profile...');
           const profileResponse = await agent.getProfile({
             actor: auth.session.handle
           });
           
-          console.log('📡 Profile response:', {
+          logger.debug('📡 Profile response:', {
             success: profileResponse.success,
             handle: profileResponse.data?.handle,
             did: profileResponse.data?.did,
@@ -921,14 +922,14 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           }
           
           // Method 2: Try getAuthorFeed with your handle
-          console.log('🔄 Step 2: Getting your posts with getAuthorFeed...');
+          logger.debug('🔄 Step 2: Getting your posts with getAuthorFeed...');
           const feedResponse = await agent.getAuthorFeed({
             actor: auth.session.handle,
             filter: 'posts_no_replies',
             limit: 100
           });
           
-          console.log('📡 getAuthorFeed response:', {
+          logger.debug('📡 getAuthorFeed response:', {
             success: feedResponse.success,
             feedLength: feedResponse.data?.feed?.length,
             firstPostAuthor: feedResponse.data?.feed?.[0]?.post?.author?.did,
@@ -940,14 +941,14 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           
           // Method 3: If getAuthorFeed doesn't work, try with DID
           if (!feedResponse.success || feedResponse.data.feed.length === 0) {
-            console.log('🔄 Step 3: Trying getAuthorFeed with DID...');
+            logger.debug('🔄 Step 3: Trying getAuthorFeed with DID...');
             const feedResponse2 = await agent.getAuthorFeed({
               actor: auth.session.did,
               filter: 'posts_no_replies',
               limit: 100
             });
             
-            console.log('📡 getAuthorFeed (DID) response:', {
+            logger.debug('📡 getAuthorFeed (DID) response:', {
               success: feedResponse2.success,
               feedLength: feedResponse2.data?.feed?.length,
               firstPostAuthor: feedResponse2.data?.feed?.[0]?.post?.author?.did,
@@ -962,14 +963,14 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           
           // Method 4: Try listRecords with different approach
           if (!feedResponse.success || feedResponse.data.feed.length === 0) {
-            console.log('🔄 Step 4: Trying listRecords with your repository...');
+            logger.debug('🔄 Step 4: Trying listRecords with your repository...');
             const listResponse = await agent.com.atproto.repo.listRecords({
               repo: auth.session.did,
               collection: 'app.bsky.feed.post',
               limit: 100
             });
             
-            console.log('📡 listRecords response:', {
+            logger.debug('📡 listRecords response:', {
               success: listResponse.success,
               recordsLength: listResponse.data?.records?.length,
               firstRecord: listResponse.data?.records?.[0] ? {
@@ -1006,7 +1007,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           
           // Process the results
           if (feedResponse.success && feedResponse.data.feed.length > 0) {
-            console.log('Bluesky fetchMyPosts: Processing posts', { feedLength: feedResponse.data.feed.length });
+            logger.debug('Bluesky fetchMyPosts: Processing posts', { feedLength: feedResponse.data.feed.length });
             
             // Filter to only YOUR posts
             const myPosts = feedResponse.data.feed
@@ -1039,7 +1040,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
                 labels: item.post.labels
               }));
             
-            console.log(`✅ Found ${myPosts.length} of MY posts after filtering`);
+            logger.debug(`✅ Found ${myPosts.length} of MY posts after filtering`);
             
             // Store these posts separately for journal import
             set({ 
@@ -1049,7 +1050,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
             
             return myPosts;
           } else {
-            console.log('❌ No posts found with any method');
+            logger.debug('❌ No posts found with any method');
             throw new Error('No posts found - you may not have any posts on Bluesky');
           }
         } catch (error) {
@@ -1070,7 +1071,7 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           return;
         }
 
-        console.log('📱 Starting Bluesky post import to journal...');
+        logger.debug('📱 Starting Bluesky post import to journal...');
         
         try {
           // First, fetch MY posts specifically
@@ -1082,28 +1083,28 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           // Filter for MY posts (should be all of them now since fetchMyPosts only gets MY posts)
           const myPosts = allPosts.filter(post => {
             const isMyPost = post.author.did === auth.session!.did;
-            console.log(`📋 Post ${post.id}: author DID "${post.author.did}" vs my DID "${auth.session!.did}" = ${isMyPost}`);
+            logger.debug(`📋 Post ${post.id}: author DID "${post.author.did}" vs my DID "${auth.session!.did}" = ${isMyPost}`);
             return isMyPost;
           });
           
-          console.log(`🔍 Found ${myPosts.length} of my posts out of ${allPosts.length} total posts`);
+          logger.debug(`🔍 Found ${myPosts.length} of my posts out of ${allPosts.length} total posts`);
           
           let successCount = 0;
           let errorCount = 0;
           
           for (const post of myPosts) {
             try {
-              console.log(`🔄 Creating journal entry for Bluesky post:`, post.id, post.record.text?.substring(0, 50));
+              logger.debug(`🔄 Creating journal entry for Bluesky post:`, post.id, post.record.text?.substring(0, 50));
               await useJournalStore.getState().createEntryFromSocialPost(post, 'bluesky');
               successCount++;
-              console.log(`✅ Successfully imported Bluesky post ${post.id} to journal`);
+              logger.debug(`✅ Successfully imported Bluesky post ${post.id} to journal`);
             } catch (error) {
               errorCount++;
               console.error('❌ Failed to import Bluesky post to journal:', post.id, error);
             }
           }
           
-          console.log(`📊 Bluesky import complete: ${successCount} successful, ${errorCount} errors`);
+          logger.debug(`📊 Bluesky import complete: ${successCount} successful, ${errorCount} errors`);
         } catch (error) {
           console.error('❌ Failed to fetch my posts for import:', error);
           throw error;

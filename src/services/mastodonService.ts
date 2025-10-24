@@ -45,6 +45,7 @@ import {
   MastodonInstance
 } from '../types/mastodon';
 import { JournalEntry, EntrySource } from '../types/journal';
+import { logger } from '../utils/logger';
 
 class MastodonService {
   private clientId: string = '';
@@ -75,19 +76,19 @@ class MastodonService {
    */
   async registerClient(instanceUrl: string, redirectUri: string): Promise<{client_id: string, client_secret: string}> {
     try {
-      console.log('Registering client with:', { instanceUrl, redirectUri });
+      logger.debug('Registering client with:', { instanceUrl, redirectUri });
       
       // Check if we have pre-registered credentials for this instance
       const preRegisteredClient = this.getPreRegisteredClient(instanceUrl);
       if (preRegisteredClient) {
-        console.log('Found pre-registered client for:', instanceUrl);
-        console.log('Client ID set:', preRegisteredClient.client_id ? 'Yes' : 'No');
-        console.log('Client Secret set:', preRegisteredClient.client_secret ? 'Yes' : 'No');
-        console.log('⚠️  Using pre-registered client - redirect URI must match exactly!');
-        console.log('Current redirect URI:', redirectUri);
+        logger.debug('Found pre-registered client for:', instanceUrl);
+        logger.debug('Client ID set:', preRegisteredClient.client_id ? 'Yes' : 'No');
+        logger.debug('Client Secret set:', preRegisteredClient.client_secret ? 'Yes' : 'No');
+        logger.debug('⚠️  Using pre-registered client - redirect URI must match exactly!');
+        logger.debug('Current redirect URI:', redirectUri);
         
         // For now, let's use dynamic registration to avoid redirect URI mismatches
-        console.log('🔄 Using dynamic registration instead to ensure redirect URI matches...');
+        logger.debug('🔄 Using dynamic registration instead to ensure redirect URI matches...');
         // this.clientId = preRegisteredClient.client_id;
         // this.clientSecret = preRegisteredClient.client_secret;
         // return preRegisteredClient;
@@ -106,7 +107,7 @@ class MastodonService {
         })
       });
 
-      console.log('Registration response status:', response.status);
+      logger.debug('Registration response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -114,7 +115,7 @@ class MastodonService {
         
         // If we get rate limited, try to use a fallback approach
         if (response.status === 429) {
-          console.log('Rate limited, trying fallback client registration...');
+          logger.debug('Rate limited, trying fallback client registration...');
           return await this.tryFallbackRegistration(instanceUrl, redirectUri);
         }
         
@@ -122,7 +123,7 @@ class MastodonService {
       }
 
       const clientData = await response.json();
-      console.log('Client registered successfully:', { client_id: clientData.client_id });
+      logger.debug('Client registered successfully:', { client_id: clientData.client_id });
       
       this.clientId = clientData.client_id;
       this.clientSecret = clientData.client_secret;
@@ -142,7 +143,7 @@ class MastodonService {
     const fallbackName = `MyFace SnapJournal ${Date.now()}`;
     
     try {
-      console.log('Trying fallback registration with name:', fallbackName);
+      logger.debug('Trying fallback registration with name:', fallbackName);
       
       const response = await fetch(`${instanceUrl}/api/v1/apps`, {
         method: 'POST',
@@ -159,7 +160,7 @@ class MastodonService {
 
       if (response.ok) {
         const clientData = await response.json();
-        console.log('Fallback registration successful:', { client_id: clientData.client_id });
+        logger.debug('Fallback registration successful:', { client_id: clientData.client_id });
         
         this.clientId = clientData.client_id;
         this.clientSecret = clientData.client_secret;
@@ -208,7 +209,7 @@ class MastodonService {
     code: string,
     redirectUri: string
   ): Promise<MastodonAuthResponse> {
-    console.log('Token exchange request:', {
+    logger.debug('Token exchange request:', {
       url: `${instanceUrl}/oauth/token`,
       client_id: this.clientId ? this.clientId.substring(0, 10) + '...' : 'NOT SET',
       redirect_uri: redirectUri,
@@ -229,7 +230,7 @@ class MastodonService {
       })
     });
 
-    console.log('Token exchange response status:', response.status);
+    logger.debug('Token exchange response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -244,7 +245,7 @@ class MastodonService {
     }
 
     const result = await response.json();
-    console.log('Token exchange successful:', { 
+    logger.debug('Token exchange successful:', { 
       access_token: result.access_token ? 'Present' : 'Missing',
       token_type: result.token_type,
       scope: result.scope
@@ -359,7 +360,7 @@ class MastodonService {
     }
 
     const url = `${instanceUrl}/api/v1/timelines/public?${params.toString()}`;
-    console.log(`Fetching from: ${url}`);
+    logger.debug(`Fetching from: ${url}`);
     
     const response = await fetch(url, {
       headers: {
@@ -372,7 +373,7 @@ class MastodonService {
     }
 
     const posts = await response.json();
-    console.log(`API returned ${posts.length} posts (requested: ${limit})`);
+    logger.debug(`API returned ${posts.length} posts (requested: ${limit})`);
     return posts;
   }
 
@@ -391,7 +392,7 @@ class MastodonService {
     let requestsMade = 0;
     const maxRequests = Math.ceil(totalLimit / perRequestLimit);
 
-    console.log(`Fetching ${totalLimit} posts with pagination (${maxRequests} requests)`);
+    logger.debug(`Fetching ${totalLimit} posts with pagination (${maxRequests} requests)`);
 
     while (allPosts.length < totalLimit && requestsMade < maxRequests) {
       try {
@@ -404,7 +405,7 @@ class MastodonService {
         );
 
         if (posts.length === 0) {
-          console.log('No more posts available');
+          logger.debug('No more posts available');
           break;
         }
 
@@ -415,13 +416,13 @@ class MastodonService {
         const oldestPost = posts[posts.length - 1];
         maxId = oldestPost.id;
 
-        console.log(`Request ${requestsMade}: fetched ${posts.length} posts, total: ${allPosts.length}`);
+        logger.debug(`Request ${requestsMade}: fetched ${posts.length} posts, total: ${allPosts.length}`);
 
         // Longer delay to be respectful to the API and avoid rate limits
         if (requestsMade < maxRequests && allPosts.length < totalLimit) {
           // Progressive delay: longer delays as we make more requests
           const delay = Math.min(1000 + (requestsMade * 200), 3000); // 1s, 1.2s, 1.4s, up to 3s max
-          console.log(`Waiting ${delay}ms before next request...`);
+          logger.debug(`Waiting ${delay}ms before next request...`);
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       } catch (error) {
@@ -429,7 +430,7 @@ class MastodonService {
         
         // If it's a rate limit error, wait longer and retry once
         if (error instanceof Error && error.message.includes('429')) {
-          console.log('Rate limited! Waiting 5 seconds before retry...');
+          logger.debug('Rate limited! Waiting 5 seconds before retry...');
           await new Promise(resolve => setTimeout(resolve, 5000));
           
           try {
@@ -446,7 +447,7 @@ class MastodonService {
               requestsMade++;
               const oldestPost = retryPosts[retryPosts.length - 1];
               maxId = oldestPost.id;
-              console.log(`Retry successful: fetched ${retryPosts.length} posts, total: ${allPosts.length}`);
+              logger.debug(`Retry successful: fetched ${retryPosts.length} posts, total: ${allPosts.length}`);
             }
           } catch (retryError) {
             console.error('Retry also failed:', retryError);
@@ -461,7 +462,7 @@ class MastodonService {
 
     // Trim to exact limit if we got more than requested
     const result = allPosts.slice(0, totalLimit);
-    console.log(`Final result: ${result.length} posts`);
+    logger.debug(`Final result: ${result.length} posts`);
     
     return result;
   }
@@ -671,7 +672,7 @@ class MastodonService {
     const endpoint = isLiked ? 'unfavourite' : 'favourite';
     const url = `${instanceUrl}/api/v1/statuses/${statusId}/${endpoint}`;
     
-    console.log('🌐 Mastodon API call:', {
+    logger.debug('🌐 Mastodon API call:', {
       url,
       endpoint,
       isLiked,
@@ -687,7 +688,7 @@ class MastodonService {
       }
     });
     
-    console.log('📡 API response status:', response.status, response.statusText);
+    logger.debug('📡 API response status:', response.status, response.statusText);
 
     if (!response.ok) {
       const errorText = await response.text();

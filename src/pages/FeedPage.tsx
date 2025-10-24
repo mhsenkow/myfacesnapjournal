@@ -54,6 +54,7 @@ import { useApp } from '../contexts/AppContext';
 import { substackService, SubstackFeedItem } from '../services/substackService';
 import { MastodonPost } from '../types/mastodon';
 import PostInspector from '../components/UI/PostInspector';
+import { extractBlueskyMedia, extractBlueskyMentions, extractBlueskyHashtags } from '../utils/blueskyHelpers';
 
 // Feed Layout Component
 interface FeedLayoutProps {
@@ -1403,15 +1404,11 @@ const FeedPage: React.FC = () => {
 
   // Unified toggleLike function that handles both Mastodon and Bluesky posts
   const handleToggleLike = async (postId: string, platform?: string, uri?: string, cid?: string) => {
-    console.log('🔄 handleToggleLike called:', { postId, platform, uri, cid });
-
     if (platform === 'bluesky' && uri && cid) {
       // Handle Bluesky post
-      console.log('🔵 Handling Bluesky post like:', { uri, cid });
       await toggleBlueskyLike(uri, cid);
     } else {
       // Handle Mastodon post (default behavior)
-      console.log('🟣 Handling Mastodon post like:', { postId });
       await toggleLike(postId);
     }
   };
@@ -1520,7 +1517,6 @@ const FeedPage: React.FC = () => {
     if (auth.isAuthenticated && 
         !appState.activeFeedSources.mastodon && 
         appState.userFeedPreferences.mastodon === null) {
-      console.log('Auto-enabling Mastodon feed source');
       toggleFeedSource('mastodon');
     }
   }, [auth.isAuthenticated, appState.activeFeedSources.mastodon, appState.userFeedPreferences.mastodon, toggleFeedSource]);
@@ -1529,7 +1525,6 @@ const FeedPage: React.FC = () => {
     if (blueskyAuth.isAuthenticated && 
         !appState.activeFeedSources.bluesky && 
         appState.userFeedPreferences.bluesky === null) {
-      console.log('Auto-enabling Bluesky feed source');
       toggleFeedSource('bluesky');
     }
   }, [blueskyAuth.isAuthenticated, appState.activeFeedSources.bluesky, appState.userFeedPreferences.bluesky, toggleFeedSource]);
@@ -1660,9 +1655,9 @@ const FeedPage: React.FC = () => {
                   uri: blueskyPost.uri,
                   cid: blueskyPost.cid,
                   url: `https://bsky.app/post/${postId}`,
-                  media_attachments: [], // TODO: Extract from Bluesky embeds
-                  mentions: [], // TODO: Extract from Bluesky facets
-                  tags: [], // TODO: Extract from Bluesky facets
+                  media_attachments: extractBlueskyMedia(blueskyPost),
+                  mentions: extractBlueskyMentions(blueskyPost),
+                  tags: extractBlueskyHashtags(blueskyPost),
                   emojis: [],
                   sensitive: false,
                   spoiler_text: '',
@@ -1784,18 +1779,6 @@ const FeedPage: React.FC = () => {
             
             combinedPosts = Array.from(combinedPostsMap.values());
             
-            if (duplicateCount > 0) {
-              console.log(`🔍 Deduplication complete: ${duplicateCount} duplicates removed`);
-            }
-            
-            console.log(`📊 Combined posts summary:`, {
-              total: combinedPosts.length,
-              mastodon: combinedPosts.filter(p => p.platform === 'mastodon').length,
-              bluesky: combinedPosts.filter(p => p.platform === 'bluesky').length,
-              substack: combinedPosts.filter(p => p.platform === 'substack').length,
-              unknown: combinedPosts.filter(p => !p.platform).length
-            });
-            
             const isLoading = isLoadingPosts || (blueskyAuth.isAuthenticated && blueskyIsLoading);
             
             if (isLoading) {
@@ -1827,19 +1810,10 @@ const FeedPage: React.FC = () => {
                 toggleLike={async (postId: string) => {
                   // Get the post to check if it's Bluesky or Mastodon
                   const post = combinedPosts.find(p => p.id === postId);
-                  console.log('🔍 toggleLike debug:', { 
-                    postId, 
-                    foundPost: !!post, 
-                    platform: post?.platform, 
-                    uri: post?.uri, 
-                    cid: post?.cid 
-                  });
                   
                   if (post?.platform === 'bluesky') {
-                    console.log('🔵 Detected Bluesky post, calling toggleBlueskyLike');
                     await handleToggleLike(postId, 'bluesky', post.uri, post.cid);
                   } else {
-                    console.log('🟣 Detected Mastodon post (or no platform), calling toggleLike');
                     await handleToggleLike(postId); // Mastodon
                   }
                 }}

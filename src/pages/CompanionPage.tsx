@@ -8,12 +8,22 @@
  * - Personalized introspection exercises and mindfulness
  */
 
-import React, { useState, useRef, useEffect } from 'react'
-import { Send, Brain, Heart, Lightbulb, Bot, Moon, Sun, Eye, Zap, Target, Sparkles } from 'lucide-react'
+import React, { useState, useRef } from 'react'
+import { Send, Brain, Heart, Lightbulb, Bot, Moon, Sun, Eye, Zap, Target, Sparkles, RefreshCw, Settings } from 'lucide-react'
+import { useEchoStore } from '../stores/echoStore'
+import { useJournalStore } from '../stores/journalStore'
+import OllamaSettings from '../components/UI/OllamaSettings'
 
 const CompanionPage: React.FC = () => {
   const [message, setMessage] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [showOllamaSettings, setShowOllamaSettings] = useState(false)
+  
+  // Store hooks
+  const { generateInsights } = useEchoStore()
+  const { entries } = useJournalStore()
+  
   const [conversation, setConversation] = useState([
     {
       id: '1',
@@ -23,8 +33,8 @@ const CompanionPage: React.FC = () => {
     }
   ])
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return
+  const handleSendMessage = async () => {
+    if (!message.trim() || isLoading) return
 
     // Add user message
     const userMessage = {
@@ -35,18 +45,44 @@ const CompanionPage: React.FC = () => {
     }
 
     setConversation(prev => [...prev, userMessage])
+    const currentMessage = message
     setMessage('')
+    setIsLoading(true)
 
-    // Simulate AI response with more introspective language
-    setTimeout(() => {
-      const aiResponse = {
+    try {
+      // Create context from recent journal entries
+      const recentEntries = entries.slice(-5) // Last 5 entries
+      const context = recentEntries.length > 0 
+        ? `Recent journal entries for context:\n${recentEntries.map(entry => 
+            `${entry.title}: ${entry.content.substring(0, 200)}...`
+          ).join('\n\n')}`
+        : undefined
+
+      // Generate AI response
+      const aiResponse = await generateInsights(currentMessage, context)
+      
+      const botMessage = {
         id: (Date.now() + 1).toString(),
         type: 'bot' as const,
-        content: 'That\'s a fascinating insight. Let\'s dive deeper into that thought pattern. What underlying emotions do you think are driving this perspective?',
+        content: aiResponse,
         timestamp: new Date()
       }
-      setConversation(prev => [...prev, aiResponse])
-    }, 1000)
+      
+      setConversation(prev => [...prev, botMessage])
+    } catch (error) {
+      console.error('Failed to generate AI response:', error)
+      
+      const errorMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'bot' as const,
+        content: 'I apologize, but I\'m having trouble processing your request right now. Please try again.',
+        timestamp: new Date()
+      }
+      
+      setConversation(prev => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -99,12 +135,28 @@ const CompanionPage: React.FC = () => {
             </h1>
             <p className="glass-text-tertiary mt-3 text-lg font-light">
               Deep self-reflection powered by artificial intelligence
+              {typeof window !== 'undefined' && !(window as any).__TAURI__ && (
+                <span className="ml-2 text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded">
+                  Web Mode
+                </span>
+              )}
             </p>
           </div>
-          <button className="glass-subtle px-5 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light">
-            <Brain size={20} className="mr-2 text-purple-600" />
-            New Session
-          </button>
+          <div className="flex gap-3">
+            {typeof window !== 'undefined' && !(window as any).__TAURI__ && (
+              <button 
+                onClick={() => setShowOllamaSettings(true)}
+                className="glass-subtle px-5 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light flex items-center"
+              >
+                <Settings size={20} className="mr-2 text-blue-600" />
+                Ollama Settings
+              </button>
+            )}
+            <button className="glass-subtle px-5 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light">
+              <Brain size={20} className="mr-2 text-purple-600" />
+              New Session
+            </button>
+          </div>
         </div>
       </div>
 
@@ -149,6 +201,18 @@ const CompanionPage: React.FC = () => {
                   </div>
                 </div>
               ))}
+              
+              {/* Loading indicator */}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="glass-subtle border border-neutral-200 dark:border-neutral-700 glass-text-primary max-w-2xl px-6 py-4 rounded-2xl">
+                    <div className="flex items-center gap-2">
+                      <RefreshCw size={16} className="animate-spin text-purple-500" />
+                      <p className="text-sm font-light">AI is thinking...</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Message Input */}
@@ -167,10 +231,14 @@ const CompanionPage: React.FC = () => {
                 </div>
                 <button
                   onClick={handleSendMessage}
-                  disabled={!message.trim()}
+                  disabled={!message.trim() || isLoading}
                   className="px-6 py-3 bg-gradient-to-br from-purple-500 to-blue-600 text-white rounded-xl hover:from-purple-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg flex items-center gap-2"
                 >
-                  <Send size={18} />
+                  {isLoading ? (
+                    <RefreshCw size={18} className="animate-spin" />
+                  ) : (
+                    <Send size={18} />
+                  )}
                 </button>
               </div>
             </div>
@@ -257,6 +325,12 @@ const CompanionPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Ollama Settings Modal */}
+      <OllamaSettings 
+        isOpen={showOllamaSettings} 
+        onClose={() => setShowOllamaSettings(false)} 
+      />
     </div>
   )
 }

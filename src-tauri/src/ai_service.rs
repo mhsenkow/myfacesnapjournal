@@ -11,6 +11,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tokio::process::Command;
+use reqwest;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmbeddingRequest {
@@ -65,6 +66,7 @@ pub struct AIService {
     model: AIModel,
     embedding_model: String,
     chat_model: String,
+    ollama_url: String,
 }
 
 impl AIService {
@@ -78,7 +80,8 @@ impl AIService {
         Ok(AIService {
             model,
             embedding_model: "nomic-embed-text".to_string(), // Default embedding model
-            chat_model: "llama2:7b".to_string(),             // Default chat model
+            chat_model: "llama3.2".to_string(),              // Default chat model
+            ollama_url: std::env::var("OLLAMA_URL").unwrap_or_else(|_| "http://localhost:11434".to_string()),
         })
     }
 
@@ -153,40 +156,82 @@ impl AIService {
         }
     }
 
-    /// Generate chat response using Ollama
+    /// Generate chat response using Ollama HTTP API
     async fn generate_ollama_chat(&self, request: ChatRequest) -> Result<ChatResponse> {
-        let model = request.model.unwrap_or_else(|| self.chat_model.clone());
+        let model_name = request.model.unwrap_or_else(|| self.chat_model.clone());
+        let model = model_name.clone();
 
-        let prompt = if let Some(context) = request.context {
+        // Build system prompt with context
+        let system_prompt = if let Some(context) = request.context {
             format!(
-                "Context: {}\n\nUser: {}\n\nAssistant:",
-                context, request.message
+                "You are a helpful AI introspection companion for MyFace SnapJournal. \
+                You help users reflect on their journal entries and social media posts. \
+                Use the following context about the user's entries:\n\n{}\n\n \
+                Be empathetic, insightful, and encouraging. Help them discover patterns and insights in their writing.",
+                context
             )
         } else {
-            format!("User: {}\n\nAssistant:", request.message)
+            "You are a helpful AI introspection companion for MyFace SnapJournal. \
+            You help users reflect on their journal entries and social media posts. \
+            Be empathetic, insightful, and encouraging.".to_string()
         };
 
-        let output = Command::new("ollama")
-            .arg("run")
-            .arg(&model)
-            .arg(&prompt)
-            .output()
-            .await
-            .context("Failed to run Ollama chat command")?;
-
-        if !output.status.success() {
-            return Err(anyhow::anyhow!(
-                "Ollama chat failed: {}",
-                String::from_utf8_lossy(&output.stderr)
-            ));
+        #[derive(Serialize, Deserialize)]
+        struct ChatRequestBody {
+            model: String,
+            messages: Vec<Message>,
+            stream: bool,
         }
 
-        let response = String::from_utf8_lossy(&output.stdout);
+        #[derive(Serialize, Deserialize)]
+        struct Message {
+            role: String,
+            content: String,
+        }
+
+        let messages = vec![
+            Message {
+                role: "system".to_string(),
+                content: system_prompt,
+            },
+            Message {
+                role: "user".to_string(),
+                content: request.message,
+            },
+        ];
+
+        let body = ChatRequestBody {
+            model: model_name,
+            messages,
+            stream: false,
+        };
+
+        let client = reqwest::Client::new();
+        let url = format!("{}/api/chat", self.ollama_url);
+        
+        let response = client
+            .post(&url)
+            .json(&body)
+            .send()
+            .await
+            .context("Failed to send request to Ollama")?;
+
+        #[derive(Deserialize)]
+        struct ChatResponseBody {
+            message: Message,
+            #[serde(default)]
+            done: bool,
+        }
+
+        let chat_response: ChatResponseBody = response
+            .json()
+            .await
+            .context("Failed to parse Ollama response")?;
 
         Ok(ChatResponse {
-            response: response.trim().to_string(),
+            response: chat_response.message.content,
             model,
-            tokens_used: None, // Ollama doesn't provide token count in simple mode
+            tokens_used: None,
         })
     }
 
@@ -230,34 +275,114 @@ impl AIService {
         })
     }
 
-    /// Analyze journal entries for echo patterns
-    pub async fn analyze_echo_patterns(&self, entries: Vec<String>) -> Result<EchoAnalysis> {
-        // This is a simplified implementation
-        // In a real implementation, you'd use embeddings and clustering algorithms
-
+    /// Analyze journal entries for echo patterns using AI
+    pub async fn analyze_echo_patterns(&self, entry_contents: Vec<String>) -> Result<EchoAnalysis> {
         let mut patterns = Vec::new();
         let mut insights = Vec::new();
         let mut mood_trends = HashMap::new();
 
-        // Mock analysis - in reality, this would use ML algorithms
-        if entries.len() > 5 {
-            patterns.push(EchoPattern {
-                id: uuid::Uuid::new_v4().to_string(),
-                title: "Frequent Gratitude".to_string(),
-                description: "You frequently express gratitude in your entries".to_string(),
-                strength: 0.85,
-                entry_ids: entries[0..3].to_vec(),
-                tags: vec!["gratitude".to_string(), "positive".to_string()],
-                pattern_type: "emotion".to_string(),
+        if entry_contents.is_empty() {
+            return Ok(EchoAnalysis {
+                patterns,
+                insights,
+                mood_trends,
             });
-
-            insights.push("You tend to write more positively in the morning".to_string());
-            insights.push("Your entries show a pattern of reflection and growth".to_string());
         }
 
-        mood_trends.insert("positive".to_string(), 0.7);
-        mood_trends.insert("neutral".to_string(), 0.2);
-        mood_trends.insert("negative".to_string(), 0.1);
+        // Combine all entries into context for analysis
+        let combined_entries = entry_contents.join("\n\n---\n\n");
+        
+        // Use AI to analyze patterns
+        let analysis_prompt = format!(
+            "Analyze the following journal entries and identify patterns, themes, and insights. \
+            Look for recurring topics, emotions, daily rhythms, and personal growth patterns.\n\n\
+            Journal Entries:\n{}\n\n\
+            Provide your analysis in this format:\n\
+            PATTERNS:\n- [pattern name]: [description]\n\
+            INSIGHTS:\n- [insight]\n\
+            MOODS:\n- [mood]: [percentage]",
+            combined_entries
+        );
+
+        let analysis_request = ChatRequest {
+            message: analysis_prompt,
+            context: None,
+            model: Some(self.chat_model.clone()),
+        };
+
+        match self.generate_chat(analysis_request).await {
+            Ok(response) => {
+                // Parse the AI response to extract patterns
+                let analysis_text = response.response;
+                
+                // Extract patterns section
+                if let Some(patterns_section) = analysis_text.split("PATTERNS:").nth(1) {
+                    if let Some(insights_section) = patterns_section.split("INSIGHTS:").next() {
+                        for line in insights_section.lines() {
+                            if line.contains(':') && line.starts_with("- ") {
+                                let parts: Vec<&str> = line[2..].splitn(2, ':').collect();
+                                if parts.len() == 2 {
+                                    patterns.push(EchoPattern {
+                                        id: uuid::Uuid::new_v4().to_string(),
+                                        title: parts[0].trim().to_string(),
+                                        description: parts[1].trim().to_string(),
+                                        strength: 0.8, // Default strength
+                                        entry_ids: vec![], // Will be populated separately
+                                        tags: vec![],
+                                        pattern_type: "custom".to_string(),
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Extract insights section
+                if let Some(insights_section) = analysis_text.split("INSIGHTS:").nth(1) {
+                    if let Some(moods_section) = insights_section.split("MOODS:").next() {
+                        for line in moods_section.lines() {
+                            if line.starts_with("- ") {
+                                insights.push(line[2..].trim().to_string());
+                            }
+                        }
+                    }
+                }
+
+                // Extract mood trends
+                if let Some(moods_section) = analysis_text.split("MOODS:").nth(1) {
+                    for line in moods_section.lines() {
+                        if line.starts_with("- ") && line.contains(':') {
+                            let parts: Vec<&str> = line[2..].splitn(2, ':').collect();
+                            if parts.len() == 2 {
+                                if let Ok(value) = parts[1].trim().replace('%', "").parse::<f64>() {
+                                    mood_trends.insert(parts[0].trim().to_string(), value / 100.0);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Fallback: if no patterns found, generate some basic insights
+                if patterns.is_empty() && entry_contents.len() > 3 {
+                    patterns.push(EchoPattern {
+                        id: uuid::Uuid::new_v4().to_string(),
+                        title: "Regular Journaling".to_string(),
+                        description: "You maintain a consistent journaling habit".to_string(),
+                        strength: 0.7,
+                        entry_ids: vec![],
+                        tags: vec!["consistency".to_string()],
+                        pattern_type: "habit".to_string(),
+                    });
+                }
+            }
+            Err(e) => {
+                // Fallback to basic analysis if AI fails
+                eprintln!("AI analysis failed: {}", e);
+                mood_trends.insert("neutral".to_string(), 0.5);
+                mood_trends.insert("positive".to_string(), 0.3);
+                mood_trends.insert("negative".to_string(), 0.2);
+            }
+        }
 
         Ok(EchoAnalysis {
             patterns,

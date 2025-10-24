@@ -13,11 +13,13 @@ import React, { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useApp } from '../../contexts/AppContext'
 import { useNotificationStore } from '../../stores/notificationStore'
+import { useAnalyticsStore } from '../../stores/analyticsStore'
 import Sidebar from './Sidebar'
 import FloatingControls from './FloatingControls'
 import Footer from './Footer'
 import FloatingSearch from '../UI/FloatingSearch'
 import NotificationPanel from '../Notifications/NotificationPanel'
+import SmartAnalyticsPanel from '../UI/SmartAnalyticsPanel'
 import { Menu } from 'lucide-react'
 
 interface LayoutProps {
@@ -27,6 +29,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const { state, toggleSidebar } = useApp()
   const { isPanelOpen } = useNotificationStore()
+  const { isPanelOpen: isAnalyticsPanelOpen } = useAnalyticsStore()
   const [footerVisible, setFooterVisible] = useState(false)
   const location = useLocation()
   
@@ -46,6 +49,9 @@ export default function Layout({ children }: LayoutProps) {
       
       {/* Notification Panel - only render when open */}
       {isPanelOpen && <NotificationPanel />}
+      
+      {/* Analytics Panel - only render when open */}
+      {isAnalyticsPanelOpen && <SmartAnalyticsPanel isOpen={isAnalyticsPanelOpen} onClose={() => useAnalyticsStore.getState().closePanel()} />}
       
       {/* Mobile Menu Button - show when sidebar is collapsed on mobile */}
       {state.sidebarCollapsed && (
@@ -75,7 +81,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main content area */}
       <div className={`relative transition-all duration-300 ease-in-out ${
         state.sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
-      }`}>
+      } ${isPanelOpen || isAnalyticsPanelOpen ? 'mr-96' : ''}`}>
         {/* Scrollable Page content */}
         <main className="p-6 pt-16 lg:pt-6 overflow-y-auto h-screen">
           <div className="max-w-7xl mx-auto h-full">

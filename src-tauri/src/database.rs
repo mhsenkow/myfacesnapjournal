@@ -21,6 +21,10 @@ pub struct JournalEntry {
     pub tags: Vec<String>,
     pub mood: Option<String>,
     pub privacy: String,
+    pub source: Option<String>,
+    pub source_id: Option<String>,
+    pub source_url: Option<String>,
+    pub metadata: Option<serde_json::Value>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -73,7 +77,7 @@ impl Database {
         let db = Database { pool };
 
         // Run SQL migrations from files (or fallback to embedded schema)
-        db.run_sql_migrations()
+        db.run_file_migrations()
             .await
             .context("Failed to run database migrations")?;
 
@@ -81,7 +85,7 @@ impl Database {
     }
 
     /// Run database migrations
-    async fn run_migrations(&self) -> Result<()> {
+    async fn run_sql_migrations(&self) -> Result<()> {
         // Create journal_entries table
         sqlx::query(
             r#"
@@ -92,6 +96,10 @@ impl Database {
                 tags TEXT NOT NULL DEFAULT '[]',
                 mood TEXT,
                 privacy TEXT NOT NULL DEFAULT 'private',
+                source TEXT,
+                source_id TEXT,
+                source_url TEXT,
+                metadata TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             )
@@ -161,13 +169,13 @@ impl Database {
     }
 
     /// Run database migrations using SQL files
-    async fn run_sql_migrations(&self) -> Result<()> {
+    async fn run_file_migrations(&self) -> Result<()> {
         // Get the migrations directory path  
         let migrations_path = PathBuf::from("migrations");
         
         if !migrations_path.exists() {
             println!("No migrations directory found, using embedded schema");
-            return self.run_migrations().await;
+            return self.run_sql_migrations().await;
         }
 
         // Read and execute each migration file in order
@@ -209,8 +217,8 @@ impl Database {
     pub async fn create_entry(&self, entry: &JournalEntry) -> Result<()> {
         sqlx::query(
             r#"
-            INSERT INTO journal_entries (id, title, content, tags, mood, privacy, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO journal_entries (id, title, content, tags, mood, privacy, source, source_id, source_url, metadata, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#
         )
         .bind(&entry.id)
@@ -219,6 +227,10 @@ impl Database {
         .bind(serde_json::to_string(&entry.tags)?)
         .bind(&entry.mood)
         .bind(&entry.privacy)
+        .bind(&entry.source)
+        .bind(&entry.source_id)
+        .bind(&entry.source_url)
+        .bind(entry.metadata.as_ref().map(|m| serde_json::to_string(m).unwrap_or_default()))
         .bind(entry.created_at.to_rfc3339())
         .bind(entry.updated_at.to_rfc3339())
         .execute(&self.pool)
@@ -243,6 +255,11 @@ impl Database {
                 tags: serde_json::from_str(&row.get::<String, _>("tags")).unwrap_or_default(),
                 mood: row.get("mood"),
                 privacy: row.get("privacy"),
+                source: row.get("source"),
+                source_id: row.get("source_id"),
+                source_url: row.get("source_url"),
+                metadata: row.get::<Option<String>, _>("metadata")
+                    .and_then(|m| serde_json::from_str(&m).ok()),
                 created_at: DateTime::parse_from_rfc3339(&row.get::<String, _>("created_at"))?
                     .into(),
                 updated_at: DateTime::parse_from_rfc3339(&row.get::<String, _>("updated_at"))?
@@ -257,7 +274,7 @@ impl Database {
         sqlx::query(
             r#"
             UPDATE journal_entries 
-            SET title = ?, content = ?, tags = ?, mood = ?, privacy = ?, updated_at = ?
+            SET title = ?, content = ?, tags = ?, mood = ?, privacy = ?, source = ?, source_id = ?, source_url = ?, metadata = ?, updated_at = ?
             WHERE id = ?
             "#,
         )
@@ -266,6 +283,10 @@ impl Database {
         .bind(serde_json::to_string(&entry.tags)?)
         .bind(&entry.mood)
         .bind(&entry.privacy)
+        .bind(&entry.source)
+        .bind(&entry.source_id)
+        .bind(&entry.source_url)
+        .bind(entry.metadata.as_ref().map(|m| serde_json::to_string(m).unwrap_or_default()))
         .bind(entry.updated_at.to_rfc3339())
         .bind(&entry.id)
         .execute(&self.pool)
@@ -317,6 +338,11 @@ impl Database {
                 tags: serde_json::from_str(&row.get::<String, _>("tags")).unwrap_or_default(),
                 mood: row.get("mood"),
                 privacy: row.get("privacy"),
+                source: row.get("source"),
+                source_id: row.get("source_id"),
+                source_url: row.get("source_url"),
+                metadata: row.get::<Option<String>, _>("metadata")
+                    .and_then(|m| serde_json::from_str(&m).ok()),
                 created_at: DateTime::parse_from_rfc3339(&row.get::<String, _>("created_at"))?
                     .into(),
                 updated_at: DateTime::parse_from_rfc3339(&row.get::<String, _>("updated_at"))?
@@ -351,6 +377,11 @@ impl Database {
                 tags: serde_json::from_str(&row.get::<String, _>("tags")).unwrap_or_default(),
                 mood: row.get("mood"),
                 privacy: row.get("privacy"),
+                source: row.get("source"),
+                source_id: row.get("source_id"),
+                source_url: row.get("source_url"),
+                metadata: row.get::<Option<String>, _>("metadata")
+                    .and_then(|m| serde_json::from_str(&m).ok()),
                 created_at: DateTime::parse_from_rfc3339(&row.get::<String, _>("created_at"))?
                     .into(),
                 updated_at: DateTime::parse_from_rfc3339(&row.get::<String, _>("updated_at"))?

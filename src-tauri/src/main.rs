@@ -169,6 +169,10 @@ async fn create_journal_entry(
     tags: Vec<String>,
     mood: Option<String>,
     privacy: String,
+    source: Option<String>,
+    source_id: Option<String>,
+    source_url: Option<String>,
+    metadata: Option<serde_json::Value>,
 ) -> Result<JournalEntry, String> {
     let db_guard = state.database.lock().await;
     let database = db_guard.as_ref().ok_or("Database not initialized")?;
@@ -180,6 +184,10 @@ async fn create_journal_entry(
         tags,
         mood,
         privacy,
+        source,
+        source_id,
+        source_url,
+        metadata,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -212,6 +220,10 @@ async fn update_journal_entry(
     tags: Vec<String>,
     mood: Option<String>,
     privacy: String,
+    source: Option<String>,
+    source_id: Option<String>,
+    source_url: Option<String>,
+    metadata: Option<serde_json::Value>,
 ) -> Result<(), String> {
     let db_guard = state.database.lock().await;
     let database = db_guard.as_ref().ok_or("Database not initialized")?;
@@ -227,6 +239,10 @@ async fn update_journal_entry(
     entry.tags = tags;
     entry.mood = mood;
     entry.privacy = privacy;
+    entry.source = source;
+    entry.source_id = source_id;
+    entry.source_url = source_url;
+    entry.metadata = metadata;
     entry.updated_at = Utc::now();
 
     database
@@ -335,13 +351,26 @@ async fn generate_chat_response(
 #[tauri::command]
 async fn analyze_echo_patterns(
     state: State<'_, AppState>,
-    entries: Vec<String>,
+    entry_ids: Vec<String>,
 ) -> Result<Value, String> {
     let ai_guard = state.ai_service.lock().await;
     let ai_service = ai_guard.as_ref().ok_or("AI service not initialized")?;
 
+    // Fetch journal entries from database
+    let db_guard = state.database.lock().await;
+    let database = db_guard.as_ref().ok_or("Database not initialized")?;
+
+    let mut entry_contents = Vec::new();
+    for entry_id in &entry_ids {
+        if let Some(entry) = database.get_entry(entry_id).await.map_err(|e| e.to_string())? {
+            entry_contents.push(format!("{}: {}", entry.title, entry.content));
+        }
+    }
+
+    drop(db_guard);
+
     let analysis = ai_service
-        .analyze_echo_patterns(entries)
+        .analyze_echo_patterns(entry_contents)
         .await
         .map_err(|e| e.to_string())?;
 
