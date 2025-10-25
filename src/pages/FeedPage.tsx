@@ -261,11 +261,11 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 {/* Actions */}
                 <div className="flex items-center gap-6 text-neutral-500 dark:text-neutral-400 flex-wrap">
                   {/* Core Engagement */}
-                  <button className="flex items-center gap-1.5 hover:text-blue-600 transition-colors group">
+                  <button className="flex items-center gap-1.5 hover:text-blue-600 transition-colors group p-2 -m-2 rounded-lg touch-manipulation active:scale-95">
                     <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span className="text-sm font-medium">{post.replies_count}</span>
                   </button>
-                  <button className="flex items-center gap-1.5 hover:text-green-600 transition-colors group">
+                  <button className="flex items-center gap-1.5 hover:text-green-600 transition-colors group p-2 -m-2 rounded-lg touch-manipulation active:scale-95">
                     <Repeat2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span className="text-sm font-medium">{post.reblogs_count}</span>
                   </button>
@@ -276,7 +276,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                       console.log('💖 Like button clicked for post:', post.id);
                       toggleLike(post.id);
                     }}
-                    className={`post-action-button flex items-center gap-1.5 transition-colors group ${
+                    className={`post-action-button flex items-center gap-1.5 transition-colors group p-2 -m-2 rounded-lg touch-manipulation active:scale-95 ${
                       post.favourited 
                         ? 'text-red-600 heart-liked' 
                         : 'text-neutral-500 dark:text-neutral-400 hover:text-red-600'

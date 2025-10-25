@@ -53,10 +53,10 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 mb-6">
+      <div className="glass p-4 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 mb-6">
         <div>
-          <h1 className="text-4xl font-light glass-text-primary tracking-wide">Settings</h1>
-          <p className="glass-text-tertiary mt-2 text-lg font-light">Configure your journaling experience</p>
+          <h1 className="text-2xl sm:text-4xl font-light glass-text-primary tracking-wide">Settings</h1>
+          <p className="glass-text-tertiary mt-2 text-base sm:text-lg font-light">Configure your journaling experience</p>
         </div>
       </div>
 
@@ -64,14 +64,14 @@ const SettingsPage: React.FC = () => {
       <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700">
         {/* Tab Navigation */}
         <div className="border-b border-neutral-200 dark:border-neutral-700">
-          <nav className="flex space-x-8 px-6">
+          <nav className="flex space-x-2 sm:space-x-8 px-4 sm:px-6 overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-sm transition-colors touch-manipulation active:scale-95 whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-primary-500 text-primary-600'
                       : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'

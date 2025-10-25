@@ -153,7 +153,7 @@ const JournalPage: React.FC = () => {
   };
 
   const renderJournalEntry = (entry: JournalEntry) => {
-    const baseClasses = `glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 hover:glass transition-all duration-500 hover:scale-[1.02] hover:shadow-xl group ${
+    const baseClasses = `glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl p-4 sm:p-6 hover:glass transition-all duration-500 hover:scale-[1.02] hover:shadow-xl group touch-manipulation active:scale-[0.98] ${
       selectedEntry?.id === entry.id ? 'ring-2 ring-purple-500 glass-strong' : ''
     } ${
       selectedEntries.has(entry.id) ? 'bg-purple-50/30 border-purple-200 dark:bg-purple-900/20' : ''

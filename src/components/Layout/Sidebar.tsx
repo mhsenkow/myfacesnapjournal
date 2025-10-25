@@ -118,14 +118,14 @@ const Sidebar: React.FC = () => {
       {/* Mobile Backdrop Overlay */}
       {!state.sidebarCollapsed && (
         <div 
-          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden transition-opacity duration-300"
           onClick={() => toggleSidebar()}
         />
       )}
       
       {/* Sidebar */}
       <aside className={`fixed left-0 top-0 z-50 h-screen glass-sidebar transition-all duration-300 ease-in-out flex flex-col ${
-        state.sidebarCollapsed ? 'w-16' : 'w-64'
+        state.sidebarCollapsed ? 'w-16' : 'w-72 sm:w-64'
       } ${state.sidebarCollapsed ? 'lg:translate-x-0 -translate-x-full' : 'translate-x-0'}`}>
       {/* Header */}
       <div className="flex items-center justify-between h-16 px-md border-b border-semantic-neutral-light flex-shrink-0">
@@ -158,10 +158,10 @@ const Sidebar: React.FC = () => {
               <li key={item.id}>
                 <button
                   onClick={() => handleNavClick(item)}
-                  className={`w-full flex items-center px-md py-md rounded-xl transition-all duration-200 group relative ${
+                  className={`w-full flex items-center px-md py-lg rounded-xl transition-all duration-200 group relative touch-manipulation ${
                     active
                       ? 'bg-semantic-primary-light text-semantic-primary shadow-sm'
-                      : 'text-semantic-neutral hover:bg-semantic-neutral-light hover:text-semantic-neutral-dark hover:scale-[1.02]'
+                      : 'text-semantic-neutral hover:bg-semantic-neutral-light hover:text-semantic-neutral-dark hover:scale-[1.02] active:scale-[0.98]'
                   }`}
                   title={state.sidebarCollapsed ? item.description : undefined}
                 >

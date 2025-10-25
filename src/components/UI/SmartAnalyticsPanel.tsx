@@ -399,7 +399,7 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
   };
 
   return (
-    <div className={`fixed top-0 right-0 h-full w-96 glass-panel glass-subtle border-l border-neutral-200 dark:border-neutral-700 shadow-2xl z-50 overflow-y-auto transform transition-transform duration-300 ease-out ${
+    <div className={`fixed top-0 right-0 h-full w-full sm:w-96 glass-panel glass-subtle border-l border-neutral-200 dark:border-neutral-700 shadow-2xl z-50 overflow-y-auto transform transition-transform duration-300 ease-out ${
       isOpen ? 'translate-x-0' : 'translate-x-full'
     }`}>
       <div className="p-6">

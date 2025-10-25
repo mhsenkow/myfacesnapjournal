@@ -34,13 +34,13 @@ const FloatingControls: React.FC = () => {
 
   return (
     <div className={`
-      fixed top-6 z-[100] flex flex-col gap-2 sm:gap-3 transition-transform duration-300 ease-out
-      ${isPanelOpen || isAnalyticsPanelOpen ? 'right-96' : 'right-6'}
+      fixed top-4 z-[100] flex flex-col gap-2 sm:gap-3 transition-transform duration-300 ease-out
+      ${isPanelOpen || isAnalyticsPanelOpen ? 'right-4 sm:right-96' : 'right-4'}
     `}>
       {/* Theme Toggle */}
       <button
         onClick={toggleMode}
-        className="p-2 sm:p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+        className="p-3 sm:p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 touch-manipulation active:scale-95"
         title={`Switch to ${getNextModeName()} mode`}
       >
         {getThemeIcon()}
@@ -67,7 +67,7 @@ const FloatingControls: React.FC = () => {
           togglePanel();
           console.log('🚨 togglePanel() called');
         }}
-        className="p-2 sm:p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 relative"
+        className="p-3 sm:p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 relative touch-manipulation active:scale-95"
         title={`${unreadCount} unread notifications`}
       >
         <Bell className={`w-5 h-5 glass-text-primary transition-colors ${unreadCount > 0 ? 'text-primary-600' : ''}`} />
@@ -94,7 +94,7 @@ const FloatingControls: React.FC = () => {
           }
           toggleAnalyticsPanel();
         }}
-        className="p-2 sm:p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 relative"
+        className="p-3 sm:p-3 glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 relative touch-manipulation active:scale-95"
         title="Smart Analytics"
       >
         <BarChart3 className={`w-5 h-5 glass-text-primary transition-colors ${isAnalyticsPanelOpen ? 'text-purple-600' : ''}`} />

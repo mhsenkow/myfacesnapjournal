@@ -81,9 +81,9 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main content area */}
       <div className={`relative transition-all duration-300 ease-in-out ${
         state.sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
-      } ${isPanelOpen || isAnalyticsPanelOpen ? 'mr-96' : ''}`}>
+      } ${isPanelOpen || isAnalyticsPanelOpen ? 'mr-0 sm:mr-96' : ''}`}>
         {/* Scrollable Page content */}
-        <main className="p-6 pt-16 lg:pt-6 overflow-y-auto h-screen">
+        <main className="p-4 sm:p-6 pt-20 sm:pt-16 lg:pt-6 overflow-y-auto h-screen">
           <div className="max-w-7xl mx-auto h-full">
             {children}
           </div>

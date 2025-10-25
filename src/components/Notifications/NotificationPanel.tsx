@@ -139,7 +139,7 @@ const NotificationPanel: React.FC = () => {
       
       {/* Panel */}
       <div className={`
-        fixed top-0 right-0 z-[9999] h-screen w-96 
+        fixed top-0 right-0 z-[9999] h-screen w-full sm:w-96 
         glass shadow-2xl
         transform transition-transform duration-300 ease-out
         ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}

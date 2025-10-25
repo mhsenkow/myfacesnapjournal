@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useRef } from 'react'
-import { Send, Brain, Heart, Lightbulb, Bot, Moon, Sun, Eye, Zap, Target, Sparkles, RefreshCw, Settings } from 'lucide-react'
+import { Send, Brain, Heart, Lightbulb, Bot, Moon, Sun, Eye, Zap, Target, Sparkles, RefreshCw, Settings, User } from 'lucide-react'
 import { useEchoStore } from '../stores/echoStore'
 import { useJournalStore } from '../stores/journalStore'
 import OllamaSettings from '../components/UI/OllamaSettings'
@@ -122,18 +122,18 @@ const CompanionPage: React.FC = () => {
   ]
 
   return (
-    <div className="min-h-screen space-y-6">
+    <div className="min-h-screen space-y-4 sm:space-y-6">
       {/* Page Header with Glass Morphism */}
-      <div className="glass p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700">
-        <div className="flex items-center justify-between">
+      <div className="glass p-4 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-light glass-text-primary flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl shadow-lg">
-                <Brain className="w-8 h-8 text-white" />
+            <h1 className="text-2xl sm:text-4xl font-light glass-text-primary flex items-center gap-3 sm:gap-4">
+              <div className="p-2 sm:p-3 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl sm:rounded-2xl shadow-lg">
+                <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
               <span className="font-extralight tracking-wide">AI Introspection</span>
             </h1>
-            <p className="glass-text-tertiary mt-3 text-lg font-light">
+            <p className="glass-text-tertiary mt-2 sm:mt-3 text-base sm:text-lg font-light">
               Deep self-reflection powered by artificial intelligence
               {typeof window !== 'undefined' && !(window as any).__TAURI__ && (
                 <span className="ml-2 text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded">
@@ -142,18 +142,18 @@ const CompanionPage: React.FC = () => {
               )}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             {typeof window !== 'undefined' && !(window as any).__TAURI__ && (
               <button 
                 onClick={() => setShowOllamaSettings(true)}
-                className="glass-subtle px-5 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light flex items-center"
+                className="glass-subtle px-4 sm:px-5 py-2 sm:py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light flex items-center justify-center touch-manipulation active:scale-95"
               >
-                <Settings size={20} className="mr-2 text-blue-600" />
+                <Settings size={16} className="mr-2 text-blue-600" />
                 Ollama Settings
               </button>
             )}
-            <button className="glass-subtle px-5 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light">
-              <Brain size={20} className="mr-2 text-purple-600" />
+            <button className="glass-subtle px-4 sm:px-5 py-2 sm:py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light flex items-center justify-center touch-manipulation active:scale-95">
+              <Brain size={16} className="mr-2 text-purple-600" />
               New Session
             </button>
           </div>
@@ -161,9 +161,9 @@ const CompanionPage: React.FC = () => {
       </div>
 
       {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Main Chat Interface */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 order-2 lg:order-1">
           <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 h-[700px] flex flex-col overflow-hidden">
             {/* Chat Header */}
             <div className="p-6 border-b border-neutral-200 dark:border-neutral-700 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
@@ -179,25 +179,43 @@ const CompanionPage: React.FC = () => {
             </div>
 
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
               {conversation.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div
-                    className={`max-w-2xl px-6 py-4 rounded-2xl ${
-                      msg.type === 'user'
-                        ? 'bg-gradient-to-br from-purple-500 to-blue-600 text-white shadow-lg'
-                        : 'glass-subtle border border-neutral-200 dark:border-neutral-700 glass-text-primary'
-                    }`}
-                  >
-                    <p className="text-sm leading-relaxed font-light">{msg.content}</p>
-                    <p className={`text-xs mt-2 font-light ${
-                      msg.type === 'user' ? 'text-purple-100' : 'glass-text-muted'
+                  <div className={`flex items-start gap-3 max-w-[85%] sm:max-w-2xl ${msg.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    {/* Avatar */}
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      msg.type === 'user' 
+                        ? 'bg-gradient-to-br from-purple-500 to-blue-600 shadow-lg' 
+                        : 'bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30'
                     }`}>
-                      {msg.timestamp.toLocaleTimeString()}
-                    </p>
+                      {msg.type === 'user' ? (
+                        <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      ) : (
+                        <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400" />
+                      )}
+                    </div>
+                    
+                    {/* Message Content */}
+                    <div className="flex flex-col">
+                      <div
+                        className={`px-4 sm:px-6 py-3 sm:py-4 rounded-2xl shadow-sm ${
+                          msg.type === 'user'
+                            ? 'bg-gradient-to-br from-purple-500 to-blue-600 text-white'
+                            : 'glass-subtle border border-neutral-200 dark:border-neutral-700 glass-text-primary'
+                        }`}
+                      >
+                        <p className="text-sm sm:text-base leading-relaxed font-light whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                      <p className={`text-xs mt-1 px-1 font-light ${
+                        msg.type === 'user' ? 'text-purple-200 text-right' : 'glass-text-muted'
+                      }`}>
+                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -205,10 +223,15 @@ const CompanionPage: React.FC = () => {
               {/* Loading indicator */}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="glass-subtle border border-neutral-200 dark:border-neutral-700 glass-text-primary max-w-2xl px-6 py-4 rounded-2xl">
-                    <div className="flex items-center gap-2">
-                      <RefreshCw size={16} className="animate-spin text-purple-500" />
-                      <p className="text-sm font-light">AI is thinking...</p>
+                  <div className="flex items-start gap-3 max-w-[85%] sm:max-w-2xl">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div className="glass-subtle border border-neutral-200 dark:border-neutral-700 glass-text-primary px-4 sm:px-6 py-3 sm:py-4 rounded-2xl shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <RefreshCw size={16} className="animate-spin text-purple-500" />
+                        <p className="text-sm font-light">AI is thinking...</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -216,8 +239,8 @@ const CompanionPage: React.FC = () => {
             </div>
 
             {/* Message Input */}
-            <div className="p-6 border-t border-neutral-200 dark:border-neutral-700">
-              <div className="flex space-x-4">
+            <div className="p-4 sm:p-6 border-t border-neutral-200 dark:border-neutral-700">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <div className="flex-1 relative">
                   <textarea
                     ref={textareaRef}
@@ -225,20 +248,21 @@ const CompanionPage: React.FC = () => {
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Share your thoughts, feelings, or questions for deep introspection..."
-                    className="w-full px-4 py-3 glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-neutral-400 dark:placeholder-neutral-500 font-light"
+                    className="w-full px-4 py-3 glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-neutral-400 dark:placeholder-neutral-500 font-light text-sm sm:text-base"
                     rows={3}
                   />
                 </div>
                 <button
                   onClick={handleSendMessage}
                   disabled={!message.trim() || isLoading}
-                  className="px-6 py-3 bg-gradient-to-br from-purple-500 to-blue-600 text-white rounded-xl hover:from-purple-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg flex items-center gap-2"
+                  className="px-6 py-3 bg-gradient-to-br from-purple-500 to-blue-600 text-white rounded-xl hover:from-purple-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg flex items-center justify-center gap-2 touch-manipulation active:scale-95 min-w-[120px]"
                 >
                   {isLoading ? (
                     <RefreshCw size={18} className="animate-spin" />
                   ) : (
                     <Send size={18} />
                   )}
+                  <span className="hidden sm:inline">Send</span>
                 </button>
               </div>
             </div>
@@ -246,25 +270,25 @@ const CompanionPage: React.FC = () => {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
           {/* Introspection Prompts */}
-          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6">
-            <h3 className="font-medium glass-text-primary mb-4 flex items-center gap-2 text-lg tracking-wide">
-              <Lightbulb size={18} className="text-yellow-500" />
+          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-4 sm:p-6">
+            <h3 className="font-medium glass-text-primary mb-4 flex items-center gap-2 text-base sm:text-lg tracking-wide">
+              <Lightbulb size={16} className="text-yellow-500" />
               Introspection Prompts
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {introspectionPrompts.map((prompt, index) => (
                 <button
                   key={index}
                   onClick={() => handlePromptClick(prompt.text)}
-                  className="w-full p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group"
+                  className="w-full p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group touch-manipulation active:scale-95"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg bg-${prompt.color}-100 dark:bg-${prompt.color}-900/30`}>
-                      <prompt.icon size={16} className={`text-${prompt.color}-600 dark:text-${prompt.color}-400`} />
+                      <prompt.icon size={14} className={`text-${prompt.color}-600 dark:text-${prompt.color}-400`} />
                     </div>
-                    <span className="text-sm glass-text-secondary group-hover:text-neutral-900 dark:group-hover:text-neutral-100 font-light">
+                    <span className="text-xs sm:text-sm glass-text-secondary group-hover:text-neutral-900 dark:group-hover:text-neutral-100 font-light">
                       {prompt.text}
                     </span>
                   </div>
@@ -274,22 +298,22 @@ const CompanionPage: React.FC = () => {
           </div>
 
           {/* Mindfulness Exercises */}
-          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6">
-            <h3 className="font-medium glass-text-primary mb-4 flex items-center gap-2 text-lg tracking-wide">
-              <Moon size={18} className="text-blue-500" />
+          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-4 sm:p-6">
+            <h3 className="font-medium glass-text-primary mb-4 flex items-center gap-2 text-base sm:text-lg tracking-wide">
+              <Moon size={16} className="text-blue-500" />
               Mindfulness Exercises
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {mindfulnessExercises.map((exercise, index) => (
                 <button
                   key={index}
                   onClick={() => handleExerciseClick(exercise.title)}
-                  className="w-full p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group"
+                  className="w-full p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group touch-manipulation active:scale-95"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <exercise.icon size={16} className="text-neutral-600 dark:text-neutral-400" />
-                      <span className="text-sm font-light glass-text-secondary group-hover:text-neutral-900 dark:group-hover:text-neutral-100">
+                      <exercise.icon size={14} className="text-neutral-600 dark:text-neutral-400" />
+                      <span className="text-xs sm:text-sm font-light glass-text-secondary group-hover:text-neutral-900 dark:group-hover:text-neutral-100">
                         {exercise.title}
                       </span>
                     </div>
@@ -303,22 +327,22 @@ const CompanionPage: React.FC = () => {
           </div>
 
           {/* Session History */}
-          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6">
-            <h3 className="font-medium glass-text-primary mb-4 flex items-center gap-2 text-lg tracking-wide">
-              <Eye size={18} className="text-purple-500" />
+          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-4 sm:p-6">
+            <h3 className="font-medium glass-text-primary mb-4 flex items-center gap-2 text-base sm:text-lg tracking-wide">
+              <Eye size={16} className="text-purple-500" />
               Recent Sessions
             </h3>
-            <div className="space-y-3 text-sm">
-              <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer">
-                <p className="font-light glass-text-primary">Deep Self-Analysis</p>
+            <div className="space-y-2 sm:space-y-3 text-sm">
+              <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer touch-manipulation active:scale-95">
+                <p className="font-light glass-text-primary text-xs sm:text-sm">Deep Self-Analysis</p>
                 <p className="text-xs glass-text-muted mt-1 font-light">2 hours ago</p>
               </div>
-              <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer">
-                <p className="font-light glass-text-primary">Emotional Processing</p>
+              <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer touch-manipulation active:scale-95">
+                <p className="font-light glass-text-primary text-xs sm:text-sm">Emotional Processing</p>
                 <p className="text-xs glass-text-muted mt-1 font-light">Yesterday</p>
               </div>
-              <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer">
-                <p className="font-light glass-text-primary">Values Exploration</p>
+              <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer touch-manipulation active:scale-95">
+                <p className="font-light glass-text-primary text-xs sm:text-sm">Values Exploration</p>
                 <p className="text-xs glass-text-muted mt-1 font-light">3 days ago</p>
               </div>
             </div>
