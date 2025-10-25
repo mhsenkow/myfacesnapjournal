@@ -74,17 +74,17 @@ Feed Analysis Summary:
 - Most common content types: ${contentTypesArray.slice(0, 3).map(t => t.type).join(', ')}
 - Trending topics across feed: ${trendingTopics.slice(0, 5).map(t => `#${t.topic}`).join(', ')}
 
-Provide insights in this exact format (no intro text, no bold formatting):
-INSIGHT 1: [Clear observation and implication] | [emoticon that represents this specific insight's meaning]
-INSIGHT 2: [Clear observation and implication] | [emoticon that represents this specific insight's meaning]
-INSIGHT 3: [Clear observation and implication] | [emoticon that represents this specific insight's meaning]
-INSIGHT 4: [Clear observation and implication] | [emoticon that represents this specific insight's meaning]
+CRITICAL: You MUST use this exact format with pipe separator:
+INSIGHT 1: [Clear observation and implication] | [single relevant emoticon]
+INSIGHT 2: [Clear observation and implication] | [single relevant emoticon]
+INSIGHT 3: [Clear observation and implication] | [single relevant emoticon]
+INSIGHT 4: [Clear observation and implication] | [single relevant emoticon]
 
-Choose emoticons that directly relate to each insight's content. For example:
-- Platform dominance → 🏢 or 👥
-- Content patterns → 📝 or 📊
-- User behavior → 🎯 or 🔍
-- Community trends → 🌟 or 📈`;
+Choose ONE emoticon per insight that represents the core meaning:
+- Platform dominance/usage → 🏢 👥 📱
+- Content patterns/types → 📝 📊 📋
+- User behavior → 🎯 🔍 👤
+- Community trends → 🌟 📈 🔗`;
       break;
       
     case 'sentiment':
@@ -97,17 +97,17 @@ Feed Analysis Summary:
 - Most common content types: ${contentTypesArray.slice(0, 3).map(t => t.type).join(', ')}
 - Trending topics across feed: ${trendingTopics.slice(0, 5).map(t => `#${t.topic}`).join(', ')}
 
-Provide insights in this exact format (no intro text, no bold formatting):
-INSIGHT 1: [Clear observation and implication] | [emoticon that represents this specific insight's sentiment]
-INSIGHT 2: [Clear observation and implication] | [emoticon that represents this specific insight's sentiment]
-INSIGHT 3: [Clear observation and implication] | [emoticon that represents this specific insight's sentiment]
-INSIGHT 4: [Clear observation and implication] | [emoticon that represents this specific insight's sentiment]
+CRITICAL: You MUST use this exact format with pipe separator:
+INSIGHT 1: [Clear observation and implication] | [single relevant emoticon]
+INSIGHT 2: [Clear observation and implication] | [single relevant emoticon]
+INSIGHT 3: [Clear observation and implication] | [single relevant emoticon]
+INSIGHT 4: [Clear observation and implication] | [single relevant emoticon]
 
-Choose emoticons that match the emotional tone of each insight. For example:
-- Positive sentiment → 😊 or 🌟
-- Negative sentiment → 😔 or 😟
-- Neutral/analytical → 🤔 or 💭
-- Excited/energetic → ⚡ or 🔥`;
+Choose ONE emoticon per insight that represents the emotional tone:
+- Positive/optimistic → 😊 🌟 ✨
+- Negative/concerned → 😔 😟 😕
+- Neutral/analytical → 🤔 💭 🧠
+- Excited/energetic → ⚡ 🔥 🎉`;
       break;
       
     case 'engagement':
@@ -120,17 +120,17 @@ Feed Analysis Summary:
 - Most common content types: ${contentTypesArray.slice(0, 3).map(t => t.type).join(', ')}
 - Trending topics across feed: ${trendingTopics.slice(0, 5).map(t => `#${t.topic}`).join(', ')}
 
-Provide insights in this exact format (no intro text, no bold formatting):
-INSIGHT 1: [Clear observation and implication] | [emoticon that represents this specific insight's engagement pattern]
-INSIGHT 2: [Clear observation and implication] | [emoticon that represents this specific insight's engagement pattern]
-INSIGHT 3: [Clear observation and implication] | [emoticon that represents this specific insight's engagement pattern]
-INSIGHT 4: [Clear observation and implication] | [emoticon that represents this specific insight's engagement pattern]
+CRITICAL: You MUST use this exact format with pipe separator:
+INSIGHT 1: [Clear observation and implication] | [single relevant emoticon]
+INSIGHT 2: [Clear observation and implication] | [single relevant emoticon]
+INSIGHT 3: [Clear observation and implication] | [single relevant emoticon]
+INSIGHT 4: [Clear observation and implication] | [single relevant emoticon]
 
-Choose emoticons that represent the engagement characteristics. For example:
-- High engagement → 🔥 or 💬
-- Low engagement → 😴 or 👀
-- Interactive content → 🎯 or ⚡
-- Community building → 👥 or 🤝`;
+Choose ONE emoticon per insight that represents the engagement level:
+- High engagement → 🔥 💬 🎯
+- Low engagement → 😴 👀 🔇
+- Interactive content → ⚡ 🎪 🎮
+- Community building → 👥 🤝 🏘️`;
       break;
       
     case 'trending':
@@ -143,17 +143,17 @@ Feed Analysis Summary:
 - Most common content types: ${contentTypesArray.slice(0, 3).map(t => t.type).join(', ')}
 - Trending topics across feed: ${trendingTopics.slice(0, 5).map(t => `#${t.topic}`).join(', ')}
 
-Provide insights in this exact format (no intro text, no bold formatting):
-INSIGHT 1: [Clear observation and implication] | [emoticon that represents this specific insight's trending nature]
-INSIGHT 2: [Clear observation and implication] | [emoticon that represents this specific insight's trending nature]
-INSIGHT 3: [Clear observation and implication] | [emoticon that represents this specific insight's trending nature]
-INSIGHT 4: [Clear observation and implication] | [emoticon that represents this specific insight's trending nature]
+CRITICAL: You MUST use this exact format with pipe separator:
+INSIGHT 1: [Clear observation and implication] | [single relevant emoticon]
+INSIGHT 2: [Clear observation and implication] | [single relevant emoticon]
+INSIGHT 3: [Clear observation and implication] | [single relevant emoticon]
+INSIGHT 4: [Clear observation and implication] | [single relevant emoticon]
 
-Choose emoticons that represent the trending characteristics. For example:
-- Rising trends → 📈 or 🔥
-- Stable topics → ⚖️ or 🏠
-- Emerging themes → 🌟 or 🆕
-- Declining interests → 📉 or ⏰`;
+Choose ONE emoticon per insight that represents the trending nature:
+- Rising trends → 📈 🔥 🚀
+- Stable topics → ⚖️ 🏠 🎯
+- Emerging themes → 🌟 🆕 💡
+- Declining interests → 📉 ⏰ 🔚`;
       break;
   }
 
@@ -783,8 +783,49 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
                         {insight.emoticon}
                         {/* Tooltip */}
                         <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 max-w-xs whitespace-normal">
-                          <div className="font-medium mb-1">Insight Summary</div>
-                          <div className="text-xs opacity-90">{insight.text}</div>
+                          <div className="font-medium mb-1">Emoticon Meaning</div>
+                          <div className="text-xs opacity-90">
+                            {insight.emoticon === '🏢' && 'Platform dominance or corporate presence'}
+                            {insight.emoticon === '👥' && 'Community or user groups'}
+                            {insight.emoticon === '📱' && 'Mobile or platform usage'}
+                            {insight.emoticon === '📝' && 'Content creation or writing'}
+                            {insight.emoticon === '📊' && 'Data analysis or metrics'}
+                            {insight.emoticon === '📋' && 'Content organization or lists'}
+                            {insight.emoticon === '🎯' && 'Targeted behavior or focus'}
+                            {insight.emoticon === '🔍' && 'Analysis or investigation'}
+                            {insight.emoticon === '👤' && 'Individual user behavior'}
+                            {insight.emoticon === '🌟' && 'Community highlights or stars'}
+                            {insight.emoticon === '📈' && 'Growth trends or rising patterns'}
+                            {insight.emoticon === '🔗' && 'Connections or linking behavior'}
+                            {insight.emoticon === '😊' && 'Positive sentiment or happiness'}
+                            {insight.emoticon === '✨' && 'Optimism or sparkle'}
+                            {insight.emoticon === '😔' && 'Negative sentiment or sadness'}
+                            {insight.emoticon === '😟' && 'Concern or worry'}
+                            {insight.emoticon === '😕' && 'Confusion or mixed feelings'}
+                            {insight.emoticon === '🤔' && 'Analytical thinking or contemplation'}
+                            {insight.emoticon === '💭' && 'Thoughtful reflection'}
+                            {insight.emoticon === '🧠' && 'Intellectual analysis'}
+                            {insight.emoticon === '⚡' && 'High energy or excitement'}
+                            {insight.emoticon === '🔥' && 'High engagement or viral content'}
+                            {insight.emoticon === '🎉' && 'Celebration or excitement'}
+                            {insight.emoticon === '💬' && 'Active conversation or interaction'}
+                            {insight.emoticon === '😴' && 'Low engagement or inactivity'}
+                            {insight.emoticon === '👀' && 'Passive viewing or attention'}
+                            {insight.emoticon === '🔇' && 'Silence or lack of interaction'}
+                            {insight.emoticon === '🎪' && 'Entertaining or engaging content'}
+                            {insight.emoticon === '🎮' && 'Interactive or gamified content'}
+                            {insight.emoticon === '🤝' && 'Community building or collaboration'}
+                            {insight.emoticon === '🏘️' && 'Community or neighborhood'}
+                            {insight.emoticon === '🚀' && 'Rapid growth or trending upward'}
+                            {insight.emoticon === '⚖️' && 'Balanced or stable topics'}
+                            {insight.emoticon === '🏠' && 'Stable or home-based content'}
+                            {insight.emoticon === '🆕' && 'New or emerging themes'}
+                            {insight.emoticon === '💡' && 'Innovation or new ideas'}
+                            {insight.emoticon === '📉' && 'Declining trends or decreasing interest'}
+                            {insight.emoticon === '⏰' && 'Time-sensitive or temporal patterns'}
+                            {insight.emoticon === '🔚' && 'Ending trends or conclusion'}
+                            {!['🏢', '👥', '📱', '📝', '📊', '📋', '🎯', '🔍', '👤', '🌟', '📈', '🔗', '😊', '✨', '😔', '😟', '😕', '🤔', '💭', '🧠', '⚡', '🔥', '🎉', '💬', '😴', '👀', '🔇', '🎪', '🎮', '🤝', '🏘️', '🚀', '⚖️', '🏠', '🆕', '💡', '📉', '⏰', '🔚'].includes(insight.emoticon) && 'Contextual insight indicator'}
+                          </div>
                           {/* Tooltip arrow */}
                           <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-neutral-900 dark:border-t-neutral-100"></div>
                         </div>

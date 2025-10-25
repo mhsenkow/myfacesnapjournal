@@ -169,7 +169,8 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
       <div className={`fixed bottom-6 z-40 transition-all duration-300 ease-in-out
           left-4 right-4 sm:left-6 sm:right-6 md:left-20 md:right-20 
           ${appState.sidebarCollapsed ? 'lg:left-6' : 'lg:left-64'} 
-          max-w-6xl mx-auto`}>
+          max-w-6xl mx-auto
+          ${isVisible ? 'pointer-events-auto' : 'pointer-events-none'}`}>
         <div className={`glass-panel glass-subtle border border-neutral-300 dark:border-neutral-600 rounded-2xl shadow-2xl backdrop-blur-xl p-3 sm:p-4 space-y-2 sm:space-y-3 transition-all duration-300 ease-in-out relative
           ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'}`}>
           

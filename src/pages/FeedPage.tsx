@@ -46,7 +46,9 @@ import {
   Lock,
   Globe,
   Bookmark,
-  Search
+  Search,
+  Cloud,
+  Zap
 } from 'lucide-react';
 import { useMastodonStore } from '../stores/mastodonStore';
 import { useBlueskyStore } from '../stores/blueskyStore';
@@ -159,19 +161,17 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
   }, [displayMode]);
   // Helper function to render platform badge
   const renderPlatformBadge = (post: any) => {
-    const isBluesky = post.url?.includes('bsky.app');
+    const isBluesky = post.url?.includes('bsky.app') || post.platform === 'bluesky';
     if (isBluesky) {
       return (
-        <div className="absolute top-3 right-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-1 z-10">
-          <div className="w-2 h-2 bg-white rounded-full"></div>
-          <span>Bluesky</span>
+        <div className="absolute bottom-2 right-2 w-6 h-6 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center shadow-sm z-10 hover:scale-105 transition-transform duration-200 opacity-80 hover:opacity-100">
+          <Cloud className="w-3 h-3 text-white" />
         </div>
       );
     } else {
       return (
-        <div className="absolute top-3 right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-1 z-10">
-          <div className="w-2 h-2 bg-white rounded-full"></div>
-          <span>Mastodon</span>
+        <div className="absolute bottom-2 right-2 w-6 h-6 bg-gradient-to-br from-neutral-500 to-neutral-600 rounded-full flex items-center justify-center shadow-sm z-10 hover:scale-105 transition-transform duration-200 opacity-80 hover:opacity-100">
+          <Zap className="w-3 h-3 text-white" />
         </div>
       );
     }
@@ -395,15 +395,15 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-primary truncate">{post.account.display_name}</div>
-                <div className="text-sm text-muted-custom">@{post.account.username}</div>
+                <div className="font-semibold glass-text-primary truncate">{post.account.display_name}</div>
+                <div className="text-sm glass-text-secondary">@{post.account.username}</div>
               </div>
-              <div className="text-xs text-muted-custom">
+              <div className="text-xs glass-text-tertiary">
                 {formatRelativeTime(post.created_at)}
               </div>
             </div>
             
-            <p className="text-secondary mb-4 line-clamp-4 leading-relaxed">
+            <p className="glass-text-secondary mb-4 line-clamp-4 leading-relaxed">
               {formatContent(post.content)}
             </p>
             
@@ -421,7 +421,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
             
             {/* Actions */}
             <div className="flex items-center justify-between pt-4 border-t border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center gap-3 text-neutral-500 dark:text-neutral-400 flex-wrap">
+              <div className="flex items-center gap-3 glass-text-tertiary flex-wrap">
                 {/* Core Engagement */}
                 <button className="flex items-center gap-1 hover:text-blue-600 transition-colors">
                   <MessageCircle className="w-4 h-4" />
@@ -475,19 +475,19 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 
                 {/* Content Indicators */}
                 {post.media_attachments.length > 0 && (
-                  <div className="flex items-center gap-1 text-purple-500">
+                  <div className="flex items-center gap-1 glass-text-tertiary">
                     <Image className="w-4 h-4" />
                     <span className="text-sm">{post.media_attachments.length}</span>
                   </div>
                 )}
                 {post.poll && (
-                  <div className="flex items-center gap-1 text-orange-500">
+                  <div className="flex items-center gap-1 glass-text-tertiary">
                     <BarChart3 className="w-4 h-4" />
                     <span className="text-sm">{post.poll.votes_count}</span>
                   </div>
                 )}
                 {post.mentions.length > 0 && (
-                  <div className="flex items-center gap-1 text-cyan-500">
+                  <div className="flex items-center gap-1 glass-text-tertiary">
                     <AtSign className="w-4 h-4" />
                     <span className="text-sm">{post.mentions.length}</span>
                   </div>

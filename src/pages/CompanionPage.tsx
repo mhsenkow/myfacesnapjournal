@@ -19,6 +19,8 @@ const CompanionPage: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showOllamaSettings, setShowOllamaSettings] = useState(false)
+  const [includeJournalContext, setIncludeJournalContext] = useState(false)
+  const [includeFeedSampling, setIncludeFeedSampling] = useState(false)
   
   // Store hooks
   const { generateInsights } = useEchoStore()
@@ -51,15 +53,24 @@ const CompanionPage: React.FC = () => {
 
     try {
       // Create context from recent journal entries
-      const recentEntries = entries.slice(-5) // Last 5 entries
-      const context = recentEntries.length > 0 
-        ? `Recent journal entries for context:\n${recentEntries.map(entry => 
-            `${entry.title}: ${entry.content.substring(0, 200)}...`
-          ).join('\n\n')}`
-        : undefined
+      let context = '';
+      if (includeJournalContext) {
+        const recentEntries = entries.slice(-5) // Last 5 entries
+        context += recentEntries.length > 0 
+          ? `Recent journal entries for context:\n${recentEntries.map(entry => 
+              `${entry.title}: ${entry.content.substring(0, 200)}...`
+            ).join('\n\n')}`
+          : 'No recent journal entries available for context.'
+      }
+      
+      if (includeFeedSampling) {
+        // Add feed sampling context if needed
+        context += context ? '\n\n' : '';
+        context += 'Please consider recent social media activity and posts when providing insights.';
+      }
 
       // Generate AI response
-      const aiResponse = await generateInsights(currentMessage, context)
+      const aiResponse = await generateInsights(currentMessage, context || undefined)
       
       const botMessage = {
         id: (Date.now() + 1).toString(),
@@ -122,9 +133,9 @@ const CompanionPage: React.FC = () => {
   ]
 
   return (
-    <div className="min-h-screen space-y-4 sm:space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-purple-900 dark:via-blue-900 dark:to-indigo-900 space-y-4 sm:space-y-6">
       {/* Page Header with Glass Morphism */}
-      <div className="glass p-4 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700">
+      <div className="glass p-4 sm:p-6 rounded-2xl border border-white/20 dark:border-neutral-700/50 backdrop-blur-xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-4xl font-light glass-text-primary flex items-center gap-3 sm:gap-4">
@@ -133,7 +144,7 @@ const CompanionPage: React.FC = () => {
               </div>
               <span className="font-extralight tracking-wide">AI Introspection</span>
             </h1>
-            <p className="glass-text-tertiary mt-2 sm:mt-3 text-base sm:text-lg font-light">
+            <p className="glass-text-secondary mt-2 sm:mt-3 text-base sm:text-lg font-light">
               Deep self-reflection powered by artificial intelligence
               {typeof window !== 'undefined' && !(window as any).__TAURI__ && (
                 <span className="ml-2 text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded">
@@ -146,13 +157,13 @@ const CompanionPage: React.FC = () => {
             {typeof window !== 'undefined' && !(window as any).__TAURI__ && (
               <button 
                 onClick={() => setShowOllamaSettings(true)}
-                className="glass-subtle px-4 sm:px-5 py-2 sm:py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light flex items-center justify-center touch-manipulation active:scale-95"
+                className="glass-subtle px-4 sm:px-5 py-2 sm:py-3 rounded-xl border border-white/20 dark:border-neutral-700/50 hover:bg-white/50 dark:hover:bg-neutral-800/50 transition-colors font-light flex items-center justify-center touch-manipulation active:scale-95 backdrop-blur-xl"
               >
                 <Settings size={16} className="mr-2 text-blue-600" />
                 Ollama Settings
               </button>
             )}
-            <button className="glass-subtle px-4 sm:px-5 py-2 sm:py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors font-light flex items-center justify-center touch-manipulation active:scale-95">
+            <button className="glass-subtle px-4 sm:px-5 py-2 sm:py-3 rounded-xl border border-white/20 dark:border-neutral-700/50 hover:bg-white/50 dark:hover:bg-neutral-800/50 transition-colors font-light flex items-center justify-center touch-manipulation active:scale-95 backdrop-blur-xl">
               <Brain size={16} className="mr-2 text-purple-600" />
               New Session
             </button>
@@ -164,22 +175,49 @@ const CompanionPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Main Chat Interface */}
         <div className="lg:col-span-3 order-2 lg:order-1">
-          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 h-[700px] flex flex-col overflow-hidden">
+          <div className="glass rounded-2xl border border-white/20 dark:border-neutral-700/50 backdrop-blur-xl h-[calc(100vh-280px)] lg:h-[calc(100vh-180px)] flex flex-col overflow-hidden shadow-xl">
             {/* Chat Header */}
-            <div className="p-6 border-b border-neutral-200 dark:border-neutral-700 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
+            <div className="p-6 border-b border-white/20 dark:border-neutral-700/50 bg-gradient-to-r from-purple-100/50 to-blue-100/50 dark:from-purple-900/30 dark:to-blue-900/30 backdrop-blur-xl">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <Bot size={24} className="text-white" />
                 </div>
                 <div>
                   <h3 className="font-medium glass-text-primary text-xl tracking-wide">Introspection Specialist</h3>
-                  <p className="text-sm glass-text-tertiary font-light">Guiding your journey of self-discovery</p>
+                  <p className="text-sm glass-text-secondary font-light">Guiding your journey of self-discovery</p>
                 </div>
+              </div>
+              
+              {/* Context Toggle Buttons */}
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setIncludeJournalContext(!includeJournalContext)}
+                  className={`px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 flex items-center gap-2 backdrop-blur-xl ${
+                    includeJournalContext
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-sm'
+                      : 'glass-subtle border border-white/20 dark:border-neutral-700/50 glass-text-secondary hover:glass-text-primary hover:bg-white/50 dark:hover:bg-neutral-800/50'
+                  }`}
+                >
+                  <span className="text-sm">📔</span>
+                  Journal Context
+                </button>
+                
+                <button
+                  onClick={() => setIncludeFeedSampling(!includeFeedSampling)}
+                  className={`px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 flex items-center gap-2 backdrop-blur-xl ${
+                    includeFeedSampling
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-sm'
+                      : 'glass-subtle border border-white/20 dark:border-neutral-700/50 glass-text-secondary hover:glass-text-primary hover:bg-white/50 dark:hover:bg-neutral-800/50'
+                  }`}
+                >
+                  <span className="text-sm">📊</span>
+                  Feed Sampling
+                </button>
               </div>
             </div>
 
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6 pointer-events-none">
               {conversation.map((msg) => (
                 <div
                   key={msg.id}
@@ -239,7 +277,7 @@ const CompanionPage: React.FC = () => {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 sm:p-6 border-t border-neutral-200 dark:border-neutral-700">
+            <div className="p-4 sm:p-6 border-t border-white/20 dark:border-neutral-700/50 relative z-10 bg-gradient-to-r from-purple-50/50 to-blue-50/50 dark:from-purple-900/20 dark:to-blue-900/20 backdrop-blur-xl pointer-events-auto">
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <div className="flex-1 relative">
                   <textarea
@@ -248,7 +286,7 @@ const CompanionPage: React.FC = () => {
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Share your thoughts, feelings, or questions for deep introspection..."
-                    className="w-full px-4 py-3 glass-subtle border border-neutral-300 dark:border-neutral-600 glass-text-primary rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-neutral-400 dark:placeholder-neutral-500 font-light text-sm sm:text-base"
+                    className="w-full px-4 py-3 glass-subtle border border-white/30 dark:border-neutral-600/50 glass-text-primary rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent glass-text-tertiary font-light text-sm sm:text-base backdrop-blur-xl"
                     rows={3}
                   />
                 </div>
@@ -269,10 +307,10 @@ const CompanionPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
+        {/* Sidebar - Hidden on mobile */}
+        <div className="hidden lg:block space-y-4 sm:space-y-6 order-1 lg:order-2">
           {/* Introspection Prompts */}
-          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-4 sm:p-6">
+          <div className="glass rounded-2xl border border-white/20 dark:border-neutral-700/50 backdrop-blur-xl p-4 sm:p-6 shadow-xl">
             <h3 className="font-medium glass-text-primary mb-4 flex items-center gap-2 text-base sm:text-lg tracking-wide">
               <Lightbulb size={16} className="text-yellow-500" />
               Introspection Prompts
@@ -282,13 +320,13 @@ const CompanionPage: React.FC = () => {
                 <button
                   key={index}
                   onClick={() => handlePromptClick(prompt.text)}
-                  className="w-full p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group touch-manipulation active:scale-95"
+                  className="w-full p-3 glass-subtle border border-white/20 dark:border-neutral-700/50 rounded-xl hover:bg-white/50 dark:hover:bg-neutral-800/50 transition-colors text-left group touch-manipulation active:scale-95 backdrop-blur-xl"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg bg-${prompt.color}-100 dark:bg-${prompt.color}-900/30`}>
                       <prompt.icon size={14} className={`text-${prompt.color}-600 dark:text-${prompt.color}-400`} />
                     </div>
-                    <span className="text-xs sm:text-sm glass-text-secondary group-hover:text-neutral-900 dark:group-hover:text-neutral-100 font-light">
+                    <span className="text-xs sm:text-sm glass-text-secondary group-hover:glass-text-primary font-light">
                       {prompt.text}
                     </span>
                   </div>
@@ -298,7 +336,7 @@ const CompanionPage: React.FC = () => {
           </div>
 
           {/* Mindfulness Exercises */}
-          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-4 sm:p-6">
+          <div className="glass rounded-2xl border border-white/20 dark:border-neutral-700/50 backdrop-blur-xl p-4 sm:p-6 shadow-xl">
             <h3 className="font-medium glass-text-primary mb-4 flex items-center gap-2 text-base sm:text-lg tracking-wide">
               <Moon size={16} className="text-blue-500" />
               Mindfulness Exercises
@@ -308,16 +346,16 @@ const CompanionPage: React.FC = () => {
                 <button
                   key={index}
                   onClick={() => handleExerciseClick(exercise.title)}
-                  className="w-full p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group touch-manipulation active:scale-95"
+                  className="w-full p-3 glass-subtle border border-white/20 dark:border-neutral-700/50 rounded-xl hover:bg-white/50 dark:hover:bg-neutral-800/50 transition-colors text-left group touch-manipulation active:scale-95 backdrop-blur-xl"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <exercise.icon size={14} className="text-neutral-600 dark:text-neutral-400" />
-                      <span className="text-xs sm:text-sm font-light glass-text-secondary group-hover:text-neutral-900 dark:group-hover:text-neutral-100">
+                      <exercise.icon size={14} className="text-purple-600 dark:text-purple-400" />
+                      <span className="text-xs sm:text-sm font-light glass-text-secondary group-hover:glass-text-primary">
                         {exercise.title}
                       </span>
                     </div>
-                    <span className="text-xs glass-text-muted font-light">
+                    <span className="text-xs glass-text-tertiary font-light">
                       {exercise.duration}
                     </span>
                   </div>
@@ -327,25 +365,62 @@ const CompanionPage: React.FC = () => {
           </div>
 
           {/* Session History */}
-          <div className="glass rounded-2xl border border-neutral-200 dark:border-neutral-700 p-4 sm:p-6">
+          <div className="glass rounded-2xl border border-white/20 dark:border-neutral-700/50 backdrop-blur-xl p-4 sm:p-6 shadow-xl">
             <h3 className="font-medium glass-text-primary mb-4 flex items-center gap-2 text-base sm:text-lg tracking-wide">
               <Eye size={16} className="text-purple-500" />
               Recent Sessions
             </h3>
             <div className="space-y-2 sm:space-y-3 text-sm">
-              <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer touch-manipulation active:scale-95">
+              <div className="p-3 glass-subtle border border-white/20 dark:border-neutral-700/50 rounded-xl hover:bg-white/50 dark:hover:bg-neutral-800/50 transition-colors cursor-pointer touch-manipulation active:scale-95 backdrop-blur-xl">
                 <p className="font-light glass-text-primary text-xs sm:text-sm">Deep Self-Analysis</p>
-                <p className="text-xs glass-text-muted mt-1 font-light">2 hours ago</p>
+                <p className="text-xs glass-text-tertiary mt-1 font-light">2 hours ago</p>
               </div>
-              <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer touch-manipulation active:scale-95">
+              <div className="p-3 glass-subtle border border-white/20 dark:border-neutral-700/50 rounded-xl hover:bg-white/50 dark:hover:bg-neutral-800/50 transition-colors cursor-pointer touch-manipulation active:scale-95 backdrop-blur-xl">
                 <p className="font-light glass-text-primary text-xs sm:text-sm">Emotional Processing</p>
-                <p className="text-xs glass-text-muted mt-1 font-light">Yesterday</p>
+                <p className="text-xs glass-text-tertiary mt-1 font-light">Yesterday</p>
               </div>
-              <div className="p-3 glass-subtle border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer touch-manipulation active:scale-95">
+              <div className="p-3 glass-subtle border border-white/20 dark:border-neutral-700/50 rounded-xl hover:bg-white/50 dark:hover:bg-neutral-800/50 transition-colors cursor-pointer touch-manipulation active:scale-95 backdrop-blur-xl">
                 <p className="font-light glass-text-primary text-xs sm:text-sm">Values Exploration</p>
-                <p className="text-xs glass-text-muted mt-1 font-light">3 days ago</p>
+                <p className="text-xs glass-text-tertiary mt-1 font-light">3 days ago</p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Tiny Tokens - Only visible on mobile */}
+      <div className="lg:hidden mt-4">
+        <div className="glass rounded-xl border border-white/20 dark:border-neutral-700/50 backdrop-blur-xl p-3 shadow-xl">
+          <div className="flex flex-wrap gap-2">
+            {/* Introspection Prompt Tokens */}
+            {introspectionPrompts.map((prompt, index) => (
+              <button
+                key={`prompt-${index}`}
+                onClick={() => handlePromptClick(prompt.text)}
+                className="px-3 py-1.5 glass-subtle border border-white/20 dark:border-neutral-700/50 rounded-full hover:bg-white/50 dark:hover:bg-neutral-800/50 transition-colors text-left group touch-manipulation active:scale-95 flex items-center gap-1.5 backdrop-blur-xl"
+              >
+                <prompt.icon size={12} className={`text-${prompt.color}-600 dark:text-${prompt.color}-400`} />
+                <span className="text-xs glass-text-secondary group-hover:glass-text-primary font-light">
+                  {prompt.text.split(' ').slice(0, 3).join(' ')}
+                  {prompt.text.split(' ').length > 3 && '...'}
+                </span>
+              </button>
+            ))}
+            
+            {/* Mindfulness Exercise Tokens */}
+            {mindfulnessExercises.map((exercise, index) => (
+              <button
+                key={`exercise-${index}`}
+                onClick={() => handleExerciseClick(exercise.title)}
+                className="px-3 py-1.5 glass-subtle border border-white/20 dark:border-neutral-700/50 rounded-full hover:bg-white/50 dark:hover:bg-neutral-800/50 transition-colors text-left group touch-manipulation active:scale-95 flex items-center gap-1.5 backdrop-blur-xl"
+              >
+                <exercise.icon size={12} className="text-purple-600 dark:text-purple-400" />
+                <span className="text-xs glass-text-secondary group-hover:glass-text-primary font-light">
+                  {exercise.title.split(' ').slice(0, 2).join(' ')}
+                  {exercise.title.split(' ').length > 2 && '...'}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
