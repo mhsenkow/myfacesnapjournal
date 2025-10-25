@@ -8,11 +8,18 @@
  * - Social media performance insights
  */
 
-import React, { useState, useEffect } from 'react';
-import { X, Users, Heart, MessageCircle, BarChart3, Brain, Hash, Eye, Info } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { X, Users, Heart, MessageCircle, BarChart3, Brain, Hash, Eye } from 'lucide-react';
 import { useMastodonStore } from '../../stores/mastodonStore';
 import { useBlueskyStore } from '../../stores/blueskyStore';
 import { webAIService } from '../../services/webAIService';
+import { 
+  ShimmerCard, 
+  ShimmerMetric, 
+  ShimmerProgressBar, 
+  ShimmerInsight, 
+  ShimmerTabs 
+} from './ShimmerLoader';
 
 interface AnalyticsData {
   totalPosts: number;
@@ -20,9 +27,11 @@ interface AnalyticsData {
   avgEngagementRate: number;
   topPlatforms: Array<{ platform: string; count: number; percentage: number }>;
   trendingTopics: Array<{ topic: string; count: number; trend: 'up' | 'down' | 'stable' }>;
-  aiInsights: string[];
+  aiInsights: Array<{ text: string; emoticon: string }>;
   engagementTrend: Array<{ date: string; engagement: number }>;
   contentTypes: Array<{ type: string; count: number; percentage: number }>;
+  lastUpdated: number;
+  dataHash: string;
 }
 
 type InsightAlgorithm = 'pattern' | 'sentiment' | 'engagement' | 'trending';
@@ -49,14 +58,14 @@ const generateAlgorithmInsights = async (
     trendingTopics: Array<{ topic: string; count: number; trend: 'up' | 'down' | 'stable' }>;
     allPosts: any[];
   }
-): Promise<string[]> => {
+): Promise<Array<{ text: string; emoticon: string }>> => {
   const { totalPosts, avgEngagementRate, topPlatforms, contentTypesArray, trendingTopics } = data;
   
   let analysisPrompt = '';
   
   switch (algorithm) {
     case 'pattern':
-      analysisPrompt = `Analyze the social media feed patterns and provide 3-4 meaningful insights about content trends, posting behaviors, and community patterns across ALL posts in this feed.
+      analysisPrompt = `Analyze the social media feed patterns and provide 3-4 concise insights about content trends, posting behaviors, and community patterns.
 
 Feed Analysis Summary:
 - Total posts in feed: ${totalPosts}
@@ -65,12 +74,21 @@ Feed Analysis Summary:
 - Most common content types: ${contentTypesArray.slice(0, 3).map(t => t.type).join(', ')}
 - Trending topics across feed: ${trendingTopics.slice(0, 5).map(t => `#${t.topic}`).join(', ')}
 
-Focus on behavioral patterns, content strategy trends, and community dynamics. Format as:
-INSIGHT 1: [Observation] - [Interpretation/Implication]`;
+Provide insights in this exact format (no intro text, no bold formatting):
+INSIGHT 1: [Clear observation and implication] | [emoticon that represents this specific insight's meaning]
+INSIGHT 2: [Clear observation and implication] | [emoticon that represents this specific insight's meaning]
+INSIGHT 3: [Clear observation and implication] | [emoticon that represents this specific insight's meaning]
+INSIGHT 4: [Clear observation and implication] | [emoticon that represents this specific insight's meaning]
+
+Choose emoticons that directly relate to each insight's content. For example:
+- Platform dominance → 🏢 or 👥
+- Content patterns → 📝 or 📊
+- User behavior → 🎯 or 🔍
+- Community trends → 🌟 or 📈`;
       break;
       
     case 'sentiment':
-      analysisPrompt = `Analyze the emotional tone and sentiment patterns across ALL posts in this social media feed. Provide 3-4 insights about mood trends, emotional patterns, and community sentiment.
+      analysisPrompt = `Analyze the emotional tone and sentiment patterns across the social media feed. Provide 3-4 concise insights about mood trends, emotional patterns, and community sentiment.
 
 Feed Analysis Summary:
 - Total posts in feed: ${totalPosts}
@@ -79,12 +97,21 @@ Feed Analysis Summary:
 - Most common content types: ${contentTypesArray.slice(0, 3).map(t => t.type).join(', ')}
 - Trending topics across feed: ${trendingTopics.slice(0, 5).map(t => `#${t.topic}`).join(', ')}
 
-Focus on emotional patterns, mood trends, and sentiment shifts. Format as:
-INSIGHT 1: [Observation] - [Interpretation/Implication]`;
+Provide insights in this exact format (no intro text, no bold formatting):
+INSIGHT 1: [Clear observation and implication] | [emoticon that represents this specific insight's sentiment]
+INSIGHT 2: [Clear observation and implication] | [emoticon that represents this specific insight's sentiment]
+INSIGHT 3: [Clear observation and implication] | [emoticon that represents this specific insight's sentiment]
+INSIGHT 4: [Clear observation and implication] | [emoticon that represents this specific insight's sentiment]
+
+Choose emoticons that match the emotional tone of each insight. For example:
+- Positive sentiment → 😊 or 🌟
+- Negative sentiment → 😔 or 😟
+- Neutral/analytical → 🤔 or 💭
+- Excited/energetic → ⚡ or 🔥`;
       break;
       
     case 'engagement':
-      analysisPrompt = `Analyze what drives engagement and interaction patterns across ALL posts in this social media feed. Provide 3-4 insights about viral content characteristics, response patterns, and interaction drivers.
+      analysisPrompt = `Analyze what drives engagement and interaction patterns across the social media feed. Provide 3-4 concise insights about viral content characteristics, response patterns, and interaction drivers.
 
 Feed Analysis Summary:
 - Total posts in feed: ${totalPosts}
@@ -93,12 +120,21 @@ Feed Analysis Summary:
 - Most common content types: ${contentTypesArray.slice(0, 3).map(t => t.type).join(', ')}
 - Trending topics across feed: ${trendingTopics.slice(0, 5).map(t => `#${t.topic}`).join(', ')}
 
-Focus on engagement drivers, viral patterns, and interaction characteristics. Format as:
-INSIGHT 1: [Observation] - [Interpretation/Implication]`;
+Provide insights in this exact format (no intro text, no bold formatting):
+INSIGHT 1: [Clear observation and implication] | [emoticon that represents this specific insight's engagement pattern]
+INSIGHT 2: [Clear observation and implication] | [emoticon that represents this specific insight's engagement pattern]
+INSIGHT 3: [Clear observation and implication] | [emoticon that represents this specific insight's engagement pattern]
+INSIGHT 4: [Clear observation and implication] | [emoticon that represents this specific insight's engagement pattern]
+
+Choose emoticons that represent the engagement characteristics. For example:
+- High engagement → 🔥 or 💬
+- Low engagement → 😴 or 👀
+- Interactive content → 🎯 or ⚡
+- Community building → 👥 or 🤝`;
       break;
       
     case 'trending':
-      analysisPrompt = `Analyze topic evolution and trending patterns across ALL posts in this social media feed. Provide 3-4 insights about topic emergence, hashtag evolution, and trending dynamics.
+      analysisPrompt = `Analyze topic evolution and trending patterns across the social media feed. Provide 3-4 concise insights about topic emergence, hashtag evolution, and trending dynamics.
 
 Feed Analysis Summary:
 - Total posts in feed: ${totalPosts}
@@ -107,8 +143,17 @@ Feed Analysis Summary:
 - Most common content types: ${contentTypesArray.slice(0, 3).map(t => t.type).join(', ')}
 - Trending topics across feed: ${trendingTopics.slice(0, 5).map(t => `#${t.topic}`).join(', ')}
 
-Focus on topic trends, hashtag patterns, and emerging themes. Format as:
-INSIGHT 1: [Observation] - [Interpretation/Implication]`;
+Provide insights in this exact format (no intro text, no bold formatting):
+INSIGHT 1: [Clear observation and implication] | [emoticon that represents this specific insight's trending nature]
+INSIGHT 2: [Clear observation and implication] | [emoticon that represents this specific insight's trending nature]
+INSIGHT 3: [Clear observation and implication] | [emoticon that represents this specific insight's trending nature]
+INSIGHT 4: [Clear observation and implication] | [emoticon that represents this specific insight's trending nature]
+
+Choose emoticons that represent the trending characteristics. For example:
+- Rising trends → 📈 or 🔥
+- Stable topics → ⚖️ or 🏠
+- Emerging themes → 🌟 or 🆕
+- Declining interests → 📉 or ⏰`;
       break;
   }
 
@@ -118,24 +163,74 @@ INSIGHT 1: [Observation] - [Interpretation/Implication]`;
   });
 
   // Parse insights from AI response
-  const insightLines = aiResponse.response.split('\n').filter((line: string) => 
+  const responseText = aiResponse.response;
+  
+  // Remove any intro text before insights
+  const insightSection = responseText.split(/INSIGHT \d+:/i)[0] ? 
+    responseText.substring(responseText.indexOf('INSIGHT 1:') || responseText.indexOf('INSIGHT 1')) : 
+    responseText;
+  
+  const insightLines = insightSection.split('\n').filter((line: string) => 
     line.toLowerCase().includes('insight') && line.includes(':')
   );
   
   return insightLines.map((line: string) => {
+    // Extract content after "INSIGHT X:"
     const match = line.match(/INSIGHT \d+:\s*(.+)/i);
-    return match ? match[1].trim() : line.replace(/^INSIGHT \d+:\s*/i, '').trim();
-  }).filter((insight: string) => insight.length > 0);
+    if (match) {
+      let insightContent = match[1].trim();
+      
+      // Split by pipe separator to get text and emoticon
+      const parts = insightContent.split('|');
+      let text = parts[0]?.trim() || insightContent;
+      let emoticon = parts[1]?.trim() || '';
+      
+      // If no pipe separator, look for emoticon at the end of the text
+      if (!parts[1] && text) {
+        const emoticonMatch = text.match(/([\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}])$/u);
+        if (emoticonMatch) {
+          emoticon = emoticonMatch[1];
+          text = text.replace(emoticonMatch[0], '').trim();
+        }
+      }
+      
+      // Remove any bold formatting (**text**)
+      text = text.replace(/\*\*(.*?)\*\*/g, '$1');
+      // Remove any remaining markdown formatting
+      text = text.replace(/\*([^*]+)\*/g, '$1');
+      
+      // Remove any remaining emoticons from the text
+      text = text.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u, '').trim();
+      
+      // Clean up emoticon (remove extra spaces, take first emoji)
+      emoticon = emoticon.replace(/\s+/g, '').match(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u)?.[0] || '📊';
+      
+      return { text, emoticon };
+    }
+    return { text: line.replace(/^INSIGHT \d+:\s*/i, '').trim(), emoticon: '📊' };
+  }).filter((insight: { text: string; emoticon: string }) => insight.text.length > 0);
 };
 
 const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClose }) => {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingSections, setLoadingSections] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [activeAlgorithm, setActiveAlgorithm] = useState<InsightAlgorithm>('pattern');
   
   const { posts: mastodonPosts } = useMastodonStore();
   const { posts: blueskyPosts } = useBlueskyStore();
+
+  // Memoize data hash to detect changes
+  const dataHash = useMemo(() => {
+    const allPosts = [...mastodonPosts, ...blueskyPosts];
+    return `${allPosts.length}-${mastodonPosts.length}-${blueskyPosts.length}-${activeAlgorithm}`;
+  }, [mastodonPosts, blueskyPosts, activeAlgorithm]);
+
+  // Check if we need to reload data
+  const needsReload = useMemo(() => {
+    if (!analytics) return true;
+    return analytics.dataHash !== dataHash;
+  }, [analytics, dataHash]);
 
   // Algorithm definitions with tooltips
   const algorithms: Record<InsightAlgorithm, AlgorithmInfo> = {
@@ -162,14 +257,21 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && needsReload) {
       loadAnalytics();
     }
-  }, [isOpen, mastodonPosts, blueskyPosts, activeAlgorithm]);
+  }, [isOpen, needsReload]);
+
+  // Separate effect for algorithm changes (only reload AI insights)
+  useEffect(() => {
+    if (isOpen && analytics && !needsReload) {
+      loadAIInsights();
+    }
+  }, [activeAlgorithm]);
 
   const loadAnalytics = async () => {
-    setIsLoading(true);
     setError(null);
+    setLoadingSections(new Set(['metrics', 'platforms', 'topics', 'content', 'insights']));
 
     try {
       // Calculate basic metrics
@@ -182,11 +284,12 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
           avgEngagementRate: 0,
           topPlatforms: [],
           trendingTopics: [],
-          aiInsights: ['No posts available in feed yet. Import from Mastodon or Bluesky to see feed analytics!'],
+          aiInsights: [{ text: 'No posts available in feed yet. Import from Mastodon or Bluesky to see feed analytics!', emoticon: '📊' }],
           engagementTrend: [],
-          contentTypes: []
+          contentTypes: [],
+          lastUpdated: Date.now(),
+          dataHash
         });
-        setIsLoading(false);
         return;
       }
 
@@ -202,9 +305,9 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
         }
         // Handle Bluesky posts
         else if ('like_count' in post) {
-          engagement = (post.like_count || 0) + 
-                      (post.repostCount || 0) + 
-                      (post.replyCount || 0);
+          engagement = ((post as any).like_count || 0) + 
+                      ((post as any).repostCount || 0) + 
+                      ((post as any).replyCount || 0);
         }
         
         return sum + engagement;
@@ -267,7 +370,7 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
         .sort((a, b) => b.count - a.count);
 
       // Generate AI insights based on selected algorithm
-      let aiInsights: string[] = [];
+      let aiInsights: Array<{ text: string; emoticon: string }> = [];
       try {
         const isOllamaAvailable = await webAIService.checkAvailability();
         if (isOllamaAvailable && allPosts.length > 0) {
@@ -288,42 +391,41 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
       if (aiInsights.length === 0) {
         const platformDominance = topPlatforms.length > 0 ? topPlatforms[0] : null;
         const engagementLevel = avgEngagementRate > 5 ? 'high' : avgEngagementRate > 2 ? 'moderate' : 'low';
-        const contentDiversity = contentTypesArray.length > 2 ? 'diverse' : 'focused';
         
         switch (activeAlgorithm) {
           case 'pattern':
             aiInsights = [
-              `Feed contains ${totalPosts} posts with ${engagementLevel} engagement (${avgEngagementRate.toFixed(1)} avg) - suggests ${engagementLevel === 'high' ? 'active community interaction' : engagementLevel === 'moderate' ? 'selective engagement patterns' : 'passive consumption or niche audience'}`,
-              platformDominance ? `${platformDominance.platform} dominates with ${platformDominance.percentage.toFixed(0)}% of posts - indicates ${platformDominance.platform === 'Bluesky' ? 'early adopter community or tech-savvy audience' : 'established social media ecosystem'}` : 'Balanced platform usage suggests diverse community preferences',
-              trendingTopics.length > 0 ? `Top hashtags (#${trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) show ${trendingTopics.length > 2 ? 'diverse interests' : 'focused community themes'} - suggests ${trendingTopics.length > 2 ? 'broad community engagement' : 'specialized or niche discussions'}` : 'Limited hashtag usage suggests informal or personal communication style',
-              contentTypesArray.length > 0 ? `Content mix favors ${contentTypesArray[0].type} (${contentTypesArray[0].percentage.toFixed(0)}%) - indicates ${contentTypesArray[0].type === 'Links' ? 'information-sharing community' : contentTypesArray[0].type === 'Long-form' ? 'thoughtful discussion culture' : 'quick communication preferences'}` : 'Balanced content types suggest diverse communication styles'
+              { text: `Feed contains ${totalPosts} posts with ${engagementLevel} engagement (${avgEngagementRate.toFixed(1)} avg) - suggests ${engagementLevel === 'high' ? 'active community interaction' : engagementLevel === 'moderate' ? 'selective engagement patterns' : 'passive consumption or niche audience'}`, emoticon: '📊' },
+              { text: platformDominance ? `${platformDominance.platform} dominates with ${platformDominance.percentage.toFixed(0)}% of posts - indicates ${platformDominance.platform === 'Bluesky' ? 'early adopter community or tech-savvy audience' : 'established social media ecosystem'}` : 'Balanced platform usage suggests diverse community preferences', emoticon: '👥' },
+              { text: trendingTopics.length > 0 ? `Top hashtags (#${trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) show ${trendingTopics.length > 2 ? 'diverse interests' : 'focused community themes'} - suggests ${trendingTopics.length > 2 ? 'broad community engagement' : 'specialized or niche discussions'}` : 'Limited hashtag usage suggests informal or personal communication style', emoticon: '🏷️' },
+              { text: contentTypesArray.length > 0 ? `Content mix favors ${contentTypesArray[0].type} (${contentTypesArray[0].percentage.toFixed(0)}%) - indicates ${contentTypesArray[0].type === 'Links' ? 'information-sharing community' : contentTypesArray[0].type === 'Long-form' ? 'thoughtful discussion culture' : 'quick communication preferences'}` : 'Balanced content types suggest diverse communication styles', emoticon: '📝' }
             ];
             break;
             
           case 'sentiment':
             aiInsights = [
-              `Community sentiment appears ${engagementLevel === 'high' ? 'positive and engaged' : engagementLevel === 'moderate' ? 'balanced with selective enthusiasm' : 'reserved or contemplative'}`,
-              platformDominance ? `${platformDominance.platform} community shows ${platformDominance.platform === 'Bluesky' ? 'optimistic early-adopter energy' : 'established social media comfort'}` : 'Mixed platform sentiment suggests diverse emotional responses',
-              trendingTopics.length > 0 ? `Hashtag sentiment (#${trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) indicates ${trendingTopics.length > 2 ? 'broad emotional engagement' : 'focused community mood'}` : 'Limited hashtag usage suggests personal, less performative communication',
-              contentTypesArray.length > 0 ? `Content tone favors ${contentTypesArray[0].type} (${contentTypesArray[0].percentage.toFixed(0)}%) - suggests ${contentTypesArray[0].type === 'Links' ? 'curious, information-seeking mood' : contentTypesArray[0].type === 'Long-form' ? 'thoughtful, reflective community' : 'quick, spontaneous communication style'}` : 'Balanced content suggests varied emotional expression'
+              { text: `Community sentiment appears ${engagementLevel === 'high' ? 'positive and engaged' : engagementLevel === 'moderate' ? 'balanced with selective enthusiasm' : 'reserved or contemplative'}`, emoticon: '😊' },
+              { text: platformDominance ? `${platformDominance.platform} community shows ${platformDominance.platform === 'Bluesky' ? 'optimistic early-adopter energy' : 'established social media comfort'}` : 'Mixed platform sentiment suggests diverse emotional responses', emoticon: '🌟' },
+              { text: trendingTopics.length > 0 ? `Hashtag sentiment (#${trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) indicates ${trendingTopics.length > 2 ? 'broad emotional engagement' : 'focused community mood'}` : 'Limited hashtag usage suggests personal, less performative communication', emoticon: '💭' },
+              { text: contentTypesArray.length > 0 ? `Content tone favors ${contentTypesArray[0].type} (${contentTypesArray[0].percentage.toFixed(0)}%) - suggests ${contentTypesArray[0].type === 'Links' ? 'curious, information-seeking mood' : contentTypesArray[0].type === 'Long-form' ? 'thoughtful, reflective community' : 'quick, spontaneous communication style'}` : 'Balanced content suggests varied emotional expression', emoticon: '🎭' }
             ];
             break;
             
           case 'engagement':
             aiInsights = [
-              `Engagement patterns show ${engagementLevel === 'high' ? 'highly interactive community with strong response rates' : engagementLevel === 'moderate' ? 'selective engagement with quality over quantity' : 'passive consumption or niche audience behavior'}`,
-              platformDominance ? `${platformDominance.platform} drives ${platformDominance.percentage.toFixed(0)}% of posts - indicates ${platformDominance.platform === 'Bluesky' ? 'emerging community with growing engagement' : 'established platform with consistent interaction patterns'}` : 'Balanced platform usage suggests diverse engagement preferences',
-              trendingTopics.length > 0 ? `Top hashtags (#${trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) generate ${trendingTopics.length > 2 ? 'broad community response' : 'focused engagement'}` : 'Limited hashtag usage suggests direct, personal engagement style',
-              contentTypesArray.length > 0 ? `Most engaging content type: ${contentTypesArray[0].type} (${contentTypesArray[0].percentage.toFixed(0)}%) - suggests ${contentTypesArray[0].type === 'Links' ? 'link-sharing drives community interaction' : contentTypesArray[0].type === 'Long-form' ? 'thoughtful content generates deeper engagement' : 'quick posts encourage frequent interaction'}` : 'Diverse content types suggest varied engagement drivers'
+              { text: `Engagement patterns show ${engagementLevel === 'high' ? 'highly interactive community with strong response rates' : engagementLevel === 'moderate' ? 'selective engagement with quality over quantity' : 'passive consumption or niche audience behavior'}`, emoticon: '🔥' },
+              { text: platformDominance ? `${platformDominance.platform} drives ${platformDominance.percentage.toFixed(0)}% of posts - indicates ${platformDominance.platform === 'Bluesky' ? 'emerging community with growing engagement' : 'established platform with consistent interaction patterns'}` : 'Balanced platform usage suggests diverse engagement preferences', emoticon: '💬' },
+              { text: trendingTopics.length > 0 ? `Top hashtags (#${trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) generate ${trendingTopics.length > 2 ? 'broad community response' : 'focused engagement'}` : 'Limited hashtag usage suggests direct, personal engagement style', emoticon: '👀' },
+              { text: contentTypesArray.length > 0 ? `Most engaging content type: ${contentTypesArray[0].type} (${contentTypesArray[0].percentage.toFixed(0)}%) - suggests ${contentTypesArray[0].type === 'Links' ? 'link-sharing drives community interaction' : contentTypesArray[0].type === 'Long-form' ? 'thoughtful content generates deeper engagement' : 'quick posts encourage frequent interaction'}` : 'Diverse content types suggest varied engagement drivers', emoticon: '⚡' }
             ];
             break;
             
           case 'trending':
             aiInsights = [
-              `Topic evolution shows ${trendingTopics.length > 0 ? `${trendingTopics.length} active themes` : 'limited trending topics'} - suggests ${trendingTopics.length > 2 ? 'dynamic, evolving community interests' : 'stable, focused community discussions'}`,
-              platformDominance ? `${platformDominance.platform} trending patterns (${platformDominance.percentage.toFixed(0)}% of posts) indicate ${platformDominance.platform === 'Bluesky' ? 'emerging trends in early-adopter community' : 'established trending patterns'}` : 'Cross-platform trending suggests diverse topic evolution',
-              trendingTopics.length > 0 ? `Current trending topics (#${trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) show ${trendingTopics.length > 2 ? 'broad community interests' : 'focused trending themes'}` : 'Limited trending topics suggest personal, non-trending communication style',
-              contentTypesArray.length > 0 ? `Trending content types favor ${contentTypesArray[0].type} (${contentTypesArray[0].percentage.toFixed(0)}%) - indicates ${contentTypesArray[0].type === 'Links' ? 'information-sharing trends' : contentTypesArray[0].type === 'Long-form' ? 'thoughtful discussion trends' : 'quick communication trends'}` : 'Balanced content trends suggest diverse topic evolution'
+              { text: `Topic evolution shows ${trendingTopics.length > 0 ? `${trendingTopics.length} active themes` : 'limited trending topics'} - suggests ${trendingTopics.length > 2 ? 'dynamic, evolving community interests' : 'stable, focused community discussions'}`, emoticon: '📈' },
+              { text: platformDominance ? `${platformDominance.platform} trending patterns (${platformDominance.percentage.toFixed(0)}% of posts) indicate ${platformDominance.platform === 'Bluesky' ? 'emerging trends in early-adopter community' : 'established trending patterns'}` : 'Cross-platform trending suggests diverse topic evolution', emoticon: '🌊' },
+              { text: trendingTopics.length > 0 ? `Current trending topics (#${trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) show ${trendingTopics.length > 2 ? 'broad community interests' : 'focused trending themes'}` : 'Limited trending topics suggest personal, non-trending communication style', emoticon: '🏷️' },
+              { text: contentTypesArray.length > 0 ? `Trending content types favor ${contentTypesArray[0].type} (${contentTypesArray[0].percentage.toFixed(0)}%) - indicates ${contentTypesArray[0].type === 'Links' ? 'information-sharing trends' : contentTypesArray[0].type === 'Long-form' ? 'thoughtful discussion trends' : 'quick communication trends'}` : 'Balanced content trends suggest diverse topic evolution', emoticon: '⏰' }
             ];
             break;
         }
@@ -340,14 +442,16 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
         trendingTopics,
         aiInsights,
         engagementTrend,
-        contentTypes: contentTypesArray
+        contentTypes: contentTypesArray,
+        lastUpdated: Date.now(),
+        dataHash
       });
 
     } catch (err) {
       console.error('Analytics loading error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load analytics');
     } finally {
-      setIsLoading(false);
+      setLoadingSections(new Set());
     }
   };
 
@@ -386,9 +490,9 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
         }
         // Handle Bluesky posts
         else if ('like_count' in post) {
-          postEngagement = (post.like_count || 0) + 
-                          (post.repostCount || 0) + 
-                          (post.replyCount || 0);
+          postEngagement = ((post as any).like_count || 0) + 
+                          ((post as any).repostCount || 0) + 
+                          ((post as any).replyCount || 0);
         }
         
         return sum + postEngagement;
@@ -397,6 +501,103 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
       return { date, engagement };
     });
   };
+
+  // Separate function to load only AI insights
+  const loadAIInsights = useCallback(async () => {
+    if (!analytics) return;
+    
+    setLoadingSections(new Set(['insights']));
+    
+    try {
+      const allPosts = [...mastodonPosts, ...blueskyPosts];
+      
+      if (allPosts.length === 0) {
+        setAnalytics(prev => prev ? {
+          ...prev,
+          aiInsights: [{ text: 'No posts available in feed yet. Import from Mastodon or Bluesky to see feed analytics!', emoticon: '📊' }],
+          lastUpdated: Date.now()
+        } : null);
+        return;
+      }
+
+      // Generate AI insights based on selected algorithm
+      let aiInsights: Array<{ text: string; emoticon: string }> = [];
+      try {
+        const isOllamaAvailable = await webAIService.checkAvailability();
+        if (isOllamaAvailable && allPosts.length > 0) {
+          aiInsights = await generateAlgorithmInsights(activeAlgorithm, {
+            totalPosts: analytics.totalPosts,
+            avgEngagementRate: analytics.avgEngagementRate,
+            topPlatforms: analytics.topPlatforms,
+            contentTypesArray: analytics.contentTypes,
+            trendingTopics: analytics.trendingTopics,
+            allPosts
+          });
+        }
+      } catch (aiError) {
+        console.warn('AI analysis failed:', aiError);
+      }
+
+      // Fallback insights if AI fails
+      if (aiInsights.length === 0) {
+        const platformDominance = analytics.topPlatforms.length > 0 ? analytics.topPlatforms[0] : null;
+        const engagementLevel = analytics.avgEngagementRate > 5 ? 'high' : analytics.avgEngagementRate > 2 ? 'moderate' : 'low';
+        
+        switch (activeAlgorithm) {
+          case 'pattern':
+            aiInsights = [
+              { text: `Feed contains ${analytics.totalPosts} posts with ${engagementLevel} engagement (${analytics.avgEngagementRate.toFixed(1)} avg) - suggests ${engagementLevel === 'high' ? 'active community interaction' : engagementLevel === 'moderate' ? 'selective engagement patterns' : 'passive consumption or niche audience'}`, emoticon: '📊' },
+              { text: platformDominance ? `${platformDominance.platform} dominates with ${platformDominance.percentage.toFixed(0)}% of posts - indicates ${platformDominance.platform === 'Bluesky' ? 'early adopter community or tech-savvy audience' : 'established social media ecosystem'}` : 'Balanced platform usage suggests diverse community preferences', emoticon: '👥' },
+              { text: analytics.trendingTopics.length > 0 ? `Top hashtags (#${analytics.trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) show ${analytics.trendingTopics.length > 2 ? 'diverse interests' : 'focused community themes'} - suggests ${analytics.trendingTopics.length > 2 ? 'broad community engagement' : 'specialized or niche discussions'}` : 'Limited hashtag usage suggests informal or personal communication style', emoticon: '🏷️' },
+              { text: analytics.contentTypes.length > 0 ? `Content mix favors ${analytics.contentTypes[0].type} (${analytics.contentTypes[0].percentage.toFixed(0)}%) - indicates ${analytics.contentTypes[0].type === 'Links' ? 'information-sharing community' : analytics.contentTypes[0].type === 'Long-form' ? 'thoughtful discussion culture' : 'quick communication preferences'}` : 'Balanced content types suggest diverse communication styles', emoticon: '📝' }
+            ];
+            break;
+            
+          case 'sentiment':
+            aiInsights = [
+              { text: `Community sentiment appears ${engagementLevel === 'high' ? 'positive and engaged' : engagementLevel === 'moderate' ? 'balanced with selective enthusiasm' : 'reserved or contemplative'}`, emoticon: '😊' },
+              { text: platformDominance ? `${platformDominance.platform} community shows ${platformDominance.platform === 'Bluesky' ? 'optimistic early-adopter energy' : 'established social media comfort'}` : 'Mixed platform sentiment suggests diverse emotional responses', emoticon: '🌟' },
+              { text: analytics.trendingTopics.length > 0 ? `Hashtag sentiment (#${analytics.trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) indicates ${analytics.trendingTopics.length > 2 ? 'broad emotional engagement' : 'focused community mood'}` : 'Limited hashtag usage suggests personal, less performative communication', emoticon: '💭' },
+              { text: analytics.contentTypes.length > 0 ? `Content tone favors ${analytics.contentTypes[0].type} (${analytics.contentTypes[0].percentage.toFixed(0)}%) - suggests ${analytics.contentTypes[0].type === 'Links' ? 'curious, information-seeking mood' : analytics.contentTypes[0].type === 'Long-form' ? 'thoughtful, reflective community' : 'quick, spontaneous communication style'}` : 'Balanced content suggests varied emotional expression', emoticon: '🎭' }
+            ];
+            break;
+            
+          case 'engagement':
+            aiInsights = [
+              { text: `Engagement patterns show ${engagementLevel === 'high' ? 'highly interactive community with strong response rates' : engagementLevel === 'moderate' ? 'selective engagement with quality over quantity' : 'passive consumption or niche audience behavior'}`, emoticon: '🔥' },
+              { text: platformDominance ? `${platformDominance.platform} drives ${platformDominance.percentage.toFixed(0)}% of posts - indicates ${platformDominance.platform === 'Bluesky' ? 'emerging community with growing engagement' : 'established platform with consistent interaction patterns'}` : 'Balanced platform usage suggests diverse engagement preferences', emoticon: '💬' },
+              { text: analytics.trendingTopics.length > 0 ? `Top hashtags (#${analytics.trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) generate ${analytics.trendingTopics.length > 2 ? 'broad community response' : 'focused engagement'}` : 'Limited hashtag usage suggests direct, personal engagement style', emoticon: '👀' },
+              { text: analytics.contentTypes.length > 0 ? `Most engaging content type: ${analytics.contentTypes[0].type} (${analytics.contentTypes[0].percentage.toFixed(0)}%) - suggests ${analytics.contentTypes[0].type === 'Links' ? 'link-sharing drives community interaction' : analytics.contentTypes[0].type === 'Long-form' ? 'thoughtful content generates deeper engagement' : 'quick posts encourage frequent interaction'}` : 'Diverse content types suggest varied engagement drivers', emoticon: '⚡' }
+            ];
+            break;
+            
+          case 'trending':
+            aiInsights = [
+              { text: `Topic evolution shows ${analytics.trendingTopics.length > 0 ? `${analytics.trendingTopics.length} active themes` : 'limited trending topics'} - suggests ${analytics.trendingTopics.length > 2 ? 'dynamic, evolving community interests' : 'stable, focused community discussions'}`, emoticon: '📈' },
+              { text: platformDominance ? `${platformDominance.platform} trending patterns (${platformDominance.percentage.toFixed(0)}% of posts) indicate ${platformDominance.platform === 'Bluesky' ? 'emerging trends in early-adopter community' : 'established trending patterns'}` : 'Cross-platform trending suggests diverse topic evolution', emoticon: '🌊' },
+              { text: analytics.trendingTopics.length > 0 ? `Current trending topics (#${analytics.trendingTopics.slice(0, 3).map(t => t.topic).join(', #')}) show ${analytics.trendingTopics.length > 2 ? 'broad community interests' : 'focused trending themes'}` : 'Limited trending topics suggest personal, non-trending communication style', emoticon: '🏷️' },
+              { text: analytics.contentTypes.length > 0 ? `Trending content types favor ${analytics.contentTypes[0].type} (${analytics.contentTypes[0].percentage.toFixed(0)}%) - indicates ${analytics.contentTypes[0].type === 'Links' ? 'information-sharing trends' : analytics.contentTypes[0].type === 'Long-form' ? 'thoughtful discussion trends' : 'quick communication trends'}` : 'Balanced content trends suggest diverse topic evolution', emoticon: '⏰' }
+            ];
+            break;
+        }
+      }
+
+      setAnalytics(prev => prev ? {
+        ...prev,
+        aiInsights,
+        lastUpdated: Date.now()
+      } : null);
+      
+    } catch (err) {
+      console.error('AI insights loading error:', err);
+    } finally {
+      setLoadingSections(prev => {
+        const newSet = new Set(prev);
+        newSet.delete('insights');
+        return newSet;
+      });
+    }
+  }, [analytics, mastodonPosts, blueskyPosts, activeAlgorithm]);
 
   return (
     <div className={`fixed top-0 right-0 h-full w-full sm:w-96 glass-panel glass-subtle border-l border-neutral-200 dark:border-neutral-700 shadow-2xl z-50 overflow-y-auto transform transition-transform duration-300 ease-out ${
@@ -419,37 +620,58 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
           </button>
         </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
           </div>
-        ) : analytics ? (
+        ) : (
           <div className="space-y-6">
             {/* Key Metrics */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="glass-subtle p-4 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <MessageCircle className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm glass-text-muted">Total Posts</span>
-                </div>
-                <p className="text-2xl font-light glass-text-primary">{analytics.totalPosts}</p>
-              </div>
-              
-              <div className="glass-subtle p-4 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Heart className="w-4 h-4 text-red-500" />
-                  <span className="text-sm glass-text-muted">Total Engagement</span>
-                </div>
-                <p className="text-2xl font-light glass-text-primary">{analytics.totalEngagement}</p>
-              </div>
+              {loadingSections.has('metrics') ? (
+                <>
+                  <ShimmerMetric />
+                  <ShimmerMetric />
+                </>
+              ) : analytics ? (
+                <>
+                  <div className="glass-subtle p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MessageCircle className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm glass-text-muted">Total Posts</span>
+                    </div>
+                    <p className="text-2xl font-light glass-text-primary">{analytics.totalPosts}</p>
+                  </div>
+                  
+                  <div className="glass-subtle p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Heart className="w-4 h-4 text-red-500" />
+                      <span className="text-sm glass-text-muted">Total Engagement</span>
+                    </div>
+                    <p className="text-2xl font-light glass-text-primary">{analytics.totalEngagement}</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <ShimmerMetric />
+                  <ShimmerMetric />
+                </>
+              )}
             </div>
 
             {/* Platform Distribution */}
-            {analytics.topPlatforms.length > 0 && (
+            {loadingSections.has('platforms') ? (
+              <div>
+                <h3 className="text-sm font-medium glass-text-secondary mb-3 flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Platform Distribution
+                </h3>
+                <div className="space-y-2">
+                  <ShimmerProgressBar />
+                  <ShimmerProgressBar />
+                </div>
+              </div>
+            ) : analytics && analytics.topPlatforms.length > 0 ? (
               <div>
                 <h3 className="text-sm font-medium glass-text-secondary mb-3 flex items-center gap-2">
                   <Users className="w-4 h-4" />
@@ -472,10 +694,22 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
             {/* Trending Topics */}
-            {analytics.trendingTopics.length > 0 && (
+            {loadingSections.has('topics') ? (
+              <div>
+                <h3 className="text-sm font-medium glass-text-secondary mb-3 flex items-center gap-2">
+                  <Hash className="w-4 h-4" />
+                  Trending Topics
+                </h3>
+                <div className="space-y-2">
+                  <ShimmerCard />
+                  <ShimmerCard />
+                  <ShimmerCard />
+                </div>
+              </div>
+            ) : analytics && analytics.trendingTopics.length > 0 ? (
               <div>
                 <h3 className="text-sm font-medium glass-text-secondary mb-3 flex items-center gap-2">
                   <Hash className="w-4 h-4" />
@@ -492,7 +726,7 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
             {/* AI Insights with Micro-tabs */}
             <div>
@@ -504,42 +738,85 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
               </div>
               
               {/* Micro-tabs */}
-              <div className="flex gap-1 mb-4 p-1 glass-subtle rounded-lg">
-                {Object.entries(algorithms).map(([key, algorithm]) => (
-                  <div key={key} className="relative group">
-                    <button
-                      onClick={() => setActiveAlgorithm(key as InsightAlgorithm)}
-                      className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                        activeAlgorithm === key
-                          ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white shadow-sm'
-                          : 'glass-text-muted hover:glass-text-primary hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                      }`}
-                    >
-                      {algorithm.name}
-                    </button>
-                    
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 max-w-xs">
-                      <div className="font-medium mb-1">{algorithm.description}</div>
-                      <div className="text-xs opacity-90">{algorithm.tooltip}</div>
-                      {/* Tooltip arrow */}
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-neutral-900 dark:border-t-neutral-100"></div>
+              {loadingSections.has('insights') ? (
+                <ShimmerTabs count={4} />
+              ) : (
+                <div className="flex gap-1 mb-4 p-1 glass-subtle rounded-lg">
+                  {Object.entries(algorithms).map(([key, algorithm]) => (
+                    <div key={key} className="relative group">
+                      <button
+                        onClick={() => setActiveAlgorithm(key as InsightAlgorithm)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                          activeAlgorithm === key
+                            ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white shadow-sm'
+                            : 'glass-text-muted hover:glass-text-primary hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                        }`}
+                      >
+                        {algorithm.name}
+                      </button>
+                      
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 max-w-xs">
+                        <div className="font-medium mb-1">{algorithm.description}</div>
+                        <div className="text-xs opacity-90">{algorithm.tooltip}</div>
+                        {/* Tooltip arrow */}
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-neutral-900 dark:border-t-neutral-100"></div>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
               
               <div className="space-y-3">
-                {analytics.aiInsights.map((insight, index) => (
-                  <div key={index} className="glass-subtle p-3 rounded-lg">
-                    <p className="text-sm glass-text-primary">{insight}</p>
-                  </div>
-                ))}
+                {loadingSections.has('insights') ? (
+                  <>
+                    <ShimmerInsight />
+                    <ShimmerInsight />
+                    <ShimmerInsight />
+                    <ShimmerInsight />
+                  </>
+                ) : analytics ? (
+                  analytics.aiInsights.map((insight, index) => (
+                    <div key={index} className="glass-subtle p-3 rounded-lg relative">
+                      <p className="text-sm glass-text-primary leading-relaxed pr-6">{insight.text}</p>
+                      <div className="absolute bottom-4 -right-1 w-6 h-6 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs shadow-lg border-2 border-white dark:border-neutral-800 transform translate-x-1/2 hover:scale-110 transition-transform duration-200 cursor-pointer group">
+                        {insight.emoticon}
+                        {/* Tooltip */}
+                        <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 max-w-xs whitespace-normal">
+                          <div className="font-medium mb-1">Insight Summary</div>
+                          <div className="text-xs opacity-90">{insight.text}</div>
+                          {/* Tooltip arrow */}
+                          <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-neutral-900 dark:border-t-neutral-100"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <ShimmerInsight />
+                    <ShimmerInsight />
+                    <ShimmerInsight />
+                    <ShimmerInsight />
+                  </>
+                )}
               </div>
             </div>
 
             {/* Content Types */}
-            {analytics.contentTypes.length > 0 && (
+            {loadingSections.has('content') ? (
+              <div>
+                <h3 className="text-sm font-medium glass-text-secondary mb-3 flex items-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  Content Types
+                </h3>
+                <div className="space-y-2">
+                  <ShimmerProgressBar />
+                  <ShimmerProgressBar />
+                  <ShimmerProgressBar />
+                  <ShimmerProgressBar />
+                </div>
+              </div>
+            ) : analytics && analytics.contentTypes.length > 0 ? (
               <div>
                 <h3 className="text-sm font-medium glass-text-secondary mb-3 flex items-center gap-2">
                   <Eye className="w-4 h-4" />
@@ -562,9 +839,9 @@ const SmartAnalyticsPanel: React.FC<SmartAnalyticsPanelProps> = ({ isOpen, onClo
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );
