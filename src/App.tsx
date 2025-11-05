@@ -18,6 +18,7 @@ import FeedPage from './pages/FeedPage'
 import SettingsPage from './pages/SettingsPage'
 import DatabaseSettingsPage from './pages/DatabaseSettingsPage'
 import VaultPage from './pages/VaultPage'
+import DocumentsPage from './pages/DocumentsPage'
 import ToastContainer from './components/UI/ToastContainer'
 import LoadingScreen from './components/UI/LoadingScreen'
 import BackgroundLoadingIndicator from './components/UI/BackgroundLoadingIndicator'
@@ -40,6 +41,7 @@ function AppContent() {
           
           {/* Main app routes */}
           <Route path="/journal" element={<JournalPage />} />
+          <Route path="/documents" element={<DocumentsPage />} />
           <Route path="/echo" element={<EchoPage />} />
           <Route path="/companion" element={<CompanionPage />} />
           <Route path="/feed" element={<FeedPage />} />

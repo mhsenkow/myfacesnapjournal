@@ -23,7 +23,8 @@ import {
   ChevronLeft, 
   ChevronRight,
   Rss,
-  User
+  User,
+  FileText
 } from 'lucide-react'
 
 const Sidebar: React.FC = () => {
@@ -66,6 +67,13 @@ const Sidebar: React.FC = () => {
       icon: BookOpen,
       path: '/journal',
       description: 'Write and organize your thoughts'
+    },
+    {
+      id: 'documents',
+      label: 'Documents',
+      icon: FileText,
+      path: '/documents',
+      description: 'Full-featured document editor'
     },
     {
       id: 'echo',
