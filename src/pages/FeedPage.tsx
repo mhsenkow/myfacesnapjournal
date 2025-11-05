@@ -48,15 +48,18 @@ import {
   Bookmark,
   Search,
   Cloud,
-  Zap
+  Zap,
+  ExternalLink,
+  Twitter
 } from 'lucide-react';
 import { useMastodonStore } from '../stores/mastodonStore';
 import { useBlueskyStore } from '../stores/blueskyStore';
+import { useTwitterStore } from '../stores/twitterStore';
 import { useApp } from '../contexts/AppContext';
 import { substackService, SubstackFeedItem } from '../services/substackService';
 import { MastodonPost } from '../types/mastodon';
 import PostInspector from '../components/UI/PostInspector';
-import { extractBlueskyMedia, extractBlueskyMentions, extractBlueskyHashtags } from '../utils/blueskyHelpers';
+import { extractBlueskyMedia, extractBlueskyMentions, extractBlueskyHashtags, extractBlueskyQuotePost } from '../utils/blueskyHelpers';
 
 // Feed Layout Component
 interface FeedLayoutProps {
@@ -66,8 +69,9 @@ interface FeedLayoutProps {
   formatContent: (content: string) => string;
   formatRelativeTime: (dateString: string) => string;
   getPostAnimationClass: (postId: string, currentIndex: number) => string;
-  toggleLike: (postId: string) => Promise<void>;
-  toggleBookmark: (postId: string) => Promise<void>;
+  toggleLike: (postId: string, platform?: string, uri?: string, cid?: string) => Promise<void>;
+  toggleRepost: (postId: string, platform?: string, uri?: string, cid?: string) => Promise<void>;
+  toggleBookmark: (postId: string, platform?: string, uri?: string) => Promise<void>;
   onInspectPost: (post: any) => void;
 }
 
@@ -79,6 +83,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
   formatRelativeTime, 
   getPostAnimationClass, 
   toggleLike, 
+  toggleRepost,
   toggleBookmark, 
   onInspectPost 
 }) => {
@@ -159,13 +164,51 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
       touchStartRef.current = null;
     }
   }, [displayMode]);
+  
+  // Helper function to render quote post (Bluesky)
+  const renderQuotePost = (post: any) => {
+    const quotePost = extractBlueskyQuotePost(post);
+    if (!quotePost) return null;
+    
+    return (
+      <div className="mt-4 p-4 glass-subtle border border-blue-300 dark:border-blue-600 rounded-xl hover:glass transition-all cursor-pointer" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center">
+            <Cloud className="w-3 h-3 text-white" />
+          </div>
+          <span className="text-sm font-medium glass-text-primary">Quoted Post</span>
+        </div>
+        <p className="text-sm glass-text-secondary italic line-clamp-2">
+          {quotePost.uri.split('/').pop()?.slice(0, 40)}...
+        </p>
+        <a 
+          href={`https://bsky.app/post/${quotePost.uri.split('/').pop()}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-blue-600 hover:text-blue-700 mt-2 inline-flex items-center gap-1 transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
+          View original <ExternalLink className="w-3 h-3" />
+        </a>
+      </div>
+    );
+  };
+  
   // Helper function to render platform badge
   const renderPlatformBadge = (post: any) => {
     const isBluesky = post.url?.includes('bsky.app') || post.platform === 'bluesky';
+    const isTwitter = post.url?.includes('twitter.com') || post.platform === 'twitter';
+    
     if (isBluesky) {
       return (
         <div className="absolute bottom-2 right-2 w-6 h-6 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center shadow-sm z-10 hover:scale-105 transition-transform duration-200 opacity-80 hover:opacity-100">
           <Cloud className="w-3 h-3 text-white" />
+        </div>
+      );
+    } else if (isTwitter) {
+      return (
+        <div className="absolute bottom-2 right-2 w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm z-10 hover:scale-105 transition-transform duration-200 opacity-80 hover:opacity-100">
+          <Twitter className="w-3 h-3 text-white" />
         </div>
       );
     } else {
@@ -176,13 +219,24 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
       );
     }
   };
+  
+  // Helper function to handle reply clicks
+  const handleToggleReply = (post: any) => {
+    onInspectPost(post);
+  };
 
   // Helper function to get platform-specific border classes
   const getPlatformBorderClasses = (post: any) => {
-    const isBluesky = post.url?.includes('bsky.app');
-    return isBluesky 
-      ? 'border-blue-300 dark:border-blue-600' 
-      : 'border-purple-300 dark:border-purple-600';
+    const isBluesky = post.url?.includes('bsky.app') || post.platform === 'bluesky';
+    const isTwitter = post.url?.includes('twitter.com') || post.platform === 'twitter';
+    
+    if (isBluesky) {
+      return 'border-blue-300 dark:border-blue-600';
+    } else if (isTwitter) {
+      return 'border-blue-400 dark:border-blue-500';
+    } else {
+      return 'border-purple-300 dark:border-purple-600';
+    }
   };
   // Refined Layout (Default)
   if (displayMode === 'refined') {
@@ -236,6 +290,9 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                   {formatContent(post.content)}
                 </p>
                 
+                {/* Quote Post (Bluesky) */}
+                {post.platform === 'bluesky' && renderQuotePost(post)}
+                
                 {/* Hashtags */}
                 {post.tags && post.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -261,20 +318,41 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 {/* Actions */}
                 <div className="flex items-center gap-6 text-neutral-500 dark:text-neutral-400 flex-wrap">
                   {/* Core Engagement */}
-                  <button className="flex items-center gap-1.5 hover:text-blue-600 transition-colors group p-2 -m-2 rounded-lg touch-manipulation active:scale-95">
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleToggleReply(post);
+                    }}
+                    className="post-action-button reply-button flex items-center gap-1.5 hover:text-blue-600 transition-colors group p-2 -m-2 rounded-lg touch-manipulation active:scale-95"
+                  >
                     <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span className="text-sm font-medium">{post.replies_count}</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 hover:text-green-600 transition-colors group p-2 -m-2 rounded-lg touch-manipulation active:scale-95">
-                    <Repeat2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span className="text-sm font-medium">{post.reblogs_count}</span>
                   </button>
                   <button 
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      console.log('💖 Like button clicked for post:', post.id);
-                      toggleLike(post.id);
+                      toggleRepost(post.id, post.platform, post.uri, post.cid);
+                    }}
+                    className={`post-action-button repost-button flex items-center gap-1.5 transition-colors group p-2 -m-2 rounded-lg touch-manipulation active:scale-95 ${
+                      post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost)
+                        ? 'text-green-600 repost-active' 
+                        : 'text-neutral-500 dark:text-neutral-400 hover:text-green-600'
+                    }`}
+                  >
+                    <Repeat2 
+                      className={`w-4 h-4 group-hover:scale-110 transition-transform ${
+                        post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost) ? 'fill-current' : ''
+                      }`} 
+                    />
+                    <span className="text-sm font-medium">{post.reblogs_count || post.repostCount || 0}</span>
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleLike(post.id, post.platform, post.uri, post.cid);
                     }}
                     className={`post-action-button flex items-center gap-1.5 transition-colors group p-2 -m-2 rounded-lg touch-manipulation active:scale-95 ${
                       post.favourited 
@@ -290,7 +368,11 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                     <span className="text-sm font-medium">{post.favourites_count}</span>
                   </button>
                       <button 
-                        onClick={() => toggleBookmark(post.id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleBookmark(post.id, post.platform, post.uri);
+                        }}
                         className={`post-action-button flex items-center gap-1.5 transition-colors group ${
                           post.bookmarked 
                             ? 'text-yellow-600 bookmark-saved' 
@@ -407,6 +489,9 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
               {formatContent(post.content)}
             </p>
             
+            {/* Quote Post (Bluesky) */}
+            {post.platform === 'bluesky' && renderQuotePost(post)}
+            
             {/* Hashtags */}
             {post.tags && post.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-4">
@@ -423,20 +508,37 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
             <div className="flex items-center justify-between pt-4 border-t border-neutral-200 dark:border-neutral-700">
               <div className="flex items-center gap-3 glass-text-tertiary flex-wrap">
                 {/* Core Engagement */}
-                <button className="flex items-center gap-1 hover:text-blue-600 transition-colors">
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleToggleReply(post);
+                  }}
+                  className="post-action-button reply-button flex items-center gap-1 hover:text-blue-600 transition-colors"
+                >
                   <MessageCircle className="w-4 h-4" />
                   <span className="text-sm">{post.replies_count}</span>
-                </button>
-                <button className="flex items-center gap-1 hover:text-green-600 transition-colors">
-                  <Repeat2 className="w-4 h-4" />
-                  <span className="text-sm">{post.reblogs_count}</span>
                 </button>
                 <button 
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('💖 Cards like button clicked for post:', post.id);
-                    toggleLike(post.id);
+                    toggleRepost(post.id, post.platform, post.uri, post.cid);
+                  }}
+                  className={`post-action-button repost-button flex items-center gap-1 transition-colors ${
+                    post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost)
+                      ? 'text-green-600 repost-active' 
+                      : 'text-neutral-500 dark:text-neutral-400 hover:text-green-600'
+                  }`}
+                >
+                  <Repeat2 className={`w-4 h-4 ${post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost) ? 'fill-current' : ''}`} />
+                  <span className="text-sm">{post.reblogs_count || post.repostCount || 0}</span>
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleLike(post.id, post.platform, post.uri, post.cid);
                   }}
                   className={`post-action-button flex items-center gap-1 transition-colors ${
                     post.favourited 
@@ -450,7 +552,11 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                   <span className="text-sm">{post.favourites_count}</span>
                 </button>
                 <button 
-                  onClick={() => toggleBookmark(post.id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleBookmark(post.id, post.platform, post.uri);
+                  }}
                   className={`post-action-button flex items-center gap-1 transition-colors ${
                     post.bookmarked 
                       ? 'text-yellow-600 bookmark-saved' 
@@ -600,7 +706,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleLike(post.id);
+                          toggleLike(post.id, post.platform, post.uri, post.cid);
                         }}
                         className={`post-action-button flex items-center gap-1 transition-colors group ${
                           post.favourited 
@@ -616,19 +722,41 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                         />
                         <span className="text-sm font-medium">{post.favourites_count}</span>
                       </button>
-                      <div className="flex items-center gap-1">
-                        <MessageCircle className="w-4 h-4" />
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleReply(post);
+                        }}
+                        className="post-action-button reply-button flex items-center gap-1 transition-colors group text-white hover:text-blue-400"
+                        title="View replies"
+                      >
+                        <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
                         <span className="text-sm font-medium">{post.replies_count}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Repeat2 className="w-4 h-4" />
-                        <span className="text-sm font-medium">{post.reblogs_count}</span>
-                      </div>
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleRepost(post.id, post.platform, post.uri, post.cid);
+                        }}
+                        className={`post-action-button repost-button flex items-center gap-1 transition-colors group ${
+                          post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost)
+                            ? 'text-green-400 repost-active' 
+                            : 'text-white hover:text-green-400'
+                        }`}
+                        title={post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost) ? 'Unrepost' : 'Repost'}
+                      >
+                        <Repeat2 
+                          className={`w-4 h-4 group-hover:scale-110 transition-transform ${
+                            post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost) ? 'fill-current' : ''
+                          }`}
+                        />
+                        <span className="text-sm font-medium">{post.reblogs_count || post.repostCount || 0}</span>
+                      </button>
                     </div>
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleBookmark(post.id);
+                        toggleBookmark(post.id, post.platform, post.uri);
                       }}
                       className={`post-action-button p-1 rounded transition-colors group ${
                         post.bookmarked 
@@ -755,11 +883,11 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleLike(post.id);
+                          toggleLike(post.id, post.platform, post.uri, post.cid);
                         }}
                         className={`post-action-button flex items-center gap-1 transition-colors group ${
                           post.favourited 
-                            ? 'text-red-200 hover:text-red-100' 
+                            ? 'text-red-200 hover:text-red-100 heart-liked' 
                             : 'text-white hover:text-red-200'
                         }`}
                         title={post.favourited ? 'Unlike' : 'Like'}
@@ -779,11 +907,11 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleLike(post.id);
+                        toggleLike(post.id, post.platform, post.uri, post.cid);
                       }}
                       className={`post-action-button p-1 rounded transition-colors group ${
                         post.favourited 
-                          ? 'text-red-200 hover:text-red-100' 
+                          ? 'text-red-200 hover:text-red-100 heart-liked' 
                           : 'text-white hover:text-red-200'
                       }`}
                       title={post.favourited ? 'Unlike' : 'Like'}
@@ -886,10 +1014,17 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
               {formatContent(post.content)}
             </p>
             
+            {/* Quote Post (Bluesky) */}
+            {post.platform === 'bluesky' && renderQuotePost(post)}
+            
             {/* Interactive compact metrics */}
             <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
               <button 
-                onClick={() => toggleLike(post.id)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleLike(post.id, post.platform, post.uri, post.cid);
+                }}
                 className={`post-action-button flex items-center gap-1 transition-colors group ${
                   post.favourited 
                     ? 'text-red-600 heart-liked' 
@@ -905,7 +1040,11 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 <span className="font-medium">{post.favourites_count}</span>
               </button>
               <button 
-                onClick={() => toggleBookmark(post.id)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleBookmark(post.id, post.platform, post.uri);
+                }}
                 className={`post-action-button p-1 rounded transition-colors group ${
                   post.bookmarked 
                     ? 'text-yellow-600 bookmark-saved' 
@@ -919,14 +1058,36 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                   }`}
                 />
               </button>
-              <span className="flex items-center gap-1">
-                <Repeat2 className="w-3 h-3" />
-                {post.reblogs_count}
-              </span>
-              <span className="flex items-center gap-1">
-                <MessageCircle className="w-3 h-3" />
-                {post.replies_count}
-              </span>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleToggleReply(post);
+                }}
+                className="post-action-button reply-button flex items-center gap-1 transition-colors group text-neutral-500 dark:text-neutral-400 hover:text-blue-600"
+                title="View replies"
+              >
+                <MessageCircle className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                <span className="text-xs">{post.replies_count}</span>
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleRepost(post.id, post.platform, post.uri, post.cid);
+                }}
+                className={`post-action-button repost-button flex items-center gap-1 transition-colors group ${
+                  post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost)
+                    ? 'text-green-600 repost-active' 
+                    : 'text-neutral-500 dark:text-neutral-400 hover:text-green-600'
+                }`}
+                title={post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost) ? 'Unrepost' : 'Repost'}
+              >
+                <Repeat2 className={`w-3 h-3 group-hover:scale-110 transition-transform ${
+                  post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost) ? 'fill-current' : ''
+                }`} />
+                <span className="text-xs font-medium">{post.reblogs_count || post.repostCount || 0}</span>
+              </button>
             </div>
           </div>
         ))}
@@ -981,11 +1142,14 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
 
             {/* Content */}
             <div className="px-6 pb-4">
-              <p className="text-secondary text-lg leading-relaxed mb-4">
-                {formatContent(post.content)}
-              </p>
+            <p className="text-secondary text-lg leading-relaxed mb-4">
+              {formatContent(post.content)}
+            </p>
+            
+            {/* Quote Post (Bluesky) */}
+            {post.platform === 'bluesky' && renderQuotePost(post)}
 
-              {/* Hashtags */}
+            {/* Hashtags */}
               {post.tags && post.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4">
                   {post.tags.map((tag: any) => (
@@ -1046,15 +1210,35 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
             <div className="flex items-center justify-between px-6 py-4 border-t border-neutral-200 dark:border-neutral-700">
               <div className="flex items-center gap-8">
                 {/* Reply */}
-                <button className="flex items-center gap-2 hover:text-blue-600 transition-colors group">
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleToggleReply(post);
+                  }}
+                  className="post-action-button reply-button flex items-center gap-2 hover:text-blue-600 transition-colors group"
+                >
                   <MessageCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   <span className="font-medium">{post.replies_count}</span>
                 </button>
                 
                 {/* Reblog */}
-                <button className="flex items-center gap-2 hover:text-green-600 transition-colors group">
-                  <Repeat2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium">{post.reblogs_count}</span>
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleRepost(post.id, post.platform, post.uri, post.cid);
+                  }}
+                  className={`post-action-button repost-button flex items-center gap-2 transition-colors group ${
+                    post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost)
+                      ? 'text-green-600 repost-active' 
+                      : 'text-neutral-500 dark:text-neutral-400 hover:text-green-600'
+                  }`}
+                >
+                  <Repeat2 className={`w-5 h-5 group-hover:scale-110 transition-transform ${
+                    post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost) ? 'fill-current' : ''
+                  }`} />
+                  <span className="font-medium">{post.reblogs_count || post.repostCount || 0}</span>
                 </button>
                 
                 {/* Like */}
@@ -1062,7 +1246,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    toggleLike(post.id);
+                    toggleLike(post.id, post.platform, post.uri, post.cid);
                   }}
                   className={`post-action-button flex items-center gap-2 transition-colors group ${
                     post.favourited 
@@ -1080,7 +1264,11 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                 
                 {/* Bookmark */}
                 <button 
-                  onClick={() => toggleBookmark(post.id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleBookmark(post.id, post.platform, post.uri);
+                  }}
                   className={`post-action-button flex items-center gap-2 transition-colors group ${
                     post.bookmarked 
                       ? 'text-yellow-600 bookmark-saved' 
@@ -1238,7 +1426,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleLike(post.id);
+                      toggleLike(post.id, post.platform, post.uri, post.cid);
                     }}
                     className={`post-action-button flex flex-col items-center gap-2 transition-all duration-200 group ${
                       post.favourited 
@@ -1280,16 +1468,24 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Add repost functionality here
+                      toggleRepost(post.id, post.platform, post.uri, post.cid);
                     }}
-                    className="post-action-button flex flex-col items-center gap-2 transition-all duration-200 group text-white hover:text-green-400"
-                    title="Repost"
+                    className={`post-action-button repost-button flex flex-col items-center gap-2 transition-all duration-200 group ${
+                      post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost)
+                        ? 'text-green-400 repost-active' 
+                        : 'text-white hover:text-green-400'
+                    }`}
+                    title={post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost) ? 'Unrepost' : 'Repost'}
                   >
                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/25 backdrop-blur-sm flex items-center justify-center group-hover:bg-black/35 transition-all duration-200 group-hover:scale-110">
-                      <Repeat2 className="w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform" />
+                      <Repeat2 
+                        className={`w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform ${
+                          post.reblogged || (post.platform === 'bluesky' && post.viewer?.repost) ? 'fill-current' : ''
+                        }`}
+                      />
                     </div>
                     <span className="text-base font-bold text-white drop-shadow-lg">
-                      {post.reblogs_count}
+                      {post.reblogs_count || post.repostCount || 0}
                     </span>
                   </button>
 
@@ -1297,7 +1493,7 @@ const FeedLayout: React.FC<FeedLayoutProps> = ({
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleBookmark(post.id);
+                      toggleBookmark(post.id, post.platform, post.uri);
                     }}
                     className={`post-action-button flex flex-col items-center gap-2 transition-all duration-200 group ${
                       post.bookmarked 
@@ -1348,6 +1544,7 @@ const FeedPage: React.FC = () => {
     liveFeedInterval,
     refreshLiveFeed,
     toggleLike,
+    toggleReblog,
     toggleBookmark
   } = useMastodonStore();
 
@@ -1357,8 +1554,21 @@ const FeedPage: React.FC = () => {
     isLoading: blueskyIsLoading,
     fetchPosts: fetchBlueskyPosts,
     restoreSession: restoreBlueskySession,
-    toggleLike: toggleBlueskyLike
+    toggleLike: toggleBlueskyLike,
+    toggleRepost: toggleBlueskyRepost,
+    toggleBookmark: toggleBlueskyBookmark
   } = useBlueskyStore();
+
+  const {
+    auth: twitterAuth,
+    posts: twitterPosts,
+    isLoading: twitterIsLoading,
+    fetchPosts: fetchTwitterPosts,
+    restoreSession: restoreTwitterSession,
+    toggleLike: toggleTwitterLike,
+    toggleRetweet: toggleTwitterRetweet,
+    toggleBookmark: toggleTwitterBookmark
+  } = useTwitterStore();
   
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
@@ -1402,15 +1612,52 @@ const FeedPage: React.FC = () => {
     setInspectedPost(null);
   };
 
-  // Unified toggleLike function that handles both Mastodon and Bluesky posts
+  // Unified toggleLike function that handles Mastodon, Bluesky, and Twitter posts
   const handleToggleLike = async (postId: string, platform?: string, uri?: string, cid?: string) => {
     if (platform === 'bluesky' && uri && cid) {
       // Handle Bluesky post
       await toggleBlueskyLike(uri, cid);
+    } else if (platform === 'twitter') {
+      // Handle Twitter post
+      await toggleTwitterLike(postId);
     } else {
       // Handle Mastodon post (default behavior)
       await toggleLike(postId);
     }
+  };
+
+  // Unified toggleRepost function
+  const handleToggleRepost = async (postId: string, platform?: string, uri?: string, cid?: string) => {
+    if (platform === 'bluesky' && uri && cid) {
+      // Handle Bluesky repost
+      await toggleBlueskyRepost(uri, cid);
+    } else if (platform === 'twitter') {
+      // Handle Twitter retweet
+      await toggleTwitterRetweet(postId);
+    } else {
+      // Handle Mastodon reblog
+      await toggleReblog(postId);
+    }
+  };
+
+  // Unified toggleBookmark function
+  const handleToggleBookmark = async (postId: string, platform?: string, uri?: string) => {
+    if (platform === 'bluesky' && uri) {
+      // Handle Bluesky bookmark (local)
+      await toggleBlueskyBookmark(uri);
+    } else if (platform === 'twitter') {
+      // Handle Twitter bookmark (local)
+      await toggleTwitterBookmark(postId);
+    } else {
+      // Handle Mastodon bookmark
+      await toggleBookmark(postId);
+    }
+  };
+
+  // Unified toggleReply function
+  const handleToggleReply = (post: any) => {
+    // Open post inspector for replies
+    handleInspectPost(post);
   };
 
   // Note: Feed loading is now handled by background service
@@ -1512,6 +1759,16 @@ const FeedPage: React.FC = () => {
     initializeBluesky();
   }, [restoreBlueskySession]);
 
+  // Restore Twitter session on mount
+  useEffect(() => {
+    const initializeTwitter = async () => {
+      console.log('Initializing Twitter session...');
+      const restored = await restoreTwitterSession();
+      console.log('Twitter session restoration result:', restored);
+    };
+    initializeTwitter();
+  }, [restoreTwitterSession]);
+
   // Auto-enable feed sources when authenticated (only if user hasn't manually set preference)
   useEffect(() => {
     if (auth.isAuthenticated && 
@@ -1529,7 +1786,21 @@ const FeedPage: React.FC = () => {
     }
   }, [blueskyAuth.isAuthenticated, appState.activeFeedSources.bluesky, appState.userFeedPreferences.bluesky, toggleFeedSource]);
 
-  // Also fetch Bluesky posts when Bluesky auth changes (for manual refresh)
+  useEffect(() => {
+    if (twitterAuth.isAuthenticated && 
+        !appState.activeFeedSources.twitter && 
+        appState.userFeedPreferences.twitter === null) {
+      toggleFeedSource('twitter');
+    }
+  }, [twitterAuth.isAuthenticated, appState.activeFeedSources.twitter, appState.userFeedPreferences.twitter, toggleFeedSource]);
+
+  // Fetch Twitter posts when authenticated and Twitter feed is active
+  useEffect(() => {
+    if (twitterAuth.isAuthenticated && appState.activeFeedSources.twitter) {
+      console.log('Fetching Twitter posts...');
+      fetchTwitterPosts();
+    }
+  }, [twitterAuth.isAuthenticated, appState.activeFeedSources.twitter, fetchTwitterPosts]);
   useEffect(() => {
     if (blueskyAuth.isAuthenticated) {
       console.log('Bluesky authenticated, fetching posts...');
@@ -1612,7 +1883,7 @@ const FeedPage: React.FC = () => {
       )}
 
       {/* Posts List */}
-      {(auth.isAuthenticated || blueskyAuth.isAuthenticated) && (
+      {(auth.isAuthenticated || blueskyAuth.isAuthenticated || twitterAuth.isAuthenticated) && (
         <>
           {(() => {
             // Combine posts from both platforms
@@ -1629,6 +1900,8 @@ const FeedPage: React.FC = () => {
             
             if (appState.activeFeedSources.bluesky && blueskyAuth.isAuthenticated) {
               // Convert Bluesky posts to Mastodon format for compatibility
+              const bookmarkedPosts = JSON.parse(localStorage.getItem('bluesky-bookmarks') || '[]') as string[];
+              
               const convertedBlueskyPosts = blueskyPosts.map(blueskyPost => {
                 // Extract the unique post ID from the URI (last part after final slash)
                 const postId = blueskyPost.uri.split('/').pop() || blueskyPost.uri;
@@ -1649,7 +1922,7 @@ const FeedPage: React.FC = () => {
                   favourites_count: blueskyPost.likeCount,
                   favourited: !!blueskyPost.viewer?.like,
                   reblogged: !!blueskyPost.viewer?.repost,
-                  bookmarked: false, // Bluesky doesn't have bookmarks
+                  bookmarked: bookmarkedPosts.includes(blueskyPost.uri), // Initialize from localStorage
                   // Add platform metadata for unified handling
                   platform: 'bluesky',
                   uri: blueskyPost.uri,
@@ -1745,6 +2018,63 @@ const FeedPage: React.FC = () => {
               }));
               combinedPosts = [...combinedPosts, ...convertedSubstackPosts];
             }
+
+            if (appState.activeFeedSources.twitter && twitterAuth.isAuthenticated) {
+              // Convert Twitter posts to Mastodon format for compatibility
+              const bookmarkedPosts = JSON.parse(localStorage.getItem('twitter-bookmarks') || '[]') as string[];
+              
+              const convertedTwitterPosts = twitterPosts.map(twitterPost => {
+                const author = twitterPost.author || {
+                  id: twitterPost.author_id,
+                  username: 'unknown',
+                  name: 'Unknown User'
+                };
+
+                return {
+                  id: twitterPost.id,
+                  created_at: twitterPost.created_at,
+                  content: twitterPost.text,
+                  account: {
+                    id: author.id,
+                    username: author.username,
+                    display_name: author.name,
+                    avatar: author.profile_image_url || '',
+                    acct: author.username
+                  },
+                  replies_count: twitterPost.public_metrics?.reply_count || 0,
+                  reblogs_count: twitterPost.public_metrics?.retweet_count || 0,
+                  favourites_count: twitterPost.public_metrics?.like_count || 0,
+                  favourited: false, // Twitter API v2 doesn't provide like status in read-only mode
+                  reblogged: false, // Twitter API v2 doesn't provide retweet status in read-only mode
+                  bookmarked: bookmarkedPosts.includes(twitterPost.id),
+                  // Add platform metadata for unified handling
+                  platform: 'twitter',
+                  uri: `https://twitter.com/${author.username}/status/${twitterPost.id}`,
+                  cid: twitterPost.id,
+                  url: `https://twitter.com/${author.username}/status/${twitterPost.id}`,
+                  media_attachments: twitterPost.media?.map(media => ({
+                    id: media.media_key,
+                    type: media.type === 'photo' ? 'image' : media.type === 'video' ? 'video' : 'image',
+                    url: media.url || media.preview_image_url || '',
+                    preview_url: media.preview_image_url || media.url || '',
+                    description: media.alt_text || '',
+                    meta: media.width && media.height ? {
+                      original: { width: media.width, height: media.height }
+                    } : undefined
+                  })) || [],
+                  mentions: [],
+                  tags: [],
+                  emojis: [],
+                  sensitive: twitterPost.possibly_sensitive || false,
+                  spoiler_text: '',
+                  visibility: 'public' as const,
+                  language: twitterPost.lang || 'en',
+                  in_reply_to_id: twitterPost.in_reply_to_user_id || null,
+                  in_reply_to_account_id: twitterPost.in_reply_to_user_id || null
+                };
+              });
+              combinedPosts = [...combinedPosts, ...convertedTwitterPosts];
+            }
             
             // Deduplicate posts by ID to prevent React key conflicts
             const combinedPostsMap = new Map();
@@ -1779,7 +2109,7 @@ const FeedPage: React.FC = () => {
             
             combinedPosts = Array.from(combinedPostsMap.values());
             
-            const isLoading = isLoadingPosts || (blueskyAuth.isAuthenticated && blueskyIsLoading);
+            const isLoading = isLoadingPosts || (blueskyAuth.isAuthenticated && blueskyIsLoading) || (twitterAuth.isAuthenticated && twitterIsLoading);
             
             if (isLoading) {
               return (
@@ -1807,17 +2137,15 @@ const FeedPage: React.FC = () => {
                 formatContent={formatContent}
                 formatRelativeTime={formatRelativeTime}
                 getPostAnimationClass={getPostAnimationClass}
-                toggleLike={async (postId: string) => {
-                  // Get the post to check if it's Bluesky or Mastodon
-                  const post = combinedPosts.find(p => p.id === postId);
-                  
-                  if (post?.platform === 'bluesky') {
-                    await handleToggleLike(postId, 'bluesky', post.uri, post.cid);
-                  } else {
-                    await handleToggleLike(postId); // Mastodon
-                  }
+                toggleLike={async (postId: string, platform?: string, uri?: string, cid?: string) => {
+                  await handleToggleLike(postId, platform, uri, cid);
                 }}
-                toggleBookmark={toggleBookmark}
+                toggleRepost={async (postId: string, platform?: string, uri?: string, cid?: string) => {
+                  await handleToggleRepost(postId, platform, uri, cid);
+                }}
+                toggleBookmark={async (postId: string, platform?: string, uri?: string) => {
+                  await handleToggleBookmark(postId, platform, uri);
+                }}
                 onInspectPost={handleInspectPost}
               />
             );

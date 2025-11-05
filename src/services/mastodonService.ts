@@ -102,7 +102,7 @@ class MastodonService {
         body: JSON.stringify({
           client_name: 'MyFace SnapJournal',
           redirect_uris: redirectUri,
-          scopes: 'read:accounts read:statuses write:favourites write:bookmarks',
+          scopes: 'read:accounts read:statuses write:statuses write:favourites write:bookmarks',
           website: 'https://github.com/mhsenkow/myfacesnapjournal'
         })
       });
@@ -153,7 +153,7 @@ class MastodonService {
         body: JSON.stringify({
           client_name: fallbackName,
           redirect_uris: redirectUri,
-          scopes: 'read:accounts read:statuses write:favourites write:bookmarks',
+          scopes: 'read:accounts read:statuses write:statuses write:favourites write:bookmarks',
           website: 'https://github.com/mhsenkow/myfacesnapjournal'
         })
       });
@@ -194,7 +194,7 @@ class MastodonService {
       client_id: clientId || this.clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
-      scope: 'read:accounts read:statuses write:favourites write:bookmarks',
+      scope: 'read:accounts read:statuses write:statuses write:favourites write:bookmarks',
       force_login: 'false'
     });
 
@@ -695,7 +695,47 @@ class MastodonService {
       throw new Error(`Failed to ${isLiked ? 'unlike' : 'like'} post: ${response.status} ${errorText}`);
     }
 
-    return await response.json();
+    const updatedPost = await response.json();
+    return updatedPost;
+  }
+
+  /**
+   * Toggle reblog (boost) status for a Mastodon post
+   */
+  async toggleReblog(
+    instanceUrl: string,
+    accessToken: string,
+    statusId: string,
+    isReblogged: boolean
+  ): Promise<MastodonPost> {
+    const endpoint = isReblogged ? 'unreblog' : 'reblog';
+    const url = `${instanceUrl}/api/v1/statuses/${statusId}/${endpoint}`;
+    
+    logger.debug('🔄 Mastodon reblog API call:', {
+      url,
+      endpoint,
+      isReblogged,
+      statusId: statusId.substring(0, 10) + '...',
+      instance: instanceUrl
+    });
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    logger.debug('📡 Reblog API response status:', response.status, response.statusText);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to ${isReblogged ? 'unreblog' : 'reblog'} post: ${response.status} ${errorText}`);
+    }
+
+    const updatedPost = await response.json();
+    return updatedPost;
   }
 
   /**

@@ -108,6 +108,7 @@ interface MastodonStore {
   
   // Post interactions
   toggleLike: (postId: string) => Promise<void>;
+  toggleReblog: (postId: string) => Promise<void>;
   toggleBookmark: (postId: string) => Promise<void>;
 }
 
@@ -981,6 +982,93 @@ export const useMastodonStore = create<MastodonStore>()(
         }
       },
 
+      toggleReblog: async (postId: string) => {
+        logger.debug('🔄 toggleReblog called for post:', postId);
+        const { auth, posts, allPosts } = get();
+        
+        if (!auth.isAuthenticated || !auth.accessToken) {
+          console.error('Not authenticated');
+          alert('Please log in to Mastodon first to repost!');
+          return;
+        }
+
+        // Find the post in both arrays
+        const post = posts.find(p => p.id === postId) || allPosts.find(p => p.id === postId);
+        if (!post) {
+          console.error('Post not found');
+          return;
+        }
+
+        const isReblogged = post.reblogged || false;
+
+        try {
+          logger.debug('📡 Making reblog API call to Mastodon:', {
+            instance: auth.instance,
+            postId,
+            isReblogged,
+            action: isReblogged ? 'unreblog' : 'reblog'
+          });
+          
+          // Call the API
+          const updatedPost = await mastodonService.toggleReblog(
+            auth.instance,
+            auth.accessToken,
+            postId,
+            isReblogged
+          );
+
+          // Update the post in both arrays
+          const updatePostInArray = (postsArray: MastodonPost[]) => {
+            return postsArray.map(p => 
+              p.id === postId 
+                ? { 
+                    ...p, 
+                    reblogged: updatedPost.reblogged,
+                    reblogs_count: updatedPost.reblogs_count
+                  }
+                : p
+            );
+          };
+
+          set({
+            posts: updatePostInArray(posts),
+            allPosts: updatePostInArray(allPosts)
+          });
+
+          logger.debug(`✅ Post ${isReblogged ? 'unreblogged' : 'reblogged'} successfully`);
+        } catch (error) {
+          console.error('Failed to toggle reblog:', error);
+          
+          // Check if it's a scope error
+          if (error instanceof Error && error.message.includes('outside the authorized scopes')) {
+            logger.debug('🔐 Scope error detected - user needs to re-authenticate');
+            
+            // Show a more helpful error message with action
+            const shouldReauth = confirm(
+              '⚠️ Mastodon Permissions Needed\n\n' +
+              'Your Mastodon connection doesn\'t have permission to repost posts.\n\n' +
+              'This happens when you connected before repost support was added.\n\n' +
+              'To fix this:\n' +
+              '1. Click OK to log out\n' +
+              '2. Log back in to grant the new permissions\n' +
+              '3. Try reposting again\n\n' +
+              'Click OK to logout now, or Cancel to continue without reposts.'
+            );
+            
+            if (shouldReauth) {
+              logger.debug('🔄 User chose to re-authenticate');
+              get().logout();
+              // Show a helpful message after logout
+              alert('Logged out successfully. Please log back in to enable reposts.');
+            }
+          } else {
+            // Show generic error for other failures
+            logger.error('Failed to toggle reblog:', error);
+            alert('Failed to repost. Please try again later.');
+          }
+        }
+      },
+
       toggleBookmark: async (postId: string) => {
         const { auth, posts, allPosts } = get();
         
@@ -1031,15 +1119,26 @@ export const useMastodonStore = create<MastodonStore>()(
             
             // Show a more helpful error message with action
             const shouldReauth = confirm(
-              'Your Mastodon permissions are outdated and don\'t include like/bookmark access.\n\n' +
-              'Would you like to log out and log back in to enable likes and bookmarks?\n\n' +
+              '⚠️ Mastodon Permissions Needed\n\n' +
+              'Your Mastodon connection doesn\'t have permission to like/bookmark posts.\n\n' +
+              'This happens when you connected before these features were added.\n\n' +
+              'To fix this:\n' +
+              '1. Click OK to log out\n' +
+              '2. Log back in to grant the new permissions\n' +
+              '3. Try liking/bookmarking again\n\n' +
               'Click OK to logout now, or Cancel to continue without likes.'
             );
             
             if (shouldReauth) {
               logger.debug('🔄 User chose to re-authenticate');
               get().logout();
+              // Show a helpful message after logout
+              alert('Logged out successfully. Please log back in to enable likes and bookmarks.');
             }
+          } else {
+            // Show generic error for other failures
+            logger.error('Failed to toggle bookmark:', error);
+            alert('Failed to bookmark. Please try again later.');
           }
         }
       }

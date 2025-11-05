@@ -77,6 +77,8 @@ interface BlueskyActions {
   likePost: (uri: string, cid: string) => Promise<void>;
   toggleLike: (uri: string, cid: string) => Promise<void>;
   repostPost: (uri: string, cid: string) => Promise<void>;
+  toggleRepost: (uri: string, cid: string) => Promise<void>;
+  toggleBookmark: (uri: string) => Promise<void>; // Local bookmark (Bluesky doesn't have native bookmarks)
   
   // Utilities
   clearError: () => void;
@@ -868,6 +870,130 @@ export const useBlueskyStore = create<BlueskyState & BlueskyActions>()(
           set({ posts: updatedPosts });
         } catch (error) {
           console.error('Failed to repost:', error);
+        }
+      },
+
+      toggleRepost: async (uri: string, cid: string) => {
+        const { agent, posts, allPosts } = get();
+        if (!agent) return;
+        
+        // Find the post to check if it's already reposted
+        const post = posts.find(p => p.uri === uri) || allPosts.find(p => p.uri === uri);
+        if (!post) return;
+        
+        const isReposted = !!post.viewer?.repost;
+        
+        try {
+          logger.debug('🔄 Bluesky toggleRepost:', { uri, cid, isReposted, action: isReposted ? 'unrepost' : 'repost' });
+          
+          let updatedPosts: BlueskyPost[];
+          let updatedAllPosts: BlueskyPost[];
+          
+          if (isReposted) {
+            // Unrepost (delete the repost)
+            if (!post.viewer?.repost) return;
+            await agent.deleteRepost(post.viewer.repost);
+            
+            updatedPosts = posts.map(p => 
+              p.uri === uri 
+                ? {
+                    ...p,
+                    repostCount: Math.max(0, p.repostCount - 1),
+                    viewer: {
+                      ...p.viewer,
+                      repost: undefined
+                    }
+                  }
+                : p
+            );
+            
+            updatedAllPosts = allPosts.map(p => 
+              p.uri === uri 
+                ? {
+                    ...p,
+                    repostCount: Math.max(0, p.repostCount - 1),
+                    viewer: {
+                      ...p.viewer,
+                      repost: undefined
+                    }
+                  }
+                : p
+            );
+          } else {
+            // Repost
+            const response = await agent.repost(uri, cid);
+            
+            updatedPosts = posts.map(p => 
+              p.uri === uri 
+                ? {
+                    ...p,
+                    repostCount: p.repostCount + 1,
+                    viewer: {
+                      ...p.viewer,
+                      repost: response.uri
+                    }
+                  }
+                : p
+            );
+            
+            updatedAllPosts = allPosts.map(p => 
+              p.uri === uri 
+                ? {
+                    ...p,
+                    repostCount: p.repostCount + 1,
+                    viewer: {
+                      ...p.viewer,
+                      repost: response.uri
+                    }
+                  }
+                : p
+            );
+          }
+          
+          set({ posts: updatedPosts, allPosts: updatedAllPosts });
+          logger.debug(`✅ Bluesky post ${isReposted ? 'unreposted' : 'reposted'} successfully`);
+        } catch (error) {
+          console.error('Failed to toggle repost:', error);
+        }
+      },
+
+      toggleBookmark: async (uri: string) => {
+        // Bluesky doesn't have native bookmarks, so we'll use local storage
+        const { posts, allPosts } = get();
+        
+        // Check if bookmarked in local storage
+        const bookmarkedPosts = JSON.parse(localStorage.getItem('bluesky-bookmarks') || '[]') as string[];
+        const isBookmarked = bookmarkedPosts.includes(uri);
+        
+        try {
+          let updatedBookmarks: string[];
+          
+          if (isBookmarked) {
+            // Remove bookmark
+            updatedBookmarks = bookmarkedPosts.filter(u => u !== uri);
+          } else {
+            // Add bookmark
+            updatedBookmarks = [...bookmarkedPosts, uri];
+          }
+          
+          localStorage.setItem('bluesky-bookmarks', JSON.stringify(updatedBookmarks));
+          
+          // Update posts with bookmark state (for UI feedback)
+          const updatePostInArray = (postsArray: BlueskyPost[]) => {
+            return postsArray.map(p => ({
+              ...p,
+              bookmarked: updatedBookmarks.includes(p.uri)
+            }));
+          };
+          
+          set({
+            posts: updatePostInArray(posts),
+            allPosts: updatePostInArray(allPosts)
+          });
+          
+          logger.debug(`✅ Bluesky post ${isBookmarked ? 'unbookmarked' : 'bookmarked'} locally`);
+        } catch (error) {
+          console.error('Failed to toggle bookmark:', error);
         }
       },
 

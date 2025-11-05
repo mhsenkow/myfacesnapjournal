@@ -81,6 +81,7 @@ fn main() {
             get_github_issues,
             get_github_repository_info,
             fetch_rss_feed,
+            fetch_twitter_api,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -511,4 +512,64 @@ async fn fetch_rss_feed(url: String) -> Result<String, String> {
     }
     
     Ok(content)
+}
+
+#[tauri::command]
+async fn fetch_twitter_api(
+    method: String,
+    url: String,
+    bearer_token: String,
+    body: Option<String>,
+) -> Result<Value, String> {
+    let client = reqwest::Client::new();
+    
+    let mut request = match method.as_str() {
+        "GET" => client.get(&url),
+        "POST" => client.post(&url),
+        "DELETE" => client.delete(&url),
+        _ => return Err(format!("Unsupported HTTP method: {}", method)),
+    };
+
+    request = request
+        .header("Authorization", format!("Bearer {}", bearer_token))
+        .header("Content-Type", "application/json")
+        .header("User-Agent", "MyFaceSnapJournal/1.0")
+        .timeout(std::time::Duration::from_secs(30));
+
+    if let Some(body_str) = body {
+        request = request.body(body_str);
+    }
+
+    let response = request
+        .send()
+        .await
+        .map_err(|e| format!("Failed to fetch Twitter API: {}", e))?;
+
+    let status = response.status();
+    
+    let response_text = response
+        .text()
+        .await
+        .map_err(|e| format!("Failed to read Twitter API response: {}", e))?;
+
+    if !status.is_success() {
+        // Try to parse error message from response
+        let error_msg = if let Ok(error_json) = serde_json::from_str::<Value>(&response_text) {
+            error_json
+                .get("detail")
+                .or_else(|| error_json.get("title"))
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| format!("Twitter API error: {}", status))
+        } else {
+            format!("Twitter API error: {} - {}", status, response_text)
+        };
+        return Err(error_msg);
+    }
+
+    // Parse JSON response
+    let json: Value = serde_json::from_str(&response_text)
+        .map_err(|e| format!("Failed to parse Twitter API response: {}", e))?;
+    
+    Ok(json)
 }

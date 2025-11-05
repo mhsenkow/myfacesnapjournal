@@ -40,6 +40,23 @@ export default defineConfig({
             console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
           });
         },
+      },
+      '/api/twitter': {
+        target: 'https://api.twitter.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/twitter/, ''),
+        secure: true,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('Twitter proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Twitter proxy request:', req.method, req.url);
+          });
+          proxy.on('proxyRes', (proxyRes, req, _res) => {
+            console.log('Twitter proxy response:', proxyRes.statusCode, req.url);
+          });
+        },
       }
     }
   },

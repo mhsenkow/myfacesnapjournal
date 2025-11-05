@@ -1,6 +1,7 @@
 import React from 'react';
 import { useMastodonStore } from '../../stores/mastodonStore';
 import { useBlueskyStore } from '../../stores/blueskyStore';
+import { useTwitterStore } from '../../stores/twitterStore';
 import { useApp } from '../../contexts/AppContext';
 import { substackService } from '../../services/substackService';
 import { 
@@ -30,7 +31,8 @@ import {
   Settings,
   Wrench,
   Users,
-  Smartphone
+  Smartphone,
+  Twitter
 } from 'lucide-react';
 
 interface FooterProps {
@@ -70,7 +72,7 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
     fetchPublicTimeline
   } = useMastodonStore();
 
-  const { 
+  const {
     auth: blueskyAuth,
     algorithm: blueskyAlgorithm,
     setAlgorithm: setBlueskyAlgorithm,
@@ -86,6 +88,10 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
     setLiveFeedInterval: setBlueskyLiveFeedInterval,
     applyAlgorithm: applyBlueskyAlgorithm
   } = useBlueskyStore();
+
+  const {
+    auth: twitterAuth
+  } = useTwitterStore();
 
   // Helper functions to handle algorithm changes for both platforms
   const handleAlgorithmChange = (newAlgorithm: typeof algorithm) => {
@@ -150,7 +156,7 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
   const currentLiveFeedBatchSize = auth.isAuthenticated ? liveFeedBatchSize : blueskyLiveFeedBatchSize;
   const currentLiveFeedInterval = auth.isAuthenticated ? liveFeedInterval : blueskyLiveFeedInterval;
 
-  if (!auth.isAuthenticated && !blueskyAuth.isAuthenticated) {
+  if (!auth.isAuthenticated && !blueskyAuth.isAuthenticated && !twitterAuth.isAuthenticated) {
     return null;
   }
 
@@ -328,6 +334,21 @@ const Footer: React.FC<FooterProps> = ({ isVisible, onToggle }) => {
                       <span className="text-xs font-bold text-current">BS</span>
                     </div>
                     <span className="text-xs font-medium hidden sm:inline">Bluesky</span>
+                  </button>
+                  <button
+                    onClick={() => toggleFeedSource('twitter')}
+                    disabled={!twitterAuth.isAuthenticated}
+                    className={`p-2 rounded-md transition-colors flex items-center gap-1.5 ${
+                      appState.activeFeedSources.twitter && twitterAuth.isAuthenticated
+                        ? 'bg-blue-500 text-white shadow-sm' 
+                        : twitterAuth.isAuthenticated
+                        ? 'glass-text-secondary hover:bg-white/20 dark:hover:bg-black/20'
+                        : 'opacity-50 cursor-not-allowed'
+                    }`}
+                    title={twitterAuth.isAuthenticated ? "Toggle Twitter feed" : "Connect to Twitter first"}
+                  >
+                    <Twitter className="w-4 h-4" />
+                    <span className="text-xs font-medium hidden sm:inline">Twitter</span>
                   </button>
                   <button
                     onClick={() => toggleFeedSource('substack')}

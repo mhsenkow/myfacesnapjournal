@@ -18,11 +18,13 @@ import MastodonImport from '../components/Mastodon/MastodonImport'
 import MastodonProfileInfo from '../components/Profile/MastodonProfileInfo'
 import BlueskyProfileInfo from '../components/Profile/BlueskyProfileInfo'
 import BlueskyIntegration from '../components/Bluesky/BlueskyIntegration'
+import TwitterIntegration from '../components/Twitter/TwitterIntegration'
 import GitHubIntegration from '../components/GitHub/GitHubIntegration'
 import SubstackIntegration from '../components/Substack/SubstackIntegration'
 import IssuesTab from '../components/UI/IssuesTab'
 import { useMastodonStore } from '../stores/mastodonStore'
 import { useBlueskyStore } from '../stores/blueskyStore'
+import { useTwitterStore } from '../stores/twitterStore'
 
 const SettingsPage: React.FC = () => {
   const { settings, updateSettings } = useApp()
@@ -31,6 +33,7 @@ const SettingsPage: React.FC = () => {
   // Get connection status from stores
   const { auth: mastodonAuth } = useMastodonStore()
   const { auth: blueskyAuth } = useBlueskyStore()
+  const { auth: twitterAuth } = useTwitterStore()
   
   // Check URL params for initial tab (e.g., ?tab=profile)
   const urlParams = new URLSearchParams(window.location.search)
@@ -124,21 +127,21 @@ const SettingsPage: React.FC = () => {
               )}
               
               {/* No profiles connected */}
-              {!mastodonAuth.isAuthenticated && !blueskyAuth.isAuthenticated && (
+              {!mastodonAuth.isAuthenticated && !blueskyAuth.isAuthenticated && !twitterAuth.isAuthenticated && (
                 <div className="glass p-6 rounded-lg border border-neutral-200 text-center">
                   <User className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                   <h4 className="text-lg font-medium text-gray-900 mb-2">No Profiles Connected</h4>
                   <p className="text-sm text-gray-600 mb-4">
-                    Connect to Mastodon or Bluesky to see your profile information here
+                    Connect to Mastodon, Bluesky, or Twitter to see your profile information here
                   </p>
                   <p className="text-xs text-gray-500">
-                    Use the Feed tab to connect to your social media accounts
+                    Use the Integrations tab to connect to your social media accounts
                   </p>
                 </div>
               )}
               
               {/* Profile Integration Info */}
-              {(mastodonAuth.isAuthenticated || blueskyAuth.isAuthenticated) && (
+              {(mastodonAuth.isAuthenticated || blueskyAuth.isAuthenticated || twitterAuth.isAuthenticated) && (
                 <div className="glass p-4 rounded-lg border border-neutral-200 bg-blue-50">
                   <h4 className="text-sm font-medium text-blue-800 mb-2">Profile Integration</h4>
                   <p className="text-sm text-blue-700">
@@ -355,6 +358,11 @@ const SettingsPage: React.FC = () => {
                   <BlueskyIntegration />
                 </div>
 
+                {/* Twitter Integration */}
+                <div className="bg-white border border-neutral-200 rounded-lg p-6">
+                  <TwitterIntegration />
+                </div>
+
                 {/* GitHub Integration */}
                 <div className="bg-white border border-neutral-200 rounded-lg p-6">
                   <GitHubIntegration />
@@ -369,7 +377,7 @@ const SettingsPage: React.FC = () => {
                 <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-6">
                   <h4 className="font-medium text-neutral-900 mb-2">More Integrations Coming Soon</h4>
                   <p className="text-sm text-neutral-600">
-                    We're working on integrations with Twitter, Instagram, and other social platforms.
+                    We're working on integrations with Instagram, LinkedIn, and other social platforms.
                     Stay tuned for updates!
                   </p>
                 </div>

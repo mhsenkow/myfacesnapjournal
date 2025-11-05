@@ -61,6 +61,7 @@ export interface AppState {
     mastodon: boolean
     bluesky: boolean
     substack: boolean
+    twitter: boolean
   }
   
   // Track manual user actions to prevent auto-override
@@ -68,6 +69,7 @@ export interface AppState {
     mastodon: boolean | null // null = auto, true/false = manual
     bluesky: boolean | null
     substack: boolean | null
+    twitter: boolean | null
   }
   
   // Feature capabilities
@@ -129,12 +131,14 @@ const defaultAppState: AppState = {
   activeFeedSources: {
     mastodon: true,
     bluesky: false,
-    substack: false
+    substack: false,
+    twitter: false
   },
   userFeedPreferences: {
     mastodon: null, // null = auto-manage
     bluesky: null,
-    substack: null
+    substack: null,
+    twitter: null
   },
   features: {
     ai: true,
@@ -158,7 +162,7 @@ interface AppContextType {
   removeToast: (id: string) => void
   resetSettings: () => void
   checkCapabilities: () => Promise<void>
-  toggleFeedSource: (source: 'mastodon' | 'bluesky') => void
+  toggleFeedSource: (source: 'mastodon' | 'bluesky' | 'substack' | 'twitter') => void
 }
 
 // Create context
@@ -354,7 +358,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }
 
   // Toggle feed source
-  const toggleFeedSource = (source: 'mastodon' | 'bluesky' | 'substack') => {
+  const toggleFeedSource = (source: 'mastodon' | 'bluesky' | 'substack' | 'twitter') => {
     setState(prev => {
       const newValue = !prev.activeFeedSources[source];
       return {

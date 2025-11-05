@@ -7,6 +7,22 @@
 import { BlueskyPost } from '../types/bluesky';
 
 /**
+ * Extract quote posts from Bluesky embeds
+ */
+export function extractBlueskyQuotePost(post: BlueskyPost): any | null {
+  if (post.record?.embed?.record) {
+    return {
+      uri: post.record.embed.record.uri,
+      cid: post.record.embed.record.cid,
+      // Note: Full quote post data would need to be fetched separately
+      // For now, we'll extract what we can from the embed
+      type: 'quote'
+    };
+  }
+  return null;
+}
+
+/**
  * Extract media attachments from Bluesky embeds
  */
 export function extractBlueskyMedia(post: BlueskyPost): any[] {
@@ -41,14 +57,7 @@ export function extractBlueskyMedia(post: BlueskyPost): any[] {
       });
     }
     
-    // Extract record embeds (quote posts)
-    if (embed.record) {
-      media.push({
-        id: embed.record.uri,
-        type: 'quote',
-        url: embed.record.uri
-      });
-    }
+    // Don't add quote posts as media - they'll be handled separately
   }
   
   return media;
